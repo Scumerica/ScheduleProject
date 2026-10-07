@@ -91,6 +91,52 @@
             flex-wrap: wrap;
         }
 
+        /* Top bar drop-down menus */
+        .menu {
+            position: relative;
+        }
+        .menu-toggle {
+            background-color: #334155;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        .menu-toggle:hover,
+        .menu.open .menu-toggle {
+            background-color: #475569;
+        }
+        .menu-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 210px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            z-index: 1000;
+        }
+        .menu-panel[hidden] {
+            display: none;
+        }
+        /* Menu items are plain rows whatever colour the button would otherwise have */
+        .menu-panel button {
+            background: none !important;
+            color: var(--text) !important;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: left;
+            white-space: nowrap;
+            border-radius: 6px;
+        }
+        .menu-panel button:hover {
+            background-color: var(--summary-hover) !important;
+        }
+
         /* Draggable & Resizable Window Styling */
         .window {
             position: absolute;
@@ -189,7 +235,7 @@
             color: var(--label-color);
         }
 
-        input[type="text"], input[type="number"], select, textarea {
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
             width: 100%;
             padding: 8px 10px;
             border: 1px solid var(--border);
@@ -614,6 +660,573 @@
             background-color: #047857;
         }
 
+        /* Next-duty forecast on the supervisor schedule */
+        .next-duty {
+            font-weight: 600;
+        }
+        .next-duty.on {
+            color: #059669;
+        }
+        .next-duty-role {
+            color: var(--text-muted);
+        }
+        .next-up-icon {
+            cursor: help;
+        }
+        .swap-check {
+            font-weight: 600;
+            color: #b45309;
+        }
+        [data-theme="dark"] .swap-check {
+            color: #fcd34d;
+        }
+
+        /* Full-screen views (Employee View, 4-Week View) shown over the supervisor windows */
+        .full-view {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            overflow: auto;
+            padding: 24px 32px;
+            background-color: var(--bg-color);
+            color: var(--text);
+        }
+        .full-view[hidden],
+        .ev-empty[hidden] {
+            display: none;
+        }
+        .ev-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ev-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .ev-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .ev-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .ev-controls input {
+            width: 220px;
+        }
+        .ev-days {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .ev-day {
+            background-color: var(--panel-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .ev-day:hover {
+            background-color: var(--summary-hover);
+        }
+        .ev-day.active,
+        .ev-day.active:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+        .full-view table {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        /* 4-Week View grid */
+        .full-view table.fw-table {
+            font-size: 0.75rem;
+        }
+        .fw-table th,
+        .fw-table td {
+            padding: 4px 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .fw-table .fw-name {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            background-color: var(--panel-bg);
+        }
+        .fw-table .fw-week-start {
+            border-left: 2px solid var(--text-muted);
+        }
+        .fw-table th.fw-today {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+        .fw-rotation {
+            font-weight: 400;
+            font-size: 0.7rem;
+            margin-left: 6px;
+        }
+        .fw-duty {
+            background-color: rgba(37, 99, 235, 0.16);
+            font-weight: 600;
+        }
+        .fw-typing {
+            color: var(--text-muted);
+        }
+        .fw-out {
+            background-color: rgba(239, 68, 68, 0.16);
+        }
+        .fw-un {
+            background-color: rgba(245, 158, 11, 0.22);
+        }
+        .fw-legend {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.75rem;
+        }
+        .fw-chip {
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        /* Override dialog and the pencil button that opens it */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.55);
+        }
+        .modal-backdrop[hidden] {
+            display: none;
+        }
+        .modal-box {
+            width: min(460px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background-color: var(--panel-bg);
+            color: var(--text);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .ov-btn {
+            margin-left: 4px;
+            padding: 1px 6px;
+            font-size: 0.75rem;
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .ov-btn:hover {
+            background-color: var(--summary-hover);
+            color: var(--text);
+        }
+        .ov-btn.active {
+            background-color: #d97706;
+            border-color: #d97706;
+            color: #ffffff;
+        }
+
+        /* Duty Counters page */
+        .dc-period {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .dc-period label {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        .dc-period select,
+        .dc-period input {
+            width: auto;
+        }
+        .dc-period input[type="number"] {
+            width: 80px;
+        }
+        .dc-period span {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .dc-period span[hidden] {
+            display: none;
+        }
+        .dc-range-text {
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .dc-table th,
+        .dc-table td {
+            padding: 6px 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .dc-table th:first-child,
+        .dc-table td:first-child {
+            text-align: left;
+        }
+        .dc-table .dc-na {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+        .dc-times {
+            margin-left: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .dc-average td {
+            font-weight: 700;
+            background-color: var(--summary-bg);
+        }
+
+        /* How Scheduling Works page */
+        .help-body {
+            max-width: 920px;
+            line-height: 1.55;
+        }
+        .help-card {
+            margin-bottom: 14px;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--panel-bg);
+        }
+        .help-card h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.05rem;
+        }
+        .help-card p {
+            margin: 0 0 8px 0;
+        }
+        .help-card ul,
+        .help-card ol {
+            margin: 0 0 8px 0;
+            padding-left: 22px;
+        }
+        .help-card li {
+            margin-bottom: 4px;
+        }
+        .help-card table {
+            margin-top: 6px;
+        }
+
+        /* Office Calendar page and the calendar notes on the schedules */
+        .oc-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+        .oc-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+        }
+        .oc-dayname {
+            padding: 4px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .oc-cell {
+            min-height: 84px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--panel-bg);
+            cursor: pointer;
+        }
+        .oc-cell:hover {
+            border-color: var(--primary);
+        }
+        .oc-cell.other,
+        .oc-cell.weekend {
+            opacity: 0.55;
+        }
+        .oc-cell.schedule-day .oc-num {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        .oc-cell.selected {
+            border: 2px solid var(--primary);
+            opacity: 1;
+        }
+        .oc-num {
+            font-weight: 700;
+        }
+        .oc-chip {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .oc-closed,
+        .fw-closed {
+            background-color: rgba(100, 116, 139, 0.35);
+        }
+        .oc-half {
+            background-color: rgba(245, 158, 11, 0.3);
+        }
+        .oc-hours {
+            background-color: rgba(37, 99, 235, 0.22);
+        }
+        .oc-panel {
+            margin-bottom: 14px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--panel-bg);
+        }
+        .oc-panel [hidden] {
+            display: none;
+        }
+        .oc-heading {
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .oc-entry {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        .oc-entry .oc-chip {
+            flex: 1;
+        }
+        .oc-entry a {
+            color: var(--primary);
+            white-space: nowrap;
+        }
+        .oc-none {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .day-date {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        #day-notices .alert-box {
+            margin-bottom: 8px;
+        }
+        .alert-box.calendar {
+            background-color: #eff6ff;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+        [data-theme="dark"] .alert-box.calendar {
+            background-color: #172554;
+            border-color: #1e40af;
+            color: #bfdbfe;
+        }
+        .fw-table th.fw-marked {
+            text-decoration: underline;
+            cursor: help;
+        }
+
+        /* Calendar bar above the employee cards */
+        .plan-week-bar {
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card-bg);
+            font-size: 0.8rem;
+        }
+        .plan-calendar-btn {
+            display: block;
+            width: 100%;
+            margin-top: 6px;
+            text-align: left;
+        }
+        .plan-calendar {
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--panel-bg);
+        }
+        .plan-calendar[hidden] {
+            display: none;
+        }
+        .cal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .cal-week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr) 14px;
+            align-items: center;
+            text-align: center;
+            padding: 5px 2px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .cal-week:hover {
+            background-color: var(--summary-hover);
+        }
+        .cal-week.current {
+            border-color: var(--primary);
+        }
+        .cal-week.selected,
+        .cal-week.selected:hover {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+        .cal-week.past,
+        .cal-week.past:hover {
+            background: none;
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .cal-week.cal-names,
+        .cal-week.cal-names:hover {
+            background: none;
+            cursor: default;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .cal-day.other,
+        .cal-day.weekend {
+            opacity: 0.5;
+        }
+        .cal-mark {
+            font-size: 0.6rem;
+        }
+        .cal-foot {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .cal-foot button {
+            white-space: nowrap;
+        }
+        #employee-view td {
+            padding: 10px 12px;
+            vertical-align: top;
+        }
+        /* One box per employee per week */
+        #employee-view td.ev-week-cell {
+            height: 1px;
+            padding: 6px;
+        }
+        .ev-week-box {
+            height: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+        }
+        .ev-week-box.ev-box-duty {
+            border-left-color: var(--primary);
+        }
+        .ev-week-box.ev-box-out {
+            border-left-color: #94a3b8;
+            opacity: 0.75;
+        }
+        .ev-notes {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border);
+        }
+        #employee-view .ev-table td {
+            border-bottom: none;
+        }
+        /* The week columns share the width evenly, whatever their headings say */
+        #employee-view .ev-table {
+            table-layout: fixed;
+        }
+        #employee-view .ev-table th:first-child {
+            width: 170px;
+        }
+        #employee-view .ev-table th {
+            white-space: normal;
+            vertical-align: top;
+        }
+        #employee-view .ev-table tbody tr:nth-child(even) {
+            background-color: var(--summary-bg);
+        }
+        .ev-main {
+            font-weight: 600;
+        }
+        .ev-main.ev-duty {
+            color: var(--primary);
+        }
+        .ev-main.ev-out {
+            color: var(--text-muted);
+        }
+        .ev-group {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .ev-note {
+            margin-top: 2px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #b45309;
+        }
+        [data-theme="dark"] .ev-note {
+            color: #fcd34d;
+        }
+        @media print {
+            .fw-table .fw-name {
+                position: static;
+            }
+        }
+        .ev-empty {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        @media print {
+            body.full-view-open > *:not(.full-view),
+            body.full-view-open .ev-no-print,
+            body.full-view-open .sort-arrow {
+                display: none !important;
+            }
+            body.full-view-open .full-view {
+                position: static;
+                overflow: visible;
+                padding: 0;
+            }
+        }
+
         /* Initial Window Positions & Sizes */
         #win-employees { top: 72px; left: 20px; width: 440px; height: 720px; }
         #win-schedule { top: 72px; left: 480px; width: 880px; height: 720px; }
@@ -631,16 +1244,378 @@
             </select>
         </div>
         <div class="banner-controls">
-            <button id="btn-open-schedule" class="btn-export" style="background-color: #6366f1; padding: 5px 10px; font-size: 0.75rem;">Open</button>
-            <button id="btn-save" class="btn-export" style="background-color: #3b82f6; padding: 5px 10px; font-size: 0.75rem;">Save</button>
-            <button id="btn-export-json" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Export (JSON)</button>
-            <button id="btn-trigger-import-json" class="btn-export" style="background-color: #0284c7; padding: 5px 10px; font-size: 0.75rem;">Import (JSON)</button>
-            <button id="btn-export-daily" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Daily CSV</button>
-            <button id="btn-export-weekly" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Weekly CSV</button>
-            <button id="btn-theme-toggle" style="background-color: #475569; padding: 5px 12px; font-size: 0.8rem;" title="Switch Theme">🌙 Dark</button>
-            <button id="btn-test-mode" style="background-color: #8b5cf6; padding: 5px 12px; font-size: 0.8rem;">Test Mode</button>
+            <button id="btn-save" style="background-color: #3b82f6; padding: 6px 16px; font-size: 0.8rem;" title="Save the schedule to this browser and your storage folder">Save</button>
+
+            <div class="menu">
+                <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">File ▾</button>
+                <div class="menu-panel" hidden>
+                    <button id="btn-open-schedule" title="Load a saved schedule file">Open schedule…</button>
+                    <button id="btn-trigger-import-json" title="Load a backup file">Import backup (JSON)…</button>
+                    <button id="btn-export-json" title="Download everything as one backup file">Export backup (JSON)</button>
+                </div>
+            </div>
+
+            <div class="menu">
+                <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">Export ▾</button>
+                <div class="menu-panel" hidden>
+                    <button id="btn-export-daily" title="Download the selected day as a spreadsheet">Daily schedule (CSV)</button>
+                    <button id="btn-export-weekly" title="Download Monday to Friday as a spreadsheet">Weekly schedule (CSV)</button>
+                </div>
+            </div>
+
+            <div class="menu">
+                <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">Views ▾</button>
+                <div class="menu-panel" hidden>
+                    <button id="btn-office-calendar" title="Block days, half days or special hours">Office Calendar</button>
+                    <button id="btn-fourweek-view" title="This week and the next three, side by side">4-Week View</button>
+                    <button id="btn-employee-view" title="Read-only schedule for staff">Employee View</button>
+                    <button id="btn-duty-counters" title="How many days and times each person has worked each duty">Duty Counters</button>
+                </div>
+            </div>
+
+            <div class="menu">
+                <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">Options ▾</button>
+                <div class="menu-panel" hidden>
+                    <button id="btn-theme-toggle" title="Switch between the light and dark themes">🌙 Dark theme</button>
+                    <button id="btn-test-mode" title="Load or remove the sample office">Test Mode</button>
+                </div>
+            </div>
+
+            <div class="menu">
+                <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">Help ▾</button>
+                <div class="menu-panel" hidden>
+                    <button id="btn-help" title="A plain-language explanation of the scheduling logic">How scheduling works</button>
+                </div>
+            </div>
         </div>
     </header>
+
+    <!-- Employee View: read-only schedule for staff, shown over the supervisor windows -->
+    <div id="employee-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div id="ev-title" class="ev-title"></div>
+                <div id="ev-subtitle" class="ev-subtitle"></div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <input type="text" id="ev-search" placeholder="Find your name...">
+                <button id="ev-print" style="background-color: #059669;">Print</button>
+                <button id="ev-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div id="ev-groups" class="fw-legend"></div>
+        <div id="ev-calendar-notes" class="fw-legend"></div>
+
+        <table class="ev-table">
+            <thead id="ev-thead"></thead>
+            <tbody id="ev-tbody"></tbody>
+        </table>
+        <div id="ev-empty" class="ev-empty" hidden>No one matches that name.</div>
+    </div>
+
+    <!-- Override dialog: set one person's duty for a day or a week -->
+    <div id="override-dialog" class="modal-backdrop" hidden>
+        <div class="modal-box">
+            <div id="ov-title" class="oc-heading" style="font-size: 1.1rem;"></div>
+            <div id="ov-current" class="oc-none" style="margin-bottom: 12px;"></div>
+
+            <div class="form-group">
+                <label for="ov-duty">Duty</label>
+                <select id="ov-duty"></select>
+            </div>
+            <div class="form-group">
+                <label>Applies to</label>
+                <label style="display: flex; gap: 6px; align-items: center; font-weight: normal;"><input type="radio" name="ov-scope" value="day" checked> This day only</label>
+                <label style="display: flex; gap: 6px; align-items: center; font-weight: normal;"><input type="radio" name="ov-scope" value="week"> The whole week containing this date</label>
+            </div>
+            <div class="form-group">
+                <label for="ov-date">Date</label>
+                <input type="date" id="ov-date">
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <button id="ov-apply" style="flex: 1;">Apply Override</button>
+                <button id="ov-close" style="background-color: #475569;">Close</button>
+            </div>
+
+            <div class="oc-heading">Overrides set for this person</div>
+            <div id="ov-list"></div>
+
+            <small style="display: block; margin-top: 10px; color: var(--text-muted); font-size: 0.75rem;">An override is applied ahead of the scheduler's own pick, even if the person is resting, over the Duty Limit or not ticked for the duty. Whoever loses the position works a typing station instead.</small>
+        </div>
+    </div>
+
+    <!-- Duty Counters: days and times each person has worked each duty -->
+    <div id="counters-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div class="ev-title">Duty Counters</div>
+                <div class="ev-subtitle">Days each person has worked each duty, with the number of separate times beside it (for example 10 2× is ten days over two stints). Darker cells are higher than others in the same column.</div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <input type="text" id="dc-search" placeholder="Find a name...">
+                <button id="dc-export" style="background-color: #059669;">Export CSV</button>
+                <button id="dc-print" style="background-color: #059669;">Print</button>
+                <button id="dc-reset" class="btn-danger" style="padding: 8px 12px; font-size: 0.85rem;">Reset Counters</button>
+                <button id="dc-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div class="dc-period ev-no-print">
+            <label for="dc-mode">Period</label>
+            <select id="dc-mode">
+                <option value="all">Everything recorded</option>
+                <option value="last">The last X work days</option>
+                <option value="range">A date range</option>
+            </select>
+            <span id="dc-last-box" hidden>
+                <label for="dc-last">X =</label>
+                <input type="number" id="dc-last" value="10" min="1">
+            </span>
+            <span id="dc-range-box" hidden>
+                <label for="dc-from">From</label>
+                <input type="date" id="dc-from">
+                <label for="dc-to">to</label>
+                <input type="date" id="dc-to">
+            </span>
+        </div>
+        <div id="dc-range-text" class="dc-range-text"></div>
+
+        <table class="dc-table">
+            <thead id="dc-thead"></thead>
+            <tbody id="dc-tbody"></tbody>
+        </table>
+        <div id="dc-empty" class="ev-empty" hidden>No one matches that name.</div>
+    </div>
+
+    <!-- How Scheduling Works: plain-language explanation of the logic -->
+    <div id="help-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div class="ev-title">How Scheduling Works</div>
+                <div class="ev-subtitle">A plain-language walk through what the scheduler does and why.</div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <button id="help-print" style="background-color: #059669;">Print</button>
+                <button id="help-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div class="help-body">
+            <div class="help-card">
+                <h2>The short version</h2>
+                <p>Once a week the scheduler hands out the special duties. Each day it only adjusts for who is out. A person normally does the same job, at the same station, with the same breaks, for the whole week.</p>
+                <p>When it has a choice, it picks whoever has waited longest for a turn. When it does not have enough people, it fills the most important roles first and tells you where it had to bend a rule.</p>
+            </div>
+
+            <div class="help-card">
+                <h2>Your current settings</h2>
+                <div id="help-settings"></div>
+            </div>
+
+            <div class="help-card">
+                <h2>1. What you tell it</h2>
+                <ul>
+                    <li><strong>Who can do what.</strong> The duty checkboxes on each employee card. Typing means they can work a typing station.</li>
+                    <li><strong>What each station is for.</strong> The checkboxes on each station card. A role can only sit at a station that allows it.</li>
+                    <li><strong>How many of each role you need.</strong> The Required number for each role, per day.</li>
+                    <li><strong>Who is out, and when.</strong> Days off on the employee cards, for any week you pick on the calendar button.</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h2>2. At the start of each week</h2>
+                <ol>
+                    <li><strong>Count the openings.</strong> Each role needs its Required number of people, less anyone frozen in that role.</li>
+                    <li><strong>Supervisor overrides come first.</strong> Anyone you gave a duty for the week (the pencil button on the schedule, or Assigned Duty on their card) gets it, even if they are resting, over the Duty Limit or not ticked for it.</li>
+                    <li><strong>Anyone who owes a week goes next.</strong> A person who held a role but was out three or more days of that week is put back on the same role.</li>
+                    <li><strong>Fixed-station staff take a role their station allows</strong>, if one is open and they can be picked.</li>
+                    <li><strong>The rest are filled in hierarchy order.</strong> Higher roles pick before lower ones. Roles marked equal take turns, one position each.</li>
+                    <li><strong>The fairest person is picked.</strong> Among those who can be picked, the one who has gone longest without holding any weekly position goes first. Ties go to whoever has worked the fewest special-duty days overall.</li>
+                    <li><strong>Everyone gets a station.</strong> Position holders get a station that allows their role. Everyone else gets a typing station, and those who have been left Unassigned most often get one first.</li>
+                </ol>
+            </div>
+
+            <div class="help-card">
+                <h2>3. Who can be picked</h2>
+                <p>For a role in a given week, a person must:</p>
+                <ul>
+                    <li>be ticked for that duty,</li>
+                    <li>not be resting from that role,</li>
+                    <li>be under the Duty Limit,</li>
+                    <li>be out no more than two days that week,</li>
+                    <li>not be frozen, and not be marked "No special duty" for the week.</li>
+                </ul>
+                <p>If nobody meets all of these, the scheduler does not leave the role empty. It takes the person closest to finishing their rest, then someone over the Duty Limit, and shows a warning naming them.</p>
+            </div>
+
+            <div class="help-card">
+                <h2>4. Each day</h2>
+                <ol>
+                    <li>Anyone marked out shows as Out.</li>
+                    <li>Frozen employees keep their position.</li>
+                    <li><strong>One-day overrides are applied.</strong> A person you overrode for that day takes the duty you chose; whoever loses the position works a typing station for the day.</li>
+                    <li>Position holders work their role at their own station.</li>
+                    <li>If a holder is out, a stand-in covers for that day only. The stand-in comes from the holder's break group when possible, is chosen by the same fairness order, uses the holder's station, and goes back to their own job the next day.</li>
+                    <li>Everyone else works their typing station. A person without one takes a station that is free that day, or shows as Unassigned.</li>
+                </ol>
+            </div>
+
+            <div class="help-card">
+                <h2>5. Rest, limits and rotation</h2>
+                <ul>
+                    <li><strong>Max Rot</strong> is the most days in a row on one role. With 5, a person does one week and rotates off. With 10, they may stay a second week.</li>
+                    <li><strong>Break Rot</strong> is how many days a person rests from that role afterwards. Only days they are present count, so a day out does not shorten the rest.</li>
+                    <li><strong>The Duty Limit</strong> caps special-duty days across all roles, so nobody goes from one duty straight into another week after week.</li>
+                    <li><strong>The call-out rule.</strong> A holder who is out three or more days of their week earns no rest and gets the same role again the next week.</li>
+                    <li><strong>Rest that cannot be sustained is shortened.</strong> If a rest period is longer than the number of qualified people can cover, it is cut for that day and a warning says by how much.</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h2>6. Breaks</h2>
+                <p>Every employee belongs to break group A, B or C. Each group has its own AM break, lunch and PM break. The groups move to the next set of times each week, so nobody keeps the same lunch hour permanently.</p>
+            </div>
+
+            <div class="help-card">
+                <h2>7. After-lunch swap</h2>
+                <p>Information Desk and Class C/M staff trade places after lunch, one for one. A pair must each be ticked for the other's duty, and partners in the same break group are matched first. Anyone left without a partner is told to check with a supervisor. There is no swap on a blocked day or a half day.</p>
+            </div>
+
+            <div class="help-card">
+                <h2>8. The office calendar</h2>
+                <ul>
+                    <li><strong>A blocked day</strong> is nobody's work day. It counts toward no one's duty, rest or days out.</li>
+                    <li><strong>Half days and special hours</strong> are notes only. They appear on the schedules but do not change who works where.</li>
+                </ul>
+            </div>
+
+            <div class="help-card">
+                <h2>9. The forecast</h2>
+                <p>The Next Duty column, the 🔜 icon, the 4-Week View and the Employee View are all worked out the same way: the scheduler plays the schedule forward 30 work days on a copy of the roster, using the days off, assigned duties and calendar entries already planned. It updates the moment any of those change.</p>
+            </div>
+
+            <div class="help-card">
+                <h2>10. What the warnings mean</h2>
+                <table>
+                    <thead><tr><th>Warning</th><th>Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td>Staff Shortage</td><td>Fewer qualified people are present than the role requires.</td></tr>
+                        <tr><td>Rotation Delay</td><td>Enough people are qualified, but too many are resting.</td></tr>
+                        <tr><td>Station Error / Bottleneck</td><td>No station, or too few stations, allow this role.</td></tr>
+                        <tr><td>Intra-Group Shortage</td><td>Someone qualified is out and nobody else in their break group can cover.</td></tr>
+                        <tr><td>Rest Shortened</td><td>The Break Rot was cut for the day because the pool is too small to sustain it.</td></tr>
+                        <tr><td>Rest Waived / Duty Limit Waived</td><td>A named person was used early or over the limit because no one else was available.</td></tr>
+                        <tr><td>Assigned Duty Not Applied</td><td>More people were assigned to a role than it requires.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Office Calendar: blocked days, half days and special hours -->
+    <div id="calendar-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div class="ev-title">Office Calendar</div>
+                <div class="ev-subtitle">Block full days, half days or special hours. They are noted on the schedule, the 4-Week View and the Employee View.</div>
+            </div>
+            <div class="ev-controls">
+                <button id="oc-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div class="oc-layout">
+            <div class="oc-month">
+                <div class="cal-head">
+                    <button id="oc-prev" title="Previous month">◀</button>
+                    <strong id="oc-month-label" style="font-size: 1.1rem;"></strong>
+                    <span style="display: flex; gap: 6px;">
+                        <button id="oc-today" style="background-color: #64748b;" title="Go to the day the schedule is on">Schedule day</button>
+                        <button id="oc-next" title="Next month">▶</button>
+                    </span>
+                </div>
+                <div id="oc-grid" class="oc-grid"></div>
+            </div>
+
+            <div class="oc-side">
+                <div class="oc-panel">
+                    <div id="oc-day-label" class="oc-heading"></div>
+                    <div id="oc-day-entries"></div>
+                </div>
+
+                <div class="oc-panel">
+                    <div class="oc-heading">Add to this day</div>
+                    <div class="form-group">
+                        <label for="oc-type">Type</label>
+                        <select id="oc-type">
+                            <option value="closed">Blocked day (office closed)</option>
+                            <option value="half">Half day</option>
+                            <option value="hours">Special hours block</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="oc-half-row" hidden>
+                        <label for="oc-half">Which half is worked</label>
+                        <select id="oc-half">
+                            <option value="am">Morning only</option>
+                            <option value="pm">Afternoon only</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="oc-hours-row" hidden>
+                        <label for="oc-start">From / to</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="time" id="oc-start">
+                            <input type="time" id="oc-end">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="oc-label">Reason or note (optional)</label>
+                        <input type="text" id="oc-label" maxlength="80" placeholder="e.g. Thanksgiving, Staff meeting">
+                    </div>
+                    <div class="form-group">
+                        <label for="oc-through">Repeat on weekdays through (optional)</label>
+                        <input type="date" id="oc-through">
+                    </div>
+                    <button id="oc-add" style="width: 100%;">Add to Calendar</button>
+                </div>
+
+                <div class="oc-panel">
+                    <div class="oc-heading">Upcoming entries</div>
+                    <div id="oc-upcoming"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Four-Week View: this week plus the next three, shown over the supervisor windows -->
+    <div id="fourweek-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div id="fw-title" class="ev-title"></div>
+                <div class="ev-subtitle">Today onward is a forecast from the planned days off and assigned duties. It updates whenever the plan changes.</div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <input type="text" id="fw-search" placeholder="Find a name...">
+                <button id="fw-print" style="background-color: #059669;">Print</button>
+                <button id="fw-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div class="fw-legend">
+            <span class="fw-chip fw-duty">Special duty · station</span>
+            <span class="fw-chip fw-typing">Typing counter</span>
+            <span class="fw-chip fw-out">Out</span>
+            <span class="fw-chip fw-un">Unassigned</span>
+            <span class="fw-chip fw-closed">Office closed</span>
+        </div>
+        <div id="fw-calendar-notes" class="fw-legend"></div>
+
+        <table class="fw-table">
+            <thead id="fw-thead"></thead>
+            <tbody id="fw-tbody"></tbody>
+        </table>
+        <div id="fw-empty" class="ev-empty" hidden>No one matches that name.</div>
+    </div>
 
     <!-- Hidden file input for JSON imports -->
     <input type="file" id="json-file-input" accept=".json" style="display: none;">
@@ -665,6 +1640,11 @@
             <details open>
                 <summary id="summary-employee-roster">Employee Roster - Cards: 0</summary>
                 <div class="collapsible-content">
+                    <div class="plan-week-bar">
+                        <span>Cards show <strong>days off</strong> and <strong>assigned duty</strong> for:</span>
+                        <button id="btn-plan-calendar" class="plan-calendar-btn" title="Pick a different week">📅 <span id="plan-week-label"></span></button>
+                        <div id="plan-calendar" class="plan-calendar" hidden></div>
+                    </div>
                     <button id="btn-clear-all-out" class="btn-warning" style="margin-bottom: 8px; width: 100%;">Clear All Days Off (Everyone)</button>
                     <div id="employee-list"></div>
                 </div>
@@ -712,6 +1692,14 @@
                             </label>
                             <input type="number" id="cfg-max-aux-week" value="5" min="-1" style="width: 60px;">
                         </div>
+
+                        <label style="display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 0.8rem; cursor: pointer;">
+                            <input type="checkbox" id="cfg-lunch-swap" checked style="margin-top: 2px;">
+                            <span>
+                                <strong>After-lunch swap</strong>
+                                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: normal;">Information Desk and Class C/M trade places after lunch, one for one. Anyone left without a partner is told to check with a supervisor.</small>
+                            </span>
+                        </label>
                     </div>
                 </details>
             </div>
@@ -755,15 +1743,20 @@
                     <input type="text" id="week-rotation-counter" value="Week Rotation Counter: 1" readonly style="flex: 1; padding: 8px 10px; font-size: 0.9rem; font-weight: 600; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);">
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button id="btn-previous-week" style="background-color: #475569;">Previous Week</button>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Day</span>
                         <button id="btn-previous" style="background-color: #64748b;">Previous Day</button>
                         <button id="btn-advance" style="background-color: #10b981;">Advance Day</button>
-                        <button id="btn-advance-week" style="background-color: #059669;">Advance Week</button>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center; padding-left: 12px; border-left: 1px solid var(--border);">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Week</span>
+                        <button id="btn-previous-week" style="background-color: #64748b;">Previous Week</button>
+                        <button id="btn-advance-week" style="background-color: #10b981;">Advance Week</button>
                     </div>
                 </div>
             </div>
 
+            <div id="day-notices"></div>
             <div id="diagnostic-panel"></div>
 
             <div class="shift-summary-bar">
@@ -781,11 +1774,17 @@
                 </div>
             </div>
 
+            <small style="display: block; color: var(--text-muted); font-size: 0.75rem; margin-bottom: 8px;">
+                🔜 marks who is next up for a special duty (by the next weekly rotation). <strong>Next Duty</strong> counts work days until each person's next special duty. It is a forecast based on the days off and assigned duties planned for the coming weeks.
+            </small>
+
             <table>
                 <thead>
                     <tr>
                         <th><button class="sort-btn" data-sort="name" title="Sort by employee name">Employee / Station <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="position" title="Sort by assigned position">Assigned Position <span class="sort-arrow"></span></button></th>
+                        <th title="Information Desk and Class C/M trade places after lunch">After Lunch</th>
+                        <th><button class="sort-btn" data-sort="next" title="Sort by days until the next special duty">Next Duty <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="am" title="Sort by AM break time">AM Break <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="lunch" title="Sort by lunch time">Lunch <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="pm" title="Sort by PM break time">PM Break <span class="sort-arrow"></span></button></th>
@@ -927,15 +1926,36 @@
         function applyTheme(theme) {
             if (theme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                btnThemeToggle.textContent = '☀️ Light';
+                btnThemeToggle.textContent = '☀️ Light theme';
                 btnThemeToggle.style.backgroundColor = '#d97706';
             } else {
                 document.documentElement.removeAttribute('data-theme');
-                btnThemeToggle.textContent = '🌙 Dark';
+                btnThemeToggle.textContent = '🌙 Dark theme';
                 btnThemeToggle.style.backgroundColor = '#475569';
             }
             localStorage.setItem('scheduler_theme', theme);
         }
+
+        // Top bar menus: one open at a time. Choosing an item, clicking anywhere else or pressing Escape closes them.
+        function setOpenMenu(openMenu) {
+            document.querySelectorAll('.menu').forEach(menu => {
+                const isOpen = menu === openMenu;
+                menu.classList.toggle('open', isOpen);
+                menu.querySelector('.menu-panel').hidden = !isOpen;
+                menu.querySelector('.menu-toggle').setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        }
+
+        // Capture phase, so it also runs for menu items whose own handlers stop the click from bubbling
+        document.addEventListener('click', e => {
+            const toggle = e.target.closest ? e.target.closest('.menu-toggle') : null;
+            const menu = toggle ? toggle.parentElement : null;
+            setOpenMenu(menu && !menu.classList.contains('open') ? menu : null);
+        }, true);
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') setOpenMenu(null);
+        });
 
         btnThemeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -1008,7 +2028,7 @@
         // Column header sort buttons: click to sort by that column, click again to reverse
         let scheduleSort = { key: 'name', dir: 1 };
 
-        document.querySelectorAll('.sort-btn').forEach(btn => {
+        document.querySelectorAll('#win-schedule .sort-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (scheduleSort.key === btn.dataset.sort) {
                     scheduleSort.dir = -scheduleSort.dir;
@@ -1081,7 +2101,235 @@
             return activeDays.join(', ');
         }
 
+        // ==========================================
+        // WEEK PLANNING (days off and assigned duty for any week)
+        // ==========================================
+        // Dates are local 'YYYY-MM-DD' strings and a week is named by its Monday. The current week's plan is
+        // emp.outDays / emp.weekDuty; later weeks are kept in emp.plannedWeeks[mondayISO] and are taken up
+        // when the schedule rolls into that week.
+
+        const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        function toISODate(date) {
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${date.getFullYear()}-${mm}-${dd}`;
+        }
+
+        function parseISODate(iso) {
+            const [y, m, d] = iso.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function addDaysISO(iso, days) {
+            const date = parseISODate(iso);
+            date.setDate(date.getDate() + days);
+            return toISODate(date);
+        }
+
+        // Monday of the week a date falls in
+        function weekStartOf(date) {
+            const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+            return toISODate(monday);
+        }
+
+        // The week the schedule is on. It starts as the real current week and moves with Advance.
+        let currentWeekStart = weekStartOf(new Date());
+        // The week the employee cards are showing and editing
+        let planWeekStart = currentWeekStart;
+        let calendarMonth = null;
+
+        function blankOutDays() {
+            return { mon: false, tue: false, wed: false, thu: false, fri: false };
+        }
+
+        function isBlankPlan(plan) {
+            return !plan.duty && !Object.values(plan.outDays || {}).some(v => v);
+        }
+
+        function plannedWeeksOf(emp) {
+            if (!emp.plannedWeeks) emp.plannedWeeks = {};
+            // An earlier version kept the next three weeks in a list
+            if (Array.isArray(emp.futureWeeks)) {
+                emp.futureWeeks.forEach((week, i) => {
+                    if (week && !isBlankPlan(week)) {
+                        emp.plannedWeeks[addDaysISO(currentWeekStart, 7 * (i + 1))] = { outDays: week.outDays || blankOutDays(), duty: week.duty || '' };
+                    }
+                });
+                delete emp.futureWeeks;
+            }
+            return emp.plannedWeeks;
+        }
+
+        function prunePlan(emp, weekStart) {
+            const planned = plannedWeeksOf(emp);
+            if (planned[weekStart] && isBlankPlan(planned[weekStart])) delete planned[weekStart];
+        }
+
+        // Pass create = true when the result is going to be changed
+        function getPlanOutDays(emp, weekStart, create = false) {
+            if (weekStart === currentWeekStart) {
+                if (!emp.outDays) emp.outDays = blankOutDays();
+                return emp.outDays;
+            }
+            const planned = plannedWeeksOf(emp);
+            if (!planned[weekStart]) {
+                if (!create) return blankOutDays();
+                planned[weekStart] = { outDays: blankOutDays(), duty: '' };
+            }
+            if (!planned[weekStart].outDays) planned[weekStart].outDays = blankOutDays();
+            return planned[weekStart].outDays;
+        }
+
+        function setPlanOutDays(emp, weekStart, outDays) {
+            if (weekStart === currentWeekStart) {
+                emp.outDays = outDays;
+                return;
+            }
+            getPlanOutDays(emp, weekStart, true);
+            plannedWeeksOf(emp)[weekStart].outDays = outDays;
+            prunePlan(emp, weekStart);
+        }
+
+        // '' = the scheduler decides, 'none' = no special duty that week, otherwise a role name
+        function getPlanDuty(emp, weekStart) {
+            if (weekStart === currentWeekStart) return emp.weekDuty || '';
+            const plan = plannedWeeksOf(emp)[weekStart];
+            return (plan && plan.duty) || '';
+        }
+
+        function setPlanDuty(emp, weekStart, duty) {
+            if (weekStart === currentWeekStart) {
+                emp.weekDuty = duty;
+                return;
+            }
+            getPlanOutDays(emp, weekStart, true);
+            plannedWeeksOf(emp)[weekStart].duty = duty;
+            prunePlan(emp, weekStart);
+        }
+
+        function weekHasPlan(weekStart) {
+            return employees.some(emp => {
+                if (weekStart === currentWeekStart) return !!emp.weekDuty || Object.values(emp.outDays || {}).some(v => v);
+                const plan = (emp.plannedWeeks || {})[weekStart];
+                return !!plan && !isBlankPlan(plan);
+            });
+        }
+
+        // "Oct 5-9" or "Sep 28 - Oct 2" for the Monday to Friday of a week
+        function formatWeekRange(weekStart, withYear = false) {
+            const mon = parseISODate(weekStart);
+            const fri = parseISODate(addDaysISO(weekStart, 4));
+            const monthOf = date => MONTH_NAMES[date.getMonth()].slice(0, 3);
+            const range = mon.getMonth() === fri.getMonth()
+                ? `${monthOf(mon)} ${mon.getDate()}–${fri.getDate()}`
+                : `${monthOf(mon)} ${mon.getDate()} – ${monthOf(fri)} ${fri.getDate()}`;
+            return withYear ? `${range}, ${fri.getFullYear()}` : range;
+        }
+
+        function describeWeekOffset(weekStart) {
+            const weeks = Math.round((parseISODate(weekStart) - parseISODate(currentWeekStart)) / (7 * 864e5));
+            if (weeks === 0) return 'this week';
+            if (weeks === 1) return 'next week';
+            if (weeks > 1) return `in ${weeks} weeks`;
+            return weeks === -1 ? 'last week' : `${-weeks} weeks ago`;
+        }
+
+        function updateWeekCounterDisplay() {
+            document.getElementById('week-rotation-counter').value = `Week of ${formatWeekRange(currentWeekStart, true)} · Break rotation ${currentWeekNum}`;
+        }
+
+        function renderPlanWeekBar() {
+            document.getElementById('plan-week-label').textContent = `Week of ${formatWeekRange(planWeekStart, true)} (${describeWeekOffset(planWeekStart)})`;
+            document.getElementById('btn-clear-all-out').textContent = `Clear All Days Off (Everyone, ${formatWeekRange(planWeekStart)})`;
+            renderPlanCalendar();
+        }
+
+        // Month calendar: clicking any day picks that whole week
+        function renderPlanCalendar() {
+            if (!calendarMonth) {
+                const selected = parseISODate(planWeekStart);
+                calendarMonth = { year: selected.getFullYear(), month: selected.getMonth() };
+            }
+
+            const monthIndex = calendarMonth.year * 12 + calendarMonth.month;
+            let weekStart = weekStartOf(new Date(calendarMonth.year, calendarMonth.month, 1));
+            let weeksHTML = '';
+
+            while (true) {
+                const monday = parseISODate(weekStart);
+                if (monday.getFullYear() * 12 + monday.getMonth() > monthIndex) break;
+
+                const isPast = weekStart < currentWeekStart;
+                const classes = ['cal-week', weekStart === planWeekStart ? 'selected' : '', weekStart === currentWeekStart ? 'current' : '', isPast ? 'past' : ''].join(' ');
+                let daysHTML = '';
+                for (let i = 0; i < 7; i++) {
+                    const day = parseISODate(addDaysISO(weekStart, i));
+                    const dayClasses = ['cal-day', day.getMonth() !== calendarMonth.month ? 'other' : '', i > 4 ? 'weekend' : ''].join(' ');
+                    daysHTML += `<span class="${dayClasses}">${day.getDate()}</span>`;
+                }
+                const title = isPast ? 'This week has already passed' : `Week of ${formatWeekRange(weekStart, true)} (${describeWeekOffset(weekStart)})`;
+                weeksHTML += `<div class="${classes}" title="${title}" ${isPast ? '' : `onclick="pickPlanWeek('${weekStart}')"`}>${daysHTML}<span class="cal-mark">${weekHasPlan(weekStart) ? '●' : ''}</span></div>`;
+
+                weekStart = addDaysISO(weekStart, 7);
+            }
+
+            document.getElementById('plan-calendar').innerHTML = `
+                <div class="cal-head">
+                    <button class="role-btn" title="Previous month" onclick="shiftCalendarMonth(-1)">◀</button>
+                    <strong>${MONTH_NAMES[calendarMonth.month]} ${calendarMonth.year}</strong>
+                    <button class="role-btn" title="Next month" onclick="shiftCalendarMonth(1)">▶</button>
+                </div>
+                <div class="cal-week cal-names"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span><span></span></div>
+                ${weeksHTML}
+                <div class="cal-foot">
+                    <button class="role-btn" onclick="pickPlanWeek(currentWeekStart)">Current week</button>
+                    <span>Click any day to pick its week. ● = days off or an assigned duty are set. Outlined = the week the schedule is on.</span>
+                </div>
+            `;
+        }
+
+        function shiftCalendarMonth(delta) {
+            const moved = new Date(calendarMonth.year, calendarMonth.month + delta, 1);
+            calendarMonth = { year: moved.getFullYear(), month: moved.getMonth() };
+            renderPlanCalendar();
+        }
+
+        document.getElementById('btn-plan-calendar').addEventListener('click', () => {
+            const calendar = document.getElementById('plan-calendar');
+            calendar.hidden = !calendar.hidden;
+            if (!calendar.hidden) {
+                calendarMonth = null;
+                renderPlanCalendar();
+            }
+        });
+
+        // Switches which week the cards' days off and assigned duty refer to, keeping open cards open
+        function pickPlanWeek(weekStart) {
+            const openIds = [...document.querySelectorAll('#employee-list .employee-card')]
+                .map((card, idx) => card.open ? employees[idx].id : null)
+                .filter(id => id);
+            planWeekStart = weekStart;
+            calendarMonth = null;
+            document.getElementById('plan-calendar').hidden = true;
+            sortAndRenderEmployees();
+            document.querySelectorAll('#employee-list .employee-card').forEach((card, idx) => {
+                if (openIds.includes(employees[idx].id)) card.open = true;
+            });
+        }
+
+        function updatePlanDuty(id, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                setPlanDuty(emp, planWeekStart, val);
+                generateSchedule();
+            }
+        }
+
         function sortAndRenderEmployees() {
+            renderPlanWeekBar();
+
             employees.sort((a, b) => {
                 const nameA = parseNameParts(a.name);
                 const nameB = parseNameParts(b.name);
@@ -1094,7 +2342,11 @@
 
             document.getElementById('summary-employee-roster').textContent = `Employee Roster - Cards: ${employees.length}`;
 
+            // Redrawing must not collapse the cards that are open or move the list
             const listEl = document.getElementById('employee-list');
+            const scrollBox = listEl.closest('.window-body');
+            const scrollTop = scrollBox ? scrollBox.scrollTop : 0;
+            const openIds = new Set([...listEl.querySelectorAll('.employee-card[open]')].map(card => card.dataset.empId));
             listEl.innerHTML = '';
 
             const allTrackedRoles = [
@@ -1134,8 +2386,20 @@
 
                 const activeGrp = getEmployeeActiveGroup(emp, currentWeekNum);
 
+                // Days off and assigned duty are shown for the week picked in the calendar bar
+                const planLabel = formatWeekRange(planWeekStart);
+                const planOut = getPlanOutDays(emp, planWeekStart);
+                const planDuty = getPlanDuty(emp, planWeekStart);
+                // A duty set through the Override dialog can be one the person is not ticked for
+                const dutyOptions = [['', 'Auto (scheduler decides)'], ['none', 'No special duty']]
+                    .concat(roles.filter(r => emp[r.prop] || r.name === planDuty).map(r => [r.name, emp[r.prop] ? r.label : `${r.label} (not ticked)`]))
+                    .map(([value, label]) => `<option value="${escapeHTML(value)}" ${value === planDuty ? 'selected' : ''}>${escapeHTML(label)}</option>`)
+                    .join('');
+
                 const card = document.createElement('details');
                 card.className = 'employee-card';
+                card.dataset.empId = emp.id;
+                card.open = openIds.has(emp.id);
                 card.innerHTML = `
                     <summary class="card-header">
                         <span>${displayName}</span>
@@ -1158,15 +2422,24 @@
                         </div>
 
                         <div class="toggle-group-row">
-                            <span class="toggle-group-label">Out:</span>
+                            <span class="toggle-group-label">Out (${planLabel}):</span>
                             <div class="toggle-group-items">
-                                <label><input type="checkbox" ${emp.outDays.mon ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'mon', this.checked)"> M</label>
-                                <label><input type="checkbox" ${emp.outDays.tue ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'tue', this.checked)"> T</label>
-                                <label><input type="checkbox" ${emp.outDays.wed ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'wed', this.checked)"> W</label>
-                                <label><input type="checkbox" ${emp.outDays.thu ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'thu', this.checked)"> Th</label>
-                                <label><input type="checkbox" ${emp.outDays.fri ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'fri', this.checked)"> F</label>
+                                <label><input type="checkbox" ${planOut.mon ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'mon', this.checked)"> M</label>
+                                <label><input type="checkbox" ${planOut.tue ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'tue', this.checked)"> T</label>
+                                <label><input type="checkbox" ${planOut.wed ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'wed', this.checked)"> W</label>
+                                <label><input type="checkbox" ${planOut.thu ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'thu', this.checked)"> Th</label>
+                                <label><input type="checkbox" ${planOut.fri ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'fri', this.checked)"> F</label>
                                 <button class="btn-warning" onclick="setAllOutDays('${emp.id}', true, this)">All Days</button>
                                 <button class="btn-warning" onclick="setAllOutDays('${emp.id}', false, this)">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="toggle-group-row">
+                            <span class="toggle-group-label">Assigned Duty (${planLabel}):</span>
+                            <div class="toggle-group-items">
+                                <select onchange="updatePlanDuty('${emp.id}', this.value)" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: 600;">
+                                    ${dutyOptions}
+                                </select>
                             </div>
                         </div>
 
@@ -1203,6 +2476,8 @@
                 `;
                 listEl.appendChild(card);
             });
+
+            if (scrollBox) scrollBox.scrollTop = scrollTop;
         }
 
         function updateBreakGroup(id, val) {
@@ -1224,7 +2499,8 @@
                 emp.typing = false;
                 emp.frozen = false;
                 emp.frozenPosition = '';
-                emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                setPlanOutDays(emp, planWeekStart, blankOutDays());
+                setPlanDuty(emp, planWeekStart, '');
                 sortAndRenderEmployees();
                 generateSchedule();
             }
@@ -1239,8 +2515,8 @@
         function updateOutDay(id, day, val) {
             const emp = employees.find(e => e.id === id);
             if (emp) {
-                if (!emp.outDays) emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
-                emp.outDays[day] = val;
+                getPlanOutDays(emp, planWeekStart, true)[day] = val;
+                prunePlan(emp, planWeekStart);
                 generateSchedule();
             }
         }
@@ -1260,20 +2536,18 @@
         function setAllOutDays(id, val, btn) {
             const emp = employees.find(e => e.id === id);
             if (emp) {
-                emp.outDays = { mon: val, tue: val, wed: val, thu: val, fri: val };
+                setPlanOutDays(emp, planWeekStart, { mon: val, tue: val, wed: val, thu: val, fri: val });
                 btn.closest('.toggle-group-items').querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = val);
                 generateSchedule();
             }
         }
 
         document.getElementById('btn-clear-all-out').addEventListener('click', () => {
-            const outCount = employees.filter(e => e.outDays && Object.values(e.outDays).some(v => v)).length;
+            const outCount = employees.filter(e => Object.values(getPlanOutDays(e, planWeekStart)).some(v => v)).length;
             if (outCount === 0) return;
-            if (!confirm(`Clear all days off for ${outCount} employee(s)?`)) return;
+            if (!confirm(`Clear all days off for the week of ${formatWeekRange(planWeekStart)} for ${outCount} employee(s)?`)) return;
 
-            employees.forEach(emp => {
-                emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
-            });
+            employees.forEach(emp => setPlanOutDays(emp, planWeekStart, blankOutDays()));
             sortAndRenderEmployees();
             generateSchedule();
         });
@@ -1360,12 +2634,18 @@
             
             document.getElementById('summary-counter-config').textContent = `Counter/Station Config: ${counterStations.length}`;
 
+            // Redrawing must not collapse the station cards that are open or move the list
             const listEl = document.getElementById('counter-list');
+            const scrollBox = listEl.closest('.window-body');
+            const scrollTop = scrollBox ? scrollBox.scrollTop : 0;
+            const openIds = new Set([...listEl.querySelectorAll('.counter-card[open]')].map(card => card.dataset.counterId));
             listEl.innerHTML = '';
 
             counterStations.forEach(cntr => {
                 const card = document.createElement('details');
                 card.className = 'counter-card';
+                card.dataset.counterId = cntr.id;
+                card.open = openIds.has(cntr.id);
                 card.innerHTML = `
                     <summary class="card-header">
                         <span>Counter #${cntr.number}</span>
@@ -1383,6 +2663,8 @@
                 `;
                 listEl.appendChild(card);
             });
+
+            if (scrollBox) scrollBox.scrollTop = scrollTop;
         }
 
         function clearCounterTypes(id) {
@@ -1577,8 +2859,15 @@
                     emp.shiftsSinceLastAux[newName] = emp.shiftsSinceLastAux[oldName];
                     delete emp.shiftsSinceLastAux[oldName];
                 }
+                Object.keys(emp.dayOverrides || {}).forEach(date => {
+                    if (emp.dayOverrides[date] === oldName) emp.dayOverrides[date] = newName;
+                });
                 if (emp.weekRole === oldName) emp.weekRole = newName;
                 if (emp.owedRole === oldName) emp.owedRole = newName;
+                if (emp.weekDuty === oldName) emp.weekDuty = newName;
+                Object.values(emp.plannedWeeks || {}).forEach(week => {
+                    if (week.duty === oldName) week.duty = newName;
+                });
                 if (emp.frozenPosition && getPositionRole(emp.frozenPosition) === oldName) {
                     emp.frozenPosition = newName + emp.frozenPosition.slice(oldName.length);
                 }
@@ -1622,6 +2911,13 @@
                 if (emp.shiftsSinceLastAux) delete emp.shiftsSinceLastAux[role.name];
                 if (emp.weekRole === role.name) releaseWeekRole(emp);
                 if (emp.owedRole === role.name) emp.owedRole = '';
+                Object.keys(emp.dayOverrides || {}).forEach(date => {
+                    if (emp.dayOverrides[date] === role.name) delete emp.dayOverrides[date];
+                });
+                if (emp.weekDuty === role.name) emp.weekDuty = '';
+                Object.values(emp.plannedWeeks || {}).forEach(week => {
+                    if (week.duty === role.name) week.duty = '';
+                });
                 if (emp.frozen && getPositionRole(emp.frozenPosition) === role.name) {
                     emp.frozen = false;
                     emp.frozenPosition = '';
@@ -1640,6 +2936,7 @@
             });
             configState.typing = { ...typingConfig };
             configState.maxAuxPerWeek = getMaxAuxPerWeek();
+            configState.lunchSwap = document.getElementById('cfg-lunch-swap').checked;
             configState.restUnit = 'days';
             return configState;
         }
@@ -1647,6 +2944,13 @@
         // Restores roles (order, custom roles, settings) from a saved file. Older files have no role list,
         // only per-role settings, and stored Break Rot in weeks.
         function applySavedConfig(data) {
+            if (data.calendarEvents && typeof data.calendarEvents === 'object') {
+                calendarEvents = data.calendarEvents;
+            }
+            if (data.dutyLog && typeof data.dutyLog === 'object') {
+                dutyLog = data.dutyLog;
+            }
+
             const hasRoleList = Array.isArray(data.roles) && data.roles.length > 0;
 
             if (hasRoleList) {
@@ -1676,6 +2980,9 @@
 
                 if (data.config.maxAuxPerWeek !== undefined) {
                     document.getElementById('cfg-max-aux-week').value = data.config.maxAuxPerWeek;
+                }
+                if (data.config.lunchSwap !== undefined) {
+                    document.getElementById('cfg-lunch-swap').checked = !!data.config.lunchSwap;
                 }
             }
 
@@ -1801,6 +3108,8 @@
 
         // Positions and stations are held for the whole week. This fills any vacant weekly position
         // and gives everyone a station for the week; anything already settled is left alone.
+        let planNotices = [];
+
         function ensureWeekPlan() {
             const daysOutCount = emp => DAYS_MAP.filter(d => emp.outDays && emp.outDays[d.key]).length;
             const stationByNumber = num => counterStations.find(c => c.number === num);
@@ -1814,8 +3123,20 @@
                 const needed = Math.max(0, rules.req - frozenCount);
 
                 employees.filter(e => e.weekRole === role).forEach(e => {
-                    if (!e[rules.toggleProp] || e.frozen || daysOutCount(e) === 5) releaseWeekRole(e);
+                    const assignedElsewhere = e.weekDuty && e.weekDuty !== role;
+                    // A supervisor override stands even when the person is not ticked for the duty
+                    const notAllowed = !e[rules.toggleProp] && e.weekDuty !== role;
+                    if (notAllowed || e.frozen || daysOutCount(e) === 5 || assignedElsewhere) releaseWeekRole(e);
                 });
+
+                // People the supervisor assigned to this role for the week come first: holders the
+                // scheduler picked give way if there is no room for them
+                const assignedWaiting = employees.filter(e => e.weekDuty === role && e.weekRole !== role && !e.frozen && daysOutCount(e) < 5);
+                let autoHolders = employees.filter(e => e.weekRole === role && e.weekDuty !== role);
+                while (autoHolders.length > 0 && employees.filter(e => e.weekRole === role).length + assignedWaiting.length > needed) {
+                    releaseWeekRole(autoHolders.pop());
+                }
+
                 const holders = employees.filter(e => e.weekRole === role);
                 holders.slice(needed).forEach(releaseWeekRole);
 
@@ -1829,7 +3150,8 @@
                 if (e.weekRole && !QUOTA_ROLES.includes(e.weekRole)) releaseWeekRole(e);
             });
 
-            const isFree = e => !e.weekRole && !e.frozen && daysOutCount(e) < 5;
+            // Free for the scheduler to place: anyone with a duty assigned for the week (or "No special duty") is not
+            const isFree = e => !e.weekRole && !e.frozen && daysOutCount(e) < 5 && !e.weekDuty;
             const restLeft = (e, v) => getRestRemaining(e, v.role, v.rules, v.restThreshold);
             const isReady = (e, v) => isFree(e) && e[v.rules.toggleProp] && daysOutCount(e) <= 2 && restLeft(e, v) <= 0 && isUnderDutyLimit(e);
 
@@ -1854,6 +3176,21 @@
                 emp.owedRole = '';
                 vacancy.filled = true;
             };
+
+            // Duties the supervisor assigned for this week are filled first, regardless of rest or the duty limit
+            planNotices = [];
+            employees.forEach(emp => {
+                if (!emp.weekDuty || emp.weekDuty === 'none' || emp.weekRole || emp.frozen || daysOutCount(emp) === 5) return;
+                const rules = getRoleRules(emp.weekDuty);
+                if (!rules) return;
+
+                const vacancy = vacancies.find(v => !v.filled && v.role === emp.weekDuty);
+                if (vacancy) {
+                    appoint(emp, vacancy, emp[rules.toggleProp] ? '' : `⚠️ Override: ${formatDisplayName(emp.name)} is assigned to ${emp.weekDuty} this week but is not ticked for that duty.`);
+                } else {
+                    planNotices.push(`⚠️ Assigned Duty Not Applied: ${formatDisplayName(emp.name)} is assigned to ${emp.weekDuty} this week, but every ${emp.weekDuty} position is already taken. Raise Required or change an assignment.`);
+                }
+            });
 
             // Anyone who was out 3+ days of their duty week goes back on the same position first
             employees.forEach(emp => {
@@ -1968,7 +3305,7 @@
             });
         }
 
-        function computeAssignmentsForDay(dayKey, weekNum) {
+        function computeAssignmentsForDay(dayKey, weekNum, weekStart = currentWeekStart) {
             const QUOTA_ROLES = getRoleNames();
 
             // Slots are listed in hierarchy order
@@ -2101,9 +3438,35 @@
                 }
             });
 
+            // Pass -0.3: Supervisor overrides for this one day. The person takes one of the role's positions
+            // (the holder who loses it works a typing station today), or works it as an extra if all
+            // positions were already overridden. 'none' keeps them off special duties for the day.
+            const todayISO = scheduleDateOf(dayKey, weekStart);
+            const overrideOf = emp => (emp.dayOverrides || {})[todayISO] || '';
+
+            QUOTA_ROLES.forEach(role => {
+                const overridden = availableEmps.filter(emp => overrideOf(emp) === role && !auxAssignments[emp.id]);
+                if (overridden.length === 0) return;
+
+                const rules = getRoleRules(role);
+                const openSlots = slotsToFill.filter(s => s.role === role && !s.filled);
+                const holders = employees.filter(e => e.weekRole === role && !overridden.includes(e));
+                const outHolderStations = holders.filter(e => isEmployeeOutToday(e, dayKey)).map(e => e.weekStation);
+                const presentHolders = holders.filter(e => !isEmployeeOutToday(e, dayKey) && !overrideOf(e) && !auxAssignments[e.id]);
+                // Stations to hand over: an absent holder's first, then those of the holders who will be displaced
+                const displaced = presentHolders.slice(Math.max(0, openSlots.length - overridden.length)).map(e => e.weekStation);
+                const stations = outHolderStations.concat(displaced);
+
+                overridden.forEach((emp, i) => {
+                    if (openSlots[i]) openSlots[i].filled = true;
+                    placeAtStation(emp, role, rules, emp.weekRole === role ? emp.weekStation : (stations[i] || null));
+                    notices.push(`✎ Override: ${formatDisplayName(emp.name)} is on ${role} today${emp[rules.toggleProp] ? '' : ', though not ticked for that duty'}.`);
+                });
+            });
+
             // Pass 0: Everyone holding a position this week works it at their own station
             availableEmps.forEach(emp => {
-                if (auxAssignments[emp.id] || !emp.weekRole) return;
+                if (auxAssignments[emp.id] || !emp.weekRole || overrideOf(emp)) return;
                 const slot = slotsToFill.find(s => s.role === emp.weekRole && !s.filled);
                 if (!slot) return;
                 slot.filled = true;
@@ -2123,7 +3486,7 @@
 
             // Higher roles in the hierarchy get their cover first; equal roles take turns
             sortByHierarchy(slotsToFill);
-            const canCover = e => !auxAssignments[e.id] && !e.weekRole;
+            const canCover = e => !auxAssignments[e.id] && !e.weekRole && e.weekDuty !== 'none' && !overrideOf(e);
 
             slotsToFill.forEach(slot => {
                 const qualified = getPrioritizedCandidates(slot.role).filter(e => canCover(e) && e[slot.rules.toggleProp]);
@@ -2188,17 +3551,81 @@
             return { assignments, occupiedCounters, notices };
         }
 
+        // ==========================================
+        // AFTER-LUNCH SWAP (Information Desk <-> Class C/M)
+        // ==========================================
+
+        function isLunchSwapOn(iso) {
+            if (!document.getElementById('cfg-lunch-swap').checked) return false;
+            // No swap on a closed day or a half day: there is only one half to work
+            return !getCalendarEntries(iso).some(entry => entry.type === 'closed' || entry.type === 'half');
+        }
+
+        // Information Desk and Class C/M staff trade places after lunch, one for one. A pair must each be
+        // qualified for the other's role; anyone left over is told to check with a supervisor.
+        // Returns { empId: { unpaired: true } | { position, staffText, partnerName } } for a day's assignments.
+        function computeLunchSwaps(assignments, weekNum, iso) {
+            const infoRole = roles.find(r => r.id === 'info');
+            const roadRole = roles.find(r => r.id === 'classcm');
+            if (!infoRole || !roadRole || !isLunchSwapOn(iso)) return {};
+
+            const stationOf = emp => parseInt((assignments[emp.id].match(/Counter\s+(\d+)/i) || [])[1]) || 0;
+            const staffOn = role => employees
+                .filter(emp => getPositionRole(assignments[emp.id]) === role.name)
+                .sort((a, b) => stationOf(a) - stationOf(b));
+
+            const infoStaff = staffOn(infoRole);
+            const roadStaff = staffOn(roadRole);
+            if (infoStaff.length === 0 || roadStaff.length === 0) return {};
+
+            const swaps = {};
+            const takePosition = (emp, partner) => ({
+                position: assignments[partner.id],
+                staffText: describePositionForStaff(assignments[partner.id]),
+                partnerName: formatDisplayName(partner.name)
+            });
+            const pairUp = sameGroupOnly => {
+                infoStaff.forEach(infoEmp => {
+                    if (swaps[infoEmp.id] || !infoEmp[roadRole.prop]) return;
+                    const partner = roadStaff.find(roadEmp =>
+                        !swaps[roadEmp.id] &&
+                        roadEmp[infoRole.prop] &&
+                        (!sameGroupOnly || getEmployeeActiveGroup(roadEmp, weekNum) === getEmployeeActiveGroup(infoEmp, weekNum))
+                    );
+                    if (partner) {
+                        swaps[infoEmp.id] = takePosition(infoEmp, partner);
+                        swaps[partner.id] = takePosition(partner, infoEmp);
+                    }
+                });
+            };
+
+            // Same break group first, so both are back from lunch at the same time
+            pairUp(true);
+            pairUp(false);
+
+            infoStaff.concat(roadStaff).forEach(emp => {
+                if (!swaps[emp.id]) swaps[emp.id] = { unpaired: true };
+            });
+            return swaps;
+        }
+
+        let scheduleLunchSwaps = {};
+        let scheduleForecast = { byEmp: {}, daysToNextWeek: null, days: [] };
+
         function generateSchedule() {
+            employees.forEach(plannedWeeksOf);
             ensureWeekPlan();
+            const planMessages = [...planNotices];
 
             const selectedDay = document.getElementById('schedule-day').value;
+            renderDayNotices(selectedDay);
             const hasShortage = checkCoverageErrors(selectedDay, currentWeekNum);
 
             const { assignments, occupiedCounters, notices } = computeAssignmentsForDay(selectedDay, currentWeekNum);
 
             const diagnosticPanel = document.getElementById('diagnostic-panel');
-            notices.forEach(msg => diagnosticPanel.appendChild(createAlertBox('warning', msg)));
-            
+            planMessages.concat(notices).forEach(msg => diagnosticPanel.appendChild(createAlertBox('warning', msg)));
+
             if (hasShortage) {
                 Object.keys(assignments).forEach(id => {
                     if (assignments[id] === "Unassigned") {
@@ -2208,6 +3635,8 @@
             }
 
             activeAssignments = assignments;
+            scheduleLunchSwaps = computeLunchSwaps(assignments, currentWeekNum, scheduleDateOf(selectedDay));
+            scheduleForecast = forecastSchedule(selectedDay, currentWeekNum);
             renderScheduleTable(occupiedCounters, currentWeekNum);
         }
 
@@ -2224,16 +3653,8 @@
             return groupAssignments;
         }
 
-        function renderScheduleTable(occupiedCounters = new Set(), weekNum = 1) {
-            const tbody = document.getElementById('schedule-tbody');
-            tbody.innerHTML = '';
-
-            document.querySelectorAll('.sort-btn').forEach(btn => {
-                const isActive = btn.dataset.sort === scheduleSort.key;
-                btn.classList.toggle('active', isActive);
-                btn.querySelector('.sort-arrow').textContent = isActive ? (scheduleSort.dir === 1 ? '▲' : '▼') : '⇅';
-            });
-
+        // One row per employee for a day's assignments; used by the supervisor table and the Employee View
+        function buildScheduleRows(assignments, weekNum) {
             // "9:10 AM" -> minutes since midnight, so break columns sort by time of day
             const timeToMinutes = text => {
                 const match = text.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -2242,22 +3663,11 @@
                 return hours * 60 + parseInt(match[2]);
             };
 
-            const breakGroups = calculateBreakGroups(weekNum, activeAssignments);
+            const breakGroups = calculateBreakGroups(weekNum, assignments);
 
-            let countA = 0, countB = 0, countC = 0;
-            Object.values(breakGroups).forEach(grp => {
-                if (grp === 'A') countA++;
-                if (grp === 'B') countB++;
-                if (grp === 'C') countC++;
-            });
-
-            document.getElementById('count-group-a').textContent = countA;
-            document.getElementById('count-group-b').textContent = countB;
-            document.getElementById('count-group-c').textContent = countC;
-
-            let empRows = employees.map(emp => {
+            return employees.map(emp => {
                 const displayName = formatDisplayName(emp.name);
-                const pos = activeAssignments[emp.id] || "Unassigned";
+                const pos = assignments[emp.id] || "Unassigned";
                 let badgeClass = "badge";
                 if (pos.startsWith("Out")) badgeClass += " out";
                 if (pos === "Unassigned" || pos.includes("Shortage")) badgeClass += " unassigned";
@@ -2278,7 +3688,10 @@
                     publicNotes: emp.publicNotes || ''
                 };
             });
+        }
 
+        // Sorts schedule rows in place. sort = { key: 'name' | 'position' | 'am' | 'lunch' | 'pm', dir: 1 | -1 }
+        function sortScheduleRows(rows, sort) {
             // Roles in hierarchy order, then typing counters, Unassigned, Out
             const roleNames = getRoleNames();
             function getPositionPriority(pos) {
@@ -2295,11 +3708,11 @@
                 return match ? parseInt(match[1]) : Infinity;
             };
 
-            const dir = scheduleSort.dir;
+            const dir = sort.dir;
             const byName = (a, b) => a.name.localeCompare(b.name);
 
-            if (scheduleSort.key === 'position') {
-                empRows.sort((a, b) => {
+            if (sort.key === 'position') {
+                rows.sort((a, b) => {
                     const priA = getPositionPriority(a.pos);
                     const priB = getPositionPriority(b.pos);
                     if (priA !== priB) return dir * (priA - priB);
@@ -2308,26 +3721,906 @@
                     if (stationA !== stationB) return dir * (stationA - stationB);
                     return byName(a, b);
                 });
-            } else if (['am', 'lunch', 'pm'].includes(scheduleSort.key)) {
+            } else if (sort.key === 'next') {
+                // Soonest special duty first: on duty now, then fewest days to wait
+                rows.sort((a, b) => (a.nextSort !== b.nextSort) ? dir * (a.nextSort - b.nextSort) : byName(a, b));
+            } else if (['am', 'lunch', 'pm'].includes(sort.key)) {
                 // Staff who are out have no break time and always go last
-                empRows.sort((a, b) => {
+                rows.sort((a, b) => {
                     if (!a.breakTimes || !b.breakTimes) {
                         if (a.breakTimes) return -1;
                         if (b.breakTimes) return 1;
                         return byName(a, b);
                     }
-                    const diff = a.breakTimes[scheduleSort.key] - b.breakTimes[scheduleSort.key];
+                    const diff = a.breakTimes[sort.key] - b.breakTimes[sort.key];
                     return diff !== 0 ? dir * diff : byName(a, b);
                 });
             } else {
-                empRows.sort((a, b) => dir * byName(a, b));
+                rows.sort((a, b) => dir * byName(a, b));
             }
+        }
+
+        // ==========================================
+        // OFFICE CALENDAR (blocked days, half days and special hours)
+        // ==========================================
+        // calendarEvents['YYYY-MM-DD'] = [{ id, type: 'closed' | 'half' | 'hours', half: 'am' | 'pm', start, end, label }]
+
+        const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        let calendarEvents = {};
+        let officeCalendar = { month: null, selected: null };
+
+        function getCalendarEntries(iso) {
+            return calendarEvents[iso] || [];
+        }
+
+        function isOfficeClosed(iso) {
+            return getCalendarEntries(iso).some(entry => entry.type === 'closed');
+        }
+
+        // The real date of a schedule day, e.g. 'wed' in the current week
+        function scheduleDateOf(dayKey, weekStart = currentWeekStart) {
+            return addDaysISO(weekStart, Math.max(0, DAYS_MAP.findIndex(d => d.key === dayKey)));
+        }
+
+        function formatLongDate(iso) {
+            const date = parseISODate(iso);
+            return `${WEEKDAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()].slice(0, 3)} ${date.getDate()}, ${date.getFullYear()}`;
+        }
+
+        function formatShortDate(iso) {
+            const date = parseISODate(iso);
+            return `${WEEKDAY_NAMES[date.getDay()].slice(0, 3)} ${MONTH_NAMES[date.getMonth()].slice(0, 3)} ${date.getDate()}`;
+        }
+
+        // '14:30' -> '2:30 PM'
+        function formatClock(time) {
+            const [h, m] = (time || '').split(':').map(Number);
+            if (isNaN(h)) return '';
+            return `${(h % 12) || 12}:${String(m || 0).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+        }
+
+        function describeCalendarEntry(entry) {
+            const note = entry.label ? `: ${entry.label}` : '';
+            if (entry.type === 'closed') return `Office closed${note}`;
+            if (entry.type === 'half') return `Half day, ${entry.half === 'pm' ? 'afternoon only' : 'morning only'}${note}`;
+            return `Special hours ${formatClock(entry.start)}–${formatClock(entry.end)}${note}`;
+        }
+
+        function shortCalendarEntry(entry) {
+            if (entry.type === 'closed') return 'Closed';
+            if (entry.type === 'half') return entry.half === 'pm' ? 'Half day (PM)' : 'Half day (AM)';
+            return `${formatClock(entry.start)}–${formatClock(entry.end)}`;
+        }
+
+        // Every entry from startISO for the given number of days, oldest first, as { date, entry }
+        function calendarEntriesInRange(startISO, dayCount) {
+            const found = [];
+            for (let i = 0; i < dayCount; i++) {
+                const date = addDaysISO(startISO, i);
+                getCalendarEntries(date).forEach(entry => found.push({ date: date, entry: entry }));
+            }
+            return found;
+        }
+
+        // One line per entry, for the notes shown above the 4-Week View and the Employee View
+        function calendarNotesHTML(startISO, dayCount) {
+            return calendarEntriesInRange(startISO, dayCount)
+                .map(item => `<span class="fw-chip oc-${item.entry.type}">📅 <strong>${formatShortDate(item.date)}</strong> · ${escapeHTML(describeCalendarEntry(item.entry))}</span>`)
+                .join('');
+        }
+
+        // Date and any calendar entries for the day shown in the supervisor schedule
+        function renderDayNotices(dayKey) {
+            const iso = scheduleDateOf(dayKey);
+            document.getElementById('day-notices').innerHTML =
+                `<div class="day-date">${formatLongDate(iso)}</div>` +
+                getCalendarEntries(iso).map(entry => `<div class="alert-box calendar">📅 ${escapeHTML(describeCalendarEntry(entry))}</div>`).join('');
+        }
+
+        function renderOfficeCalendar() {
+            if (!officeCalendar.selected) officeCalendar.selected = scheduleDateOf(document.getElementById('schedule-day').value);
+            if (!officeCalendar.month) {
+                const selected = parseISODate(officeCalendar.selected);
+                officeCalendar.month = { year: selected.getFullYear(), month: selected.getMonth() };
+            }
+
+            const view = officeCalendar.month;
+            const scheduleDay = scheduleDateOf(document.getElementById('schedule-day').value);
+            document.getElementById('oc-month-label').textContent = `${MONTH_NAMES[view.month]} ${view.year}`;
+
+            let gridHTML = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(name => `<div class="oc-dayname">${name}</div>`).join('');
+            let iso = weekStartOf(new Date(view.year, view.month, 1));
+            while (true) {
+                const monday = parseISODate(iso);
+                if (monday.getFullYear() * 12 + monday.getMonth() > view.year * 12 + view.month) break;
+
+                for (let i = 0; i < 7; i++) {
+                    const dayISO = addDaysISO(iso, i);
+                    const day = parseISODate(dayISO);
+                    const classes = ['oc-cell',
+                        day.getMonth() !== view.month ? 'other' : '',
+                        i > 4 ? 'weekend' : '',
+                        dayISO === officeCalendar.selected ? 'selected' : '',
+                        dayISO === scheduleDay ? 'schedule-day' : ''].join(' ');
+                    const chips = getCalendarEntries(dayISO)
+                        .map(entry => `<span class="oc-chip oc-${entry.type}" title="${escapeHTML(describeCalendarEntry(entry))}">${escapeHTML(shortCalendarEntry(entry))}</span>`)
+                        .join('');
+                    gridHTML += `<div class="${classes}" onclick="selectOfficeCalendarDay('${dayISO}')"><span class="oc-num">${day.getDate()}</span>${chips}</div>`;
+                }
+                iso = addDaysISO(iso, 7);
+            }
+            document.getElementById('oc-grid').innerHTML = gridHTML;
+
+            // Selected day
+            const selected = officeCalendar.selected;
+            document.getElementById('oc-day-label').textContent = formatLongDate(selected);
+            const entries = getCalendarEntries(selected);
+            document.getElementById('oc-day-entries').innerHTML = entries.length === 0
+                ? '<div class="oc-none">Nothing is blocked on this day.</div>'
+                : entries.map(entry => `<div class="oc-entry"><span class="oc-chip oc-${entry.type}">${escapeHTML(describeCalendarEntry(entry))}</span><button class="btn-danger" onclick="deleteCalendarEntry('${selected}', '${entry.id}')">Remove</button></div>`).join('');
+
+            // Only the fields the chosen type needs
+            const type = document.getElementById('oc-type').value;
+            document.getElementById('oc-half-row').hidden = type !== 'half';
+            document.getElementById('oc-hours-row').hidden = type !== 'hours';
+
+            // Everything from the schedule's current week onward
+            const upcoming = Object.keys(calendarEvents)
+                .filter(date => date >= currentWeekStart && calendarEvents[date].length > 0)
+                .sort();
+            document.getElementById('oc-upcoming').innerHTML = upcoming.length === 0
+                ? '<div class="oc-none">No entries yet.</div>'
+                : upcoming.map(date => calendarEvents[date].map(entry =>
+                    `<div class="oc-entry"><a href="#" onclick="selectOfficeCalendarDay('${date}'); return false;">${formatShortDate(date)}</a><span class="oc-chip oc-${entry.type}">${escapeHTML(describeCalendarEntry(entry))}</span><button class="btn-danger" onclick="deleteCalendarEntry('${date}', '${entry.id}')">Remove</button></div>`
+                ).join('')).join('');
+        }
+
+        function selectOfficeCalendarDay(iso) {
+            const day = parseISODate(iso);
+            officeCalendar.selected = iso;
+            officeCalendar.month = { year: day.getFullYear(), month: day.getMonth() };
+            renderOfficeCalendar();
+        }
+
+        function shiftOfficeCalendarMonth(delta) {
+            const moved = new Date(officeCalendar.month.year, officeCalendar.month.month + delta, 1);
+            officeCalendar.month = { year: moved.getFullYear(), month: moved.getMonth() };
+            renderOfficeCalendar();
+        }
+
+        function addCalendarEntry() {
+            const type = document.getElementById('oc-type').value;
+            const entry = { type: type, label: document.getElementById('oc-label').value.trim() };
+
+            if (type === 'half') {
+                entry.half = document.getElementById('oc-half').value;
+            } else if (type === 'hours') {
+                entry.start = document.getElementById('oc-start').value;
+                entry.end = document.getElementById('oc-end').value;
+                if (!entry.start || !entry.end || entry.start >= entry.end) {
+                    alert('Enter a start time and a later end time for the special hours.');
+                    return;
+                }
+            }
+
+            // Optionally repeat on every weekday through a later date
+            const through = document.getElementById('oc-through').value;
+            if (through && through < officeCalendar.selected) {
+                alert('The "through" date must be on or after the selected day.');
+                return;
+            }
+            const lastDate = through || officeCalendar.selected;
+            let added = 0;
+            for (let date = officeCalendar.selected; date <= lastDate && added < 366; date = addDaysISO(date, 1)) {
+                const weekday = parseISODate(date).getDay();
+                if (through && (weekday === 0 || weekday === 6)) continue;
+                if (!calendarEvents[date]) calendarEvents[date] = [];
+                calendarEvents[date].push({ ...entry, id: 'cal_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
+                added++;
+            }
+
+            document.getElementById('oc-label').value = '';
+            document.getElementById('oc-through').value = '';
+            generateSchedule();
+            renderOfficeCalendar();
+        }
+
+        function deleteCalendarEntry(iso, id) {
+            calendarEvents[iso] = getCalendarEntries(iso).filter(entry => entry.id !== id);
+            if (calendarEvents[iso].length === 0) delete calendarEvents[iso];
+            generateSchedule();
+            renderOfficeCalendar();
+        }
+
+        function openOfficeCalendar() {
+            officeCalendar = { month: null, selected: null };
+            document.body.classList.add('full-view-open');
+            document.getElementById('calendar-view').hidden = false;
+            renderOfficeCalendar();
+        }
+
+        function closeOfficeCalendar() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('calendar-view').hidden = true;
+        }
+
+        document.getElementById('btn-office-calendar').addEventListener('click', openOfficeCalendar);
+        document.getElementById('oc-close').addEventListener('click', closeOfficeCalendar);
+        document.getElementById('oc-prev').addEventListener('click', () => shiftOfficeCalendarMonth(-1));
+        document.getElementById('oc-next').addEventListener('click', () => shiftOfficeCalendarMonth(1));
+        document.getElementById('oc-today').addEventListener('click', () => selectOfficeCalendarDay(scheduleDateOf(document.getElementById('schedule-day').value)));
+        document.getElementById('oc-type').addEventListener('change', renderOfficeCalendar);
+        document.getElementById('oc-add').addEventListener('click', addCalendarEntry);
+
+        // ==========================================
+        // DUTY OVERRIDE (supervisor sets a person's duty for one day or a whole week)
+        // ==========================================
+        // One day: emp.dayOverrides['YYYY-MM-DD'] = role name or 'none'.
+        // Whole week: the same Assigned Duty the employee card shows (emp.weekDuty / emp.plannedWeeks).
+
+        let overrideEmpId = null;
+
+        function describeOverrideDuty(duty) {
+            return duty === 'none' ? 'No special duty' : duty;
+        }
+
+        // The one-day or weekly override in force for a person on a date, as text ('' when there is none)
+        function activeOverrideText(emp, iso) {
+            const dayDuty = (emp.dayOverrides || {})[iso];
+            if (dayDuty) return `Override for this day: ${describeOverrideDuty(dayDuty)}`;
+            const weekDuty = getPlanDuty(emp, weekStartOf(parseISODate(iso)));
+            return weekDuty ? `Override for this week: ${describeOverrideDuty(weekDuty)}` : '';
+        }
+
+        function renderOverrideDialog() {
+            const emp = employees.find(e => e.id === overrideEmpId);
+            if (!emp) return;
+
+            document.getElementById('ov-title').textContent = `Override duty: ${formatDisplayName(emp.name)}`;
+            document.getElementById('ov-current').textContent = `Scheduled for the day shown: ${activeAssignments[emp.id] || 'Unassigned'}`;
+
+            const picked = document.getElementById('ov-duty').value;
+            document.getElementById('ov-duty').innerHTML =
+                '<option value="">Auto (remove the override)</option><option value="none">No special duty</option>' +
+                roles.map(r => `<option value="${escapeHTML(r.name)}">${escapeHTML(r.name)}${emp[r.prop] ? '' : ' (not ticked for this person)'}</option>`).join('');
+            document.getElementById('ov-duty').value = picked;
+
+            // Everything already set for this person, soonest first
+            const items = [];
+            Object.keys(emp.dayOverrides || {}).sort().forEach(date => {
+                items.push({ when: date, label: `${formatShortDate(date)} only: ${describeOverrideDuty(emp.dayOverrides[date])}`, remove: `removeOverride('day', '${date}')` });
+            });
+            const weeks = Object.keys(emp.plannedWeeks || {}).filter(week => emp.plannedWeeks[week].duty);
+            if (emp.weekDuty) weeks.push(currentWeekStart);
+            weeks.sort().forEach(week => {
+                items.push({ when: week, label: `Week of ${formatWeekRange(week)}: ${describeOverrideDuty(getPlanDuty(emp, week))}`, remove: `removeOverride('week', '${week}')` });
+            });
+            items.sort((a, b) => a.when.localeCompare(b.when));
+
+            document.getElementById('ov-list').innerHTML = items.length === 0
+                ? '<div class="oc-none">No overrides are set for this person.</div>'
+                : items.map(item => `<div class="oc-entry"><span class="oc-chip oc-hours">${escapeHTML(item.label)}</span><button class="btn-danger" onclick="${item.remove}">Remove</button></div>`).join('');
+        }
+
+        function openOverrideDialog(empId) {
+            overrideEmpId = empId;
+            document.getElementById('ov-duty').value = '';
+            document.getElementById('ov-date').value = scheduleDateOf(document.getElementById('schedule-day').value);
+            document.querySelector('input[name="ov-scope"][value="day"]').checked = true;
+            document.getElementById('override-dialog').hidden = false;
+            renderOverrideDialog();
+        }
+
+        function closeOverrideDialog() {
+            document.getElementById('override-dialog').hidden = true;
+            overrideEmpId = null;
+        }
+
+        function applyOverride() {
+            const emp = employees.find(e => e.id === overrideEmpId);
+            if (!emp) return;
+
+            const duty = document.getElementById('ov-duty').value;
+            const date = document.getElementById('ov-date').value;
+            const scope = document.querySelector('input[name="ov-scope"]:checked').value;
+
+            if (!date || date < currentWeekStart) {
+                alert('Pick a date in the current week or later.');
+                return;
+            }
+            const weekday = parseISODate(date).getDay();
+            if (scope === 'day' && (weekday === 0 || weekday === 6)) {
+                alert('Pick a weekday for a one-day override.');
+                return;
+            }
+
+            if (scope === 'day') {
+                if (!emp.dayOverrides) emp.dayOverrides = {};
+                if (duty) emp.dayOverrides[date] = duty;
+                else delete emp.dayOverrides[date];
+            } else {
+                setPlanDuty(emp, weekStartOf(parseISODate(date)), duty);
+            }
+
+            sortAndRenderEmployees();
+            generateSchedule();
+            renderOverrideDialog();
+        }
+
+        function removeOverride(scope, when) {
+            const emp = employees.find(e => e.id === overrideEmpId);
+            if (!emp) return;
+            if (scope === 'day') delete emp.dayOverrides[when];
+            else setPlanDuty(emp, when, '');
+
+            sortAndRenderEmployees();
+            generateSchedule();
+            renderOverrideDialog();
+        }
+
+        document.getElementById('ov-apply').addEventListener('click', applyOverride);
+        document.getElementById('ov-close').addEventListener('click', closeOverrideDialog);
+        document.getElementById('override-dialog').addEventListener('click', e => {
+            if (e.target.id === 'override-dialog') closeOverrideDialog();
+        });
+
+        // ==========================================
+        // DUTY COUNTERS (how often each person has worked each duty, over any period)
+        // ==========================================
+        // dutyLog['YYYY-MM-DD'][empId] = what they worked that day: a role id, or 'T' typing, 'U' unassigned,
+        // 'O' out. A day is logged when it is advanced past, and removed again if Previous goes back over it.
+
+        let dutyLog = {};
+        let dutyCounterSort = { key: 'name', dir: 1 };
+
+        function recordDutyLog(iso, assignments) {
+            if (isOfficeClosed(iso)) return;
+
+            const day = {};
+            employees.forEach(emp => {
+                const assigned = assignments[emp.id];
+                if (!assigned) return;
+                const roleName = getPositionRole(assigned);
+                const role = roleName ? roles.find(r => r.name === roleName) : null;
+                day[emp.id] = role ? role.id : (assigned.startsWith('Out') ? 'O' : (assigned.startsWith('Counter') ? 'T' : 'U'));
+            });
+            dutyLog[iso] = day;
+        }
+
+        function dutyCounterColumns() {
+            return roles.map(r => ({ key: r.id, label: r.label, prop: r.prop }))
+                .concat([
+                    { key: '__total', label: 'All special duties' },
+                    { key: 'T', label: 'Typing' },
+                    { key: 'U', label: 'Unassigned' },
+                    { key: 'O', label: 'Out' }
+                ]);
+        }
+
+        // The logged days the page is showing, oldest first: everything, the last X work days, or a date range
+        function dutyCounterDates() {
+            const all = Object.keys(dutyLog).sort();
+            const mode = document.getElementById('dc-mode').value;
+
+            if (mode === 'last') {
+                const count = Math.max(1, parseInt(document.getElementById('dc-last').value) || 1);
+                return all.slice(-count);
+            }
+            if (mode === 'range') {
+                const from = document.getElementById('dc-from').value;
+                const to = document.getElementById('dc-to').value;
+                return all.filter(date => (!from || date >= from) && (!to || date <= to));
+            }
+            return all;
+        }
+
+        // { empId: { days: { key: n }, times: { key: n } } } over the given days. "Times" are separate
+        // runs on a duty; a day out does not end a run.
+        function tallyDutyLog(dates) {
+            const tally = {};
+            const lastKey = {};
+            dates.forEach(date => {
+                const day = dutyLog[date];
+                Object.keys(day).forEach(id => {
+                    const key = day[id];
+                    if (!tally[id]) tally[id] = { days: {}, times: {} };
+                    tally[id].days[key] = (tally[id].days[key] || 0) + 1;
+                    if (key !== 'O') {
+                        if (lastKey[id] !== key) tally[id].times[key] = (tally[id].times[key] || 0) + 1;
+                        lastKey[id] = key;
+                    }
+                });
+            });
+            return tally;
+        }
+
+        function renderDutyCounters() {
+            // Only the inputs the chosen period needs
+            const mode = document.getElementById('dc-mode').value;
+            document.getElementById('dc-last-box').hidden = mode !== 'last';
+            document.getElementById('dc-range-box').hidden = mode !== 'range';
+
+            const dates = dutyCounterDates();
+            const tally = tallyDutyLog(dates);
+            document.getElementById('dc-range-text').textContent = dates.length === 0
+                ? 'No days have been recorded in this period yet. Days are recorded as you advance the schedule.'
+                : `Showing ${dates.length} recorded work day${dates.length === 1 ? '' : 's'}: ${formatLongDate(dates[0])} to ${formatLongDate(dates[dates.length - 1])}.`;
+
+            const columns = dutyCounterColumns();
+            const valueOf = (emp, key) => {
+                const days = (tally[emp.id] || { days: {} }).days;
+                if (key === '__total') return roles.reduce((sum, r) => sum + (days[r.id] || 0), 0);
+                return days[key] || 0;
+            };
+            const timesOf = (emp, key) => ((tally[emp.id] || { times: {} }).times[key] || 0);
+
+            const query = document.getElementById('dc-search').value.trim().toLowerCase();
+            const shown = employees.filter(emp => !query || formatDisplayName(emp.name).toLowerCase().includes(query));
+
+            const sort = dutyCounterSort;
+            shown.sort((a, b) => {
+                if (sort.key !== 'name') {
+                    const diff = valueOf(a, sort.key) - valueOf(b, sort.key);
+                    if (diff !== 0) return sort.dir * diff;
+                }
+                return (sort.key === 'name' ? sort.dir : 1) * formatDisplayName(a.name).localeCompare(formatDisplayName(b.name));
+            });
+
+            const arrow = key => sort.key === key ? (sort.dir === 1 ? '▲' : '▼') : '⇅';
+            const headCell = (key, label) => `<th><button class="sort-btn ${sort.key === key ? 'active' : ''}" data-sort="${escapeHTML(key)}">${escapeHTML(label)} <span class="sort-arrow">${arrow(key)}</span></button></th>`;
+            document.getElementById('dc-thead').innerHTML = `<tr>${headCell('name', 'Employee')}${columns.map(c => headCell(c.key, c.label)).join('')}</tr>`;
+
+            // Darker shading = more days than others in the same column
+            const maxOf = {};
+            columns.forEach(c => maxOf[c.key] = Math.max(1, ...employees.map(emp => valueOf(emp, c.key))));
+
+            const cellHTML = (emp, col) => {
+                const days = valueOf(emp, col.key);
+                if (col.prop && !emp[col.prop] && days === 0) return '<td class="dc-na" title="Not ticked for this duty">–</td>';
+                const times = col.prop ? timesOf(emp, col.key) : 0;
+                const shade = days === 0 ? 0 : 0.08 + 0.37 * (days / maxOf[col.key]);
+                return `<td style="background-color: rgba(37, 99, 235, ${shade.toFixed(2)});">${days}${times > 0 ? ` <span class="dc-times">${times}×</span>` : ''}</td>`;
+            };
+
+            // Average days among the people ticked for each duty (everyone, for the other columns)
+            const averageHTML = columns.map(col => {
+                const pool = col.prop ? employees.filter(emp => emp[col.prop]) : employees;
+                const average = pool.length === 0 ? 0 : pool.reduce((sum, emp) => sum + valueOf(emp, col.key), 0) / pool.length;
+                return `<td>${average.toFixed(1)}</td>`;
+            }).join('');
+
+            document.getElementById('dc-tbody').innerHTML =
+                `<tr class="dc-average"><td>Average (qualified staff)</td>${averageHTML}</tr>` +
+                shown.map(emp => `<tr><td class="dc-name"><strong>${escapeHTML(formatDisplayName(emp.name))}</strong></td>${columns.map(col => cellHTML(emp, col)).join('')}</tr>`).join('');
+
+            document.getElementById('dc-empty').hidden = shown.length > 0;
+        }
+
+        function openDutyCounters() {
+            document.getElementById('dc-search').value = '';
+            document.body.classList.add('full-view-open');
+            document.getElementById('counters-view').hidden = false;
+            renderDutyCounters();
+        }
+
+        function closeDutyCounters() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('counters-view').hidden = true;
+        }
+
+        document.getElementById('btn-duty-counters').addEventListener('click', openDutyCounters);
+        document.getElementById('dc-close').addEventListener('click', closeDutyCounters);
+        document.getElementById('dc-print').addEventListener('click', () => window.print());
+        ['dc-search', 'dc-last', 'dc-from', 'dc-to'].forEach(id => document.getElementById(id).addEventListener('input', renderDutyCounters));
+        document.getElementById('dc-mode').addEventListener('change', renderDutyCounters);
+
+        // Click a heading to sort by it; numbers start with the highest first
+        document.getElementById('dc-thead').addEventListener('click', e => {
+            const btn = e.target.closest('.sort-btn');
+            if (!btn) return;
+            const key = btn.dataset.sort;
+            dutyCounterSort = dutyCounterSort.key === key
+                ? { key: key, dir: -dutyCounterSort.dir }
+                : { key: key, dir: key === 'name' ? 1 : -1 };
+            renderDutyCounters();
+        });
+
+        document.getElementById('dc-export').addEventListener('click', () => {
+            const dates = dutyCounterDates();
+            const tally = tallyDutyLog(dates);
+            const columns = dutyCounterColumns();
+            const daysOf = (emp, key) => {
+                const days = (tally[emp.id] || { days: {} }).days;
+                return key === '__total' ? roles.reduce((sum, r) => sum + (days[r.id] || 0), 0) : (days[key] || 0);
+            };
+
+            const rows = [
+                [`DUTY COUNTERS - ${document.getElementById('office-select').value.toUpperCase()}`],
+                [document.getElementById('dc-range-text').textContent],
+                [],
+                ['Employee'].concat(columns.flatMap(c => c.prop ? [`${c.label} (days)`, `${c.label} (times)`] : [`${c.label} (days)`]))
+            ];
+            employees.forEach(emp => {
+                rows.push([formatDisplayName(emp.name)].concat(columns.flatMap(c =>
+                    c.prop ? [daysOf(emp, c.key), (tally[emp.id] || { times: {} }).times[c.key] || 0] : [daysOf(emp, c.key)]
+                )));
+            });
+            const office = document.getElementById('office-select').value.replace(/\s+/g, '_');
+            downloadCSV(rows.map(r => r.map(escapeCSV).join(',')).join('\r\n'), `${office}_duty_counters_${new Date().toISOString().slice(0, 10)}.csv`);
+        });
+
+        document.getElementById('dc-reset').addEventListener('click', () => {
+            if (!confirm('Erase the whole duty record for all employees? Rest periods and the schedule are not affected.')) return;
+            dutyLog = {};
+            renderDutyCounters();
+        });
+
+        // ==========================================
+        // HOW SCHEDULING WORKS (in-app explanation, with the office's current settings)
+        // ==========================================
+
+        function renderHelpSettings() {
+            const show = value => value === -1 ? 'no limit' : value;
+            const dutyLimit = getMaxAuxPerWeek();
+            document.getElementById('help-settings').innerHTML = `
+                <p><strong>Role hierarchy:</strong> ${escapeHTML(document.getElementById('role-hierarchy-summary').textContent)}</p>
+                <table>
+                    <thead><tr><th>Role</th><th>Required per day</th><th>Max Rot (days in a row)</th><th>Break Rot (rest days)</th></tr></thead>
+                    <tbody>
+                        ${roles.map(r => { const rules = getRoleRules(r.name); return `<tr><td>${escapeHTML(r.name)}</td><td>${rules.req}</td><td>${show(rules.maxRot)}</td><td>${show(rules.breakRot)}</td></tr>`; }).join('')}
+                    </tbody>
+                </table>
+                <p><strong>Duty Limit:</strong> ${dutyLimit === -1 ? 'off' : `${dutyLimit} special-duty days in any ${DUTY_WINDOW_DAYS} work days`}.
+                   <strong>After-lunch swap:</strong> ${document.getElementById('cfg-lunch-swap').checked ? 'on' : 'off'}.</p>
+            `;
+        }
+
+        function openHelp() {
+            renderHelpSettings();
+            document.body.classList.add('full-view-open');
+            document.getElementById('help-view').hidden = false;
+            document.getElementById('help-view').scrollTop = 0;
+        }
+
+        function closeHelp() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('help-view').hidden = true;
+        }
+
+        document.getElementById('btn-help').addEventListener('click', openHelp);
+        document.getElementById('help-close').addEventListener('click', closeHelp);
+        document.getElementById('help-print').addEventListener('click', () => window.print());
+
+        // ==========================================
+        // EMPLOYEE VIEW (read-only four-week summary for staff)
+        // ==========================================
+
+        // grid[week][day] = that day's assignments for this week and the next three. Days already gone
+        // this week are shown from the current plan; today onward comes from the forecast.
+        function buildFourWeekGrid() {
+            const dayKeys = DAYS_MAP.map(d => d.key);
+            const todayIdx = dayKeys.indexOf(document.getElementById('schedule-day').value);
+
+            const grid = FOUR_WEEK_LABELS.map(() => []);
+            for (let i = 0; i < todayIdx; i++) {
+                grid[0][i] = computeAssignmentsForDay(dayKeys[i], currentWeekNum).assignments;
+            }
+            scheduleForecast.days.forEach(d => {
+                if (d.weekOffset < grid.length) grid[d.weekOffset][dayKeys.indexOf(d.dayKey)] = d.assignments;
+            });
+            return grid;
+        }
+
+        // Plain wording for staff: "Information Desk · Counter 3", "Typing · Counter 12", "Out", "Unassigned"
+        function describePositionForStaff(pos) {
+            if (!pos) return '';
+            if (pos.startsWith('Out')) return 'Out';
+            if (pos.startsWith('Unassigned')) return 'Unassigned';
+
+            const station = (pos.match(/Counter\s+(\d+)/i) || [])[1];
+            const roleName = getPositionRole(pos);
+            if (roleName) return roleName + (station ? ` · Counter ${station}` : '');
+            return `Typing · Counter ${station}`;
+        }
+
+        // One person's week: their main assignment, plus a note for every day that differs from it
+        function summarizeWeekForStaff(emp, weekDays, weekStart, weekSwaps) {
+            // Days the office is closed are left out: they are noted once for everyone in the week's heading
+            const days = DAYS_MAP.map((d, i) => ({
+                label: d.label,
+                text: isOfficeClosed(addDaysISO(weekStart, i)) ? '' : describePositionForStaff(weekDays[i] ? weekDays[i][emp.id] : '')
+            }));
+            if (DAYS_MAP.every((d, i) => isOfficeClosed(addDaysISO(weekStart, i)))) {
+                return { main: 'Office closed all week', isOut: true, isDuty: false, notes: [] };
+            }
+            const worked = days.filter(d => d.text && d.text !== 'Out');
+            const outDays = days.filter(d => d.text === 'Out');
+
+            if (worked.length === 0) {
+                return { main: outDays.length > 0 ? 'Out all week' : '', isOut: true, isDuty: false, notes: [] };
+            }
+
+            // The main assignment is what they do on most of their working days (the earlier one wins a tie)
+            const counts = {};
+            worked.forEach(d => counts[d.text] = (counts[d.text] || 0) + 1);
+            const main = worked.map(d => d.text).sort((a, b) => counts[b] - counts[a])[0];
+
+            const notes = [];
+            if (outDays.length > 0) notes.push(`Out ${outDays.map(d => d.label).join(', ')}`);
+
+            const otherDays = {};
+            worked.filter(d => d.text !== main).forEach(d => {
+                if (!otherDays[d.text]) otherDays[d.text] = [];
+                otherDays[d.text].push(d.label);
+            });
+            Object.keys(otherDays).forEach(text => {
+                const when = otherDays[text].join(', ');
+                if (text === 'Unassigned') {
+                    notes.push(`No station assigned ${when}`);
+                } else if (text.startsWith('Typing')) {
+                    notes.push(`${when}: ${text}`);
+                } else {
+                    notes.push(`Covering ${text} on ${when}`);
+                }
+            });
+
+            // After-lunch swap: one note when it is the same on every working day, otherwise the days are named
+            const swapDays = {};
+            days.forEach((d, i) => {
+                const swap = (d.text && d.text !== 'Out' && weekSwaps && weekSwaps[i]) ? weekSwaps[i][emp.id] : null;
+                if (!swap) return;
+                const text = swap.unpaired ? 'check with a supervisor' : `swap to ${swap.staffText} with ${swap.partnerName}`;
+                if (!swapDays[text]) swapDays[text] = [];
+                swapDays[text].push(d.label);
+            });
+            Object.keys(swapDays).forEach(text => {
+                const everyDay = swapDays[text].length === worked.length;
+                notes.push(`After lunch${everyDay ? '' : ' ' + swapDays[text].join(', ')}: ${text}`);
+            });
+
+            return { main: main, isOut: false, isDuty: !main.startsWith('Typing') && main !== 'Unassigned', notes: notes };
+        }
+
+        function renderEmployeeView() {
+            document.getElementById('ev-title').textContent = `${document.getElementById('office-select').value} Schedule`;
+            document.getElementById('ev-subtitle').textContent = `Four weeks from ${formatWeekRange(currentWeekStart, true)}: your main assignment and break group each week, with notes on any changes.`;
+
+            document.getElementById('ev-groups').innerHTML = ['A', 'B', 'C']
+                .map(grp => `<span class="fw-chip"><strong>Group ${grp}</strong> · AM break ${BREAK_SCHEDULES[grp].am} · Lunch ${BREAK_SCHEDULES[grp].lunch} · PM break ${BREAK_SCHEDULES[grp].pm}</span>`)
+                .join('');
+
+            const query = document.getElementById('ev-search').value.trim().toLowerCase();
+            const shown = employees.filter(emp => !query || formatDisplayName(emp.name).toLowerCase().includes(query));
+            const showGeneralNotes = shown.some(emp => emp.publicNotes);
+
+            let headHTML = '<tr><th>Employee</th>';
+            FOUR_WEEK_LABELS.forEach((label, w) => {
+                const weekStart = addDaysISO(currentWeekStart, 7 * w);
+                const weekNotes = calendarEntriesInRange(weekStart, 5)
+                    .map(item => `<div class="ev-note">${formatShortDate(item.date).slice(0, 3)}: ${escapeHTML(describeCalendarEntry(item.entry))}</div>`)
+                    .join('');
+                headHTML += `<th>${formatWeekRange(weekStart)}${weekNotes}</th>`;
+            });
+            headHTML += (showGeneralNotes ? '<th>Notes</th>' : '') + '</tr>';
+            document.getElementById('ev-thead').innerHTML = headHTML;
+            document.getElementById('ev-calendar-notes').innerHTML = calendarNotesHTML(currentWeekStart, 28);
+
+            const grid = buildFourWeekGrid();
+            // After-lunch swaps for every day of the four weeks
+            const swapsByWeek = FOUR_WEEK_LABELS.map((label, w) => DAYS_MAP.map((d, i) =>
+                grid[w][i] ? computeLunchSwaps(grid[w][i], (currentWeekNum - 1 + w) % 3 + 1, addDaysISO(currentWeekStart, 7 * w + i)) : {}
+            ));
+            const tbody = document.getElementById('ev-tbody');
+            tbody.innerHTML = '';
+
+            shown.forEach(emp => {
+                let rowHTML = `<td><strong>${escapeHTML(formatDisplayName(emp.name))}</strong></td>`;
+
+                FOUR_WEEK_LABELS.forEach((label, w) => {
+                    const week = summarizeWeekForStaff(emp, grid[w], addDaysISO(currentWeekStart, 7 * w), swapsByWeek[w]);
+                    const group = getEmployeeActiveGroup(emp, (currentWeekNum - 1 + w) % 3 + 1);
+                    const mainClass = week.isOut ? 'ev-main ev-out' : (week.isDuty ? 'ev-main ev-duty' : 'ev-main');
+
+                    // Each week sits in its own box, with any notes set apart underneath
+                    const boxClass = week.isOut ? 'ev-week-box ev-box-out' : (week.isDuty ? 'ev-week-box ev-box-duty' : 'ev-week-box');
+                    rowHTML += `<td class="ev-week-cell">
+                        <div class="${boxClass}">
+                            <div class="${mainClass}">${escapeHTML(week.main)}</div>
+                            ${week.isOut ? '' : `<div class="ev-group">Group ${group}</div>`}
+                            ${week.notes.length > 0 ? `<div class="ev-notes">${week.notes.map(note => `<div class="ev-note">${escapeHTML(note)}</div>`).join('')}</div>` : ''}
+                        </div>
+                    </td>`;
+                });
+
+                if (showGeneralNotes) rowHTML += `<td>${escapeHTML(emp.publicNotes || '')}</td>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('ev-empty').hidden = shown.length > 0;
+        }
+
+        function openEmployeeView() {
+            generateSchedule();
+            document.getElementById('ev-search').value = '';
+            document.body.classList.add('full-view-open');
+            document.getElementById('employee-view').hidden = false;
+            renderEmployeeView();
+        }
+
+        function closeEmployeeView() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('employee-view').hidden = true;
+        }
+
+        document.getElementById('btn-employee-view').addEventListener('click', openEmployeeView);
+        document.getElementById('ev-close').addEventListener('click', closeEmployeeView);
+        document.getElementById('ev-print').addEventListener('click', () => window.print());
+        document.getElementById('ev-search').addEventListener('input', renderEmployeeView);
+
+        // ==========================================
+        // FOUR-WEEK VIEW (this week plus the next three, one row per employee)
+        // ==========================================
+
+        const FOUR_WEEK_LABELS = ['This week', 'Next week', 'In 2 weeks', 'In 3 weeks'];
+
+        function renderFourWeekView() {
+            const dayKeys = DAYS_MAP.map(d => d.key);
+            const todayIdx = dayKeys.indexOf(document.getElementById('schedule-day').value);
+            const grid = buildFourWeekGrid();
+
+            const cellFor = pos => {
+                if (!pos) return { text: '', cls: '' };
+                if (pos.startsWith('Out')) return { text: 'Out', cls: 'fw-out' };
+                if (pos.startsWith('Unassigned')) return { text: 'Unassigned', cls: 'fw-un' };
+                const roleName = getPositionRole(pos);
+                const station = (pos.match(/Counter\s+(\d+)/i) || [])[1];
+                if (roleName) {
+                    const label = (roles.find(r => r.name === roleName) || { label: roleName }).label;
+                    return { text: label + (station ? ` · ${station}` : ''), cls: 'fw-duty' };
+                }
+                return { text: `Counter ${station}`, cls: 'fw-typing' };
+            };
+
+            document.getElementById('fw-title').textContent = `${document.getElementById('office-select').value}: Four-Week Schedule`;
+
+            let headHTML = '<tr><th rowspan="2" class="fw-name">Employee</th>';
+            FOUR_WEEK_LABELS.forEach((label, w) => {
+                const rotation = (currentWeekNum - 1 + w) % 3 + 1;
+                headHTML += `<th colspan="5" class="fw-week-start">${formatWeekRange(addDaysISO(currentWeekStart, 7 * w))} <span class="fw-rotation">break rotation ${rotation}</span></th>`;
+            });
+            headHTML += '</tr><tr>';
+            FOUR_WEEK_LABELS.forEach((label, w) => {
+                DAYS_MAP.forEach((d, i) => {
+                    // Days with a calendar entry are underlined; hovering shows what is set
+                    const entries = getCalendarEntries(addDaysISO(currentWeekStart, 7 * w + i));
+                    const classes = [i === 0 ? 'fw-week-start' : '', (w === 0 && i === todayIdx) ? 'fw-today' : '', entries.length > 0 ? 'fw-marked' : ''].join(' ').trim();
+                    const title = escapeHTML(entries.map(describeCalendarEntry).join('; '));
+                    headHTML += `<th class="${classes}" title="${title}">${d.label}${entries.length > 0 ? ' 📅' : ''}</th>`;
+                });
+            });
+            headHTML += '</tr>';
+            document.getElementById('fw-thead').innerHTML = headHTML;
+            document.getElementById('fw-calendar-notes').innerHTML = calendarNotesHTML(currentWeekStart, 28);
+
+            // A day the office is closed shows as Closed for everyone
+            const cellAt = (emp, w, i) => isOfficeClosed(addDaysISO(currentWeekStart, 7 * w + i))
+                ? { text: 'Closed', cls: 'fw-closed' }
+                : cellFor(grid[w][i] ? grid[w][i][emp.id] : '');
+
+            const query = document.getElementById('fw-search').value.trim().toLowerCase();
+            const shown = employees.filter(emp => !query || formatDisplayName(emp.name).toLowerCase().includes(query));
+
+            const tbody = document.getElementById('fw-tbody');
+            tbody.innerHTML = '';
+            shown.forEach(emp => {
+                let rowHTML = `<td class="fw-name"><strong>${escapeHTML(formatDisplayName(emp.name))}</strong></td>`;
+                FOUR_WEEK_LABELS.forEach((label, w) => {
+                    // Days in a row with the same position are merged into one wider cell
+                    let i = 0;
+                    while (i < 5) {
+                        const cell = cellAt(emp, w, i);
+                        let span = 1;
+                        while (i + span < 5 && cellAt(emp, w, i + span).text === cell.text) span++;
+                        const classes = [cell.cls, i === 0 ? 'fw-week-start' : ''].join(' ').trim();
+                        rowHTML += `<td colspan="${span}" class="${classes}">${escapeHTML(cell.text)}</td>`;
+                        i += span;
+                    }
+                });
+                const tr = document.createElement('tr');
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('fw-empty').hidden = shown.length > 0;
+        }
+
+        function openFourWeekView() {
+            generateSchedule();
+            document.getElementById('fw-search').value = '';
+            document.body.classList.add('full-view-open');
+            document.getElementById('fourweek-view').hidden = false;
+            renderFourWeekView();
+        }
+
+        function closeFourWeekView() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('fourweek-view').hidden = true;
+        }
+
+        document.getElementById('btn-fourweek-view').addEventListener('click', openFourWeekView);
+        document.getElementById('fw-close').addEventListener('click', closeFourWeekView);
+        document.getElementById('fw-print').addEventListener('click', () => window.print());
+        document.getElementById('fw-search').addEventListener('input', renderFourWeekView);
+
+        function renderScheduleTable(occupiedCounters = new Set(), weekNum = 1) {
+            const tbody = document.getElementById('schedule-tbody');
+            tbody.innerHTML = '';
+
+            document.querySelectorAll('#win-schedule .sort-btn').forEach(btn => {
+                const isActive = btn.dataset.sort === scheduleSort.key;
+                btn.classList.toggle('active', isActive);
+                btn.querySelector('.sort-arrow').textContent = isActive ? (scheduleSort.dir === 1 ? '▲' : '▼') : '⇅';
+            });
+
+            const breakGroups = calculateBreakGroups(weekNum, activeAssignments);
+
+            let countA = 0, countB = 0, countC = 0;
+            Object.values(breakGroups).forEach(grp => {
+                if (grp === 'A') countA++;
+                if (grp === 'B') countB++;
+                if (grp === 'C') countC++;
+            });
+
+            document.getElementById('count-group-a').textContent = countA;
+            document.getElementById('count-group-b').textContent = countB;
+            document.getElementById('count-group-c').textContent = countC;
+
+            let empRows = buildScheduleRows(activeAssignments, weekNum);
+
+            // Next special duty for each person, from the forecast
+            empRows.forEach(row => {
+                const emp = employees.find(e => e.id === row.id);
+                const next = scheduleForecast.byEmp[row.id];
+                const labelOf = roleName => escapeHTML((roles.find(r => r.name === roleName) || { label: roleName }).label);
+                const dayWords = days => days === 1 ? 'Tomorrow' : `In ${days} days`;
+
+                row.overrideText = activeOverrideText(emp, scheduleDateOf(document.getElementById('schedule-day').value));
+
+                const swap = scheduleLunchSwaps[row.id];
+                row.swapHTML = !swap ? '' : (swap.unpaired
+                    ? '<span class="swap-check">Check with supervisor</span>'
+                    : `${escapeHTML(swap.position)} <span class="next-duty-role">⇄ ${escapeHTML(swap.partnerName)}</span>`);
+
+                row.nextUp = false;
+                if (getPositionRole(row.pos)) {
+                    row.nextSort = 0;
+                    row.nextHTML = '<span class="next-duty on">On duty</span>';
+                } else if (next) {
+                    row.nextSort = next.days;
+                    row.nextHTML = `<span class="next-duty">${dayWords(next.days)}</span> <span class="next-duty-role">${labelOf(next.role)}</span>`;
+                    row.nextUp = scheduleForecast.daysToNextWeek !== null && next.days <= scheduleForecast.daysToNextWeek;
+                    row.nextTitle = `Next up: ${labelOf(next.role)}, ${dayWords(next.days).toLowerCase()}`;
+                } else if (roles.some(r => emp[r.prop])) {
+                    row.nextSort = FORECAST_DAYS + 1;
+                    row.nextHTML = `<span class="next-duty-role">${FORECAST_DAYS}+ days</span>`;
+                } else {
+                    row.nextSort = FORECAST_DAYS + 2;
+                    row.nextHTML = '<span class="next-duty-role" title="No special duties ticked for this person">-</span>';
+                }
+            });
+
+            sortScheduleRows(empRows, scheduleSort);
 
             empRows.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${row.name}</strong></td>
-                    <td><span class="${row.badgeClass}">${escapeHTML(row.pos)}</span></td>
+                    <td><strong>${row.name}</strong>${row.nextUp ? ` <span class="next-up-icon" title="${row.nextTitle}">🔜</span>` : ''}</td>
+                    <td style="white-space: nowrap;"><span class="${row.badgeClass}">${escapeHTML(row.pos)}</span><button class="ov-btn ${row.overrideText ? 'active' : ''}" title="${escapeHTML(row.overrideText || 'Override this person\'s duty')}" onclick="openOverrideDialog('${row.id}')">✎</button></td>
+                    <td style="font-size: 0.8rem;">${row.swapHTML}</td>
+                    <td style="font-size: 0.8rem; white-space: nowrap;">${row.nextHTML}</td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;">${row.amText}</td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;"><strong>${row.lunchText}</strong></td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;">${row.pmText}</td>
@@ -2345,6 +4638,8 @@
                         tr.innerHTML = `
                             <td><strong style="color: var(--text-muted);">Counter ${cntr.number}</strong></td>
                             <td><span class="badge out">Out of Service</span></td>
+                            <td></td>
+                            <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
@@ -2354,6 +4649,8 @@
                         tr.innerHTML = `
                             <td><strong style="color: var(--text-muted);">Counter ${cntr.number}</strong></td>
                             <td><span class="badge empty">Empty</span></td>
+                            <td></td>
+                            <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
                             <td style="color: var(--border);">-</td>
@@ -2403,8 +4700,11 @@
             let rows = [];
             rows.push([`DAILY SCHEDULE REPORT - ${currentOffice.toUpperCase()} - ${dayLabel.toUpperCase()} (WEEK ${currentWeekNum})`]);
             rows.push([`Generated: ${new Date().toLocaleDateString()}`]);
+            rows.push([`Schedule date: ${formatLongDate(scheduleDateOf(dayKey))}`]);
+            getCalendarEntries(scheduleDateOf(dayKey)).forEach(entry => rows.push([`Calendar: ${describeCalendarEntry(entry)}`]));
             rows.push([]);
-            rows.push(['Employee Name', 'Assigned Position', 'AM Break', 'Lunch', 'PM Break', 'Notes']);
+            rows.push(['Employee Name', 'Assigned Position', 'After Lunch', 'AM Break', 'Lunch', 'PM Break', 'Notes']);
+            const lunchSwaps = computeLunchSwaps(assignments, currentWeekNum, scheduleDateOf(dayKey));
 
             employees.forEach(emp => {
                 const displayName = formatDisplayName(emp.name);
@@ -2425,6 +4725,7 @@
                 rows.push([
                     displayName,
                     pos,
+                    !lunchSwaps[emp.id] ? '' : (lunchSwaps[emp.id].unpaired ? 'Check with supervisor' : `${lunchSwaps[emp.id].position} (swap with ${lunchSwaps[emp.id].partnerName})`),
                     breakInfo ? `${breakInfo.am} (${grp})` : '-',
                     breakInfo ? `${breakInfo.lunch} (${grp})` : '-',
                     breakInfo ? `${breakInfo.pm} (${grp})` : '-',
@@ -2449,6 +4750,8 @@
             let rows = [];
             rows.push([`WEEKLY MASTER SCHEDULE REPORT - ${currentOffice.toUpperCase()} (MON - FRI) - WEEK ${currentWeekNum}`]);
             rows.push([`Generated: ${new Date().toLocaleDateString()}`]);
+            rows.push([`Schedule week: ${formatWeekRange(currentWeekStart, true)}`]);
+            calendarEntriesInRange(currentWeekStart, 5).forEach(item => rows.push([`Calendar: ${formatShortDate(item.date)} - ${describeCalendarEntry(item.entry)}`]));
             rows.push([]);
 
             let headers = ['Employee Name'];
@@ -2509,12 +4812,15 @@
                 version: "2.4",
                 timestamp: customTimestamp,
                 currentWeekNum: currentWeekNum,
+                currentWeekStart: currentWeekStart,
                 selectedOffice: currentOffice,
                 selectedDay: document.getElementById('schedule-day').value,
                 sortMode: scheduleSort.key,
                 sortDir: scheduleSort.dir,
                 config: configState,
                 roles: roles,
+                calendarEvents: calendarEvents,
+                dutyLog: dutyLog,
                 counterStations: counterStations,
                 employees: employees,
                 stateHistoryStack: stateHistoryStack
@@ -2559,7 +4865,10 @@
 
                 if (data.currentWeekNum !== undefined) {
                     currentWeekNum = data.currentWeekNum;
-                    document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+                    // Files saved before the calendar existed start on the real current week
+                    currentWeekStart = data.currentWeekStart || weekStartOf(new Date());
+                    planWeekStart = currentWeekStart;
+                    updateWeekCounterDisplay();
                 }
 
                 if (data.selectedOffice) {
@@ -2625,22 +4934,22 @@
             }
         }
 
-        // Advance Shift with State History Snapshot
-        function advanceShift() {
-            // Push current state snapshot to history stack before advancing
-            const currentStateSnapshot = {
-                currentWeekNum: currentWeekNum,
-                selectedDay: document.getElementById('schedule-day').value,
-                employees: JSON.parse(JSON.stringify(employees)),
-                counterStations: JSON.parse(JSON.stringify(counterStations))
-            };
-            stateHistoryStack.push(currentStateSnapshot);
-
+        // Records one worked day in everyone's history and, after Friday, rolls the week over.
+        // Returns the next day and week. Used by Advance Day and by the next-duty forecast.
+        function applyDayAdvance(assignments, dayKey, weekNum, weekStart) {
             const allRoles = [...getRoleNames(), 'Typing'];
 
+            // A day the office is closed is nobody's work day: it counts toward no one's duty, rest or days out
+            const officeClosed = isOfficeClosed(scheduleDateOf(dayKey, weekStart));
+
+            // One-day overrides are finished with once their day has been worked
             employees.forEach(emp => {
-                const assigned = activeAssignments[emp.id];
-                if (!assigned) return;
+                if (emp.dayOverrides) delete emp.dayOverrides[scheduleDateOf(dayKey, weekStart)];
+            });
+
+            employees.forEach(emp => {
+                const assigned = assignments[emp.id];
+                if (!assigned || officeClosed) return;
 
                 // Days out never count toward rest, but they are counted against a position holder's week
                 if (assigned.startsWith("Out")) {
@@ -2693,49 +5002,127 @@
                 }
             });
 
-            const daySelect = document.getElementById('schedule-day');
             const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
-            let currentDayIdx = daysOrder.indexOf(daySelect.value);
+            const dayIdx = daysOrder.indexOf(dayKey);
+            if (dayIdx < 4) return { dayKey: daysOrder[dayIdx + 1], weekNum: weekNum, weekStart: weekStart };
 
-            if (currentDayIdx < 4) {
-                daySelect.value = daysOrder[currentDayIdx + 1];
-            } else {
-                daySelect.value = 'mon';
-                currentWeekNum = (currentWeekNum % 3) + 1;
-                document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+            // New week: whatever was planned for it becomes the current days off and assigned duty
+            const nextWeekStart = addDaysISO(weekStart, 7);
+            employees.forEach(emp => {
+                const planned = plannedWeeksOf(emp);
+                const upcoming = planned[nextWeekStart];
+                emp.outDays = (upcoming && upcoming.outDays) || blankOutDays();
+                emp.weekDuty = (upcoming && upcoming.duty) || '';
+                delete planned[nextWeekStart];
+            });
 
-                // New week: positions and stations rotate
-                employees.forEach(emp => {
-                    if (emp.frozen) return;
-                    if (!emp.weekRole) {
-                        emp.weekStation = '';
-                        return;
-                    }
+            // New week: positions and stations rotate
+            employees.forEach(emp => {
+                if (emp.frozen) return;
+                if (!emp.weekRole) {
+                    emp.weekStation = '';
+                    return;
+                }
 
-                    const role = emp.weekRole;
-                    const rules = getRoleRules(role);
-                    if (!emp.history[role]) {
-                        emp.history[role] = { consecutive: 0, breakRemaining: 0 };
-                    }
+                const role = emp.weekRole;
+                const rules = getRoleRules(role);
+                if (!emp.history[role]) {
+                    emp.history[role] = { consecutive: 0, breakRemaining: 0 };
+                }
 
-                    if ((emp.weekDaysOut || 0) >= 3) {
-                        // Out 3+ days of their duty week: no rest earned, same position again next week
-                        emp.history[role].consecutive = 0;
-                        releaseWeekRole(emp);
-                        emp.owedRole = role;
-                    } else if (rules.maxRot !== -1 && rules.maxRot - emp.history[role].consecutive < 5) {
-                        // Max Rot does not leave room for another full week
-                        emp.history[role].breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
-                        emp.history[role].consecutive = 0;
-                        releaseWeekRole(emp);
-                    } else {
-                        emp.weekDaysOut = 0;
-                    }
-                });
-            }
+                if ((emp.weekDaysOut || 0) >= 3) {
+                    // Out 3+ days of their duty week: no rest earned, same position again next week
+                    emp.history[role].consecutive = 0;
+                    releaseWeekRole(emp);
+                    emp.owedRole = role;
+                } else if (rules.maxRot !== -1 && rules.maxRot - emp.history[role].consecutive < 5) {
+                    // Max Rot does not leave room for another full week
+                    emp.history[role].breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
+                    emp.history[role].consecutive = 0;
+                    releaseWeekRole(emp);
+                } else {
+                    emp.weekDaysOut = 0;
+                }
+            });
+
+            return { dayKey: 'mon', weekNum: (weekNum % 3) + 1, weekStart: nextWeekStart };
+        }
+
+        // Advance Shift with State History Snapshot
+        function advanceShift() {
+            // Push current state snapshot to history stack before advancing
+            const currentStateSnapshot = {
+                currentWeekNum: currentWeekNum,
+                currentWeekStart: currentWeekStart,
+                selectedDay: document.getElementById('schedule-day').value,
+                employees: JSON.parse(JSON.stringify(employees)),
+                counterStations: JSON.parse(JSON.stringify(counterStations))
+            };
+            stateHistoryStack.push(currentStateSnapshot);
+            // Undo goes back eight weeks; older snapshots are dropped so saved files stay a sensible size
+            if (stateHistoryStack.length > 40) stateHistoryStack.shift();
+
+            const daySelect = document.getElementById('schedule-day');
+            recordDutyLog(scheduleDateOf(daySelect.value), activeAssignments);
+            const next = applyDayAdvance(activeAssignments, daySelect.value, currentWeekNum, currentWeekStart);
+            daySelect.value = next.dayKey;
+            currentWeekNum = next.weekNum;
+            // Cards showing "this week" keep following it; a week that has now passed is dropped
+            const cardsOnCurrentWeek = planWeekStart === currentWeekStart;
+            currentWeekStart = next.weekStart;
+            if (cardsOnCurrentWeek || planWeekStart < currentWeekStart) planWeekStart = currentWeekStart;
+            updateWeekCounterDisplay();
 
             sortAndRenderEmployees();
             generateSchedule();
+        }
+
+        const FORECAST_DAYS = 30;
+
+        // Plays the schedule forward on a copy of the roster, using the days off and assigned duties
+        // planned for the coming weeks, and assuming nothing else changes.
+        // Returns { byEmp: { id: { days, role } }, daysToNextWeek, days: [{ dayKey, weekNum, weekOffset, assignments }] }
+        // where byEmp is each person's next special duty and days[0] is the starting day.
+        function forecastSchedule(startDay, startWeek) {
+            const real = { employees: employees, activeAssignments: activeAssignments, planNotices: planNotices };
+            const byEmp = {};
+            const days = [];
+            let daysToNextWeek = null;
+            let weekOffset = 0;
+
+            employees = JSON.parse(JSON.stringify(real.employees));
+            try {
+                let day = startDay;
+                let week = startWeek;
+                let weekStart = currentWeekStart;
+                for (let n = 0; n <= FORECAST_DAYS; n++) {
+                    ensureWeekPlan();
+                    const { assignments } = computeAssignmentsForDay(day, week, weekStart);
+                    activeAssignments = assignments;
+                    days.push({ dayKey: day, weekNum: week, weekOffset: weekOffset, assignments: assignments });
+
+                    if (n > 0 && !isOfficeClosed(scheduleDateOf(day, weekStart))) {
+                        employees.forEach(emp => {
+                            if (byEmp[emp.id]) return;
+                            const role = getPositionRole(assignments[emp.id]);
+                            if (role) byEmp[emp.id] = { days: n, role: role };
+                        });
+                    }
+
+                    const next = applyDayAdvance(assignments, day, week, weekStart);
+                    if (daysToNextWeek === null && next.dayKey === 'mon') daysToNextWeek = n + 1;
+                    if (next.dayKey === 'mon') weekOffset++;
+                    day = next.dayKey;
+                    week = next.weekNum;
+                    weekStart = next.weekStart;
+                }
+            } finally {
+                employees = real.employees;
+                activeAssignments = real.activeAssignments;
+                planNotices = real.planNotices;
+            }
+
+            return { byEmp: byEmp, daysToNextWeek: daysToNextWeek, days: days };
         }
 
         document.getElementById('btn-advance').addEventListener('click', advanceShift);
@@ -2757,8 +5144,17 @@
                 prevState = stateHistoryStack.pop();
             }
             currentWeekNum = prevState.currentWeekNum;
-            document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+            const cardsOnCurrentWeek = planWeekStart === currentWeekStart;
+            if (prevState.currentWeekStart) currentWeekStart = prevState.currentWeekStart;
+            if (cardsOnCurrentWeek || planWeekStart < currentWeekStart) planWeekStart = currentWeekStart;
+            updateWeekCounterDisplay();
             document.getElementById('schedule-day').value = prevState.selectedDay;
+
+            // The days being undone come back off the duty record
+            const restoredDate = scheduleDateOf(prevState.selectedDay);
+            Object.keys(dutyLog).forEach(date => {
+                if (date >= restoredDate) delete dutyLog[date];
+            });
             employees = prevState.employees;
             counterStations = prevState.counterStations;
 
@@ -2769,6 +5165,8 @@
 
         document.getElementById('btn-previous').addEventListener('click', () => previousShift(1));
         document.getElementById('btn-previous-week').addEventListener('click', () => previousShift(5));
+
+        document.getElementById('cfg-lunch-swap').addEventListener('change', () => generateSchedule());
 
         document.getElementById('cfg-max-aux-week').addEventListener('input', () => {
             sortAndRenderEmployees();
@@ -2782,7 +5180,10 @@
 
                 if (data.currentWeekNum !== undefined) {
                     currentWeekNum = data.currentWeekNum;
-                    document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+                    // Files saved before the calendar existed start on the real current week
+                    currentWeekStart = data.currentWeekStart || weekStartOf(new Date());
+                    planWeekStart = currentWeekStart;
+                    updateWeekCounterDisplay();
                 }
 
                 if (data.selectedOffice) {
@@ -2893,12 +5294,15 @@
                 version: "2.4",
                 timestamp: customTimestamp,
                 currentWeekNum: currentWeekNum,
+                currentWeekStart: currentWeekStart,
                 selectedOffice: currentOffice,
                 selectedDay: document.getElementById('schedule-day').value,
                 sortMode: scheduleSort.key,
                 sortDir: scheduleSort.dir,
                 config: configState,
                 roles: roles,
+                calendarEvents: calendarEvents,
+                dutyLog: dutyLog,
                 counterStations: counterStations,
                 employees: employees,
                 stateHistoryStack: stateHistoryStack
@@ -2931,6 +5335,8 @@
         /* TEST MODE */
         let testModeActive = false;
         let testModeSavedConfig = null;
+        let testModeSavedCalendar = null;
+        let testModeSavedLog = null;
 
         document.getElementById('btn-test-mode').addEventListener('click', () => {
             testModeActive = !testModeActive;
@@ -2994,6 +5400,69 @@
                     outDaysByIdx[empIdx] = out;
                 });
 
+                // The following weeks each get their own mix of irregularities, so the four-week views look
+                // like a real office: a week of leave, odd days off, two- and three-day absences, and a few
+                // duties the supervisor has assigned or withheld. Enough weeks are filled to cover the forecast.
+                const plannedByIdx = {};
+                const planFor = (empIdx, weekISO) => {
+                    if (!plannedByIdx[empIdx]) plannedByIdx[empIdx] = {};
+                    if (!plannedByIdx[empIdx][weekISO]) {
+                        plannedByIdx[empIdx][weekISO] = { outDays: { mon: false, tue: false, wed: false, thu: false, fri: false }, duty: '' };
+                    }
+                    return plannedByIdx[empIdx][weekISO];
+                };
+                const qualifiedRoleIds = empIdx => [['info', infoStaff], ['classcm', classCMStaff], ['cdl', cdlStaff], ['banker', bankerStaff], ['training', trainingStaff]]
+                    .filter(([id, staff]) => staff.has(empIdx))
+                    .map(([id]) => id);
+
+                for (let w = 1; w <= 6; w++) {
+                    const weekISO = addDaysISO(currentWeekStart, 7 * w);
+                    const order = shuffledIndexes();
+                    let used = 0;
+                    const take = count => order.slice(used, used += count);
+
+                    // On leave all week
+                    take(1 + (w % 2)).forEach(empIdx => dayKeys.forEach(d => planFor(empIdx, weekISO).outDays[d] = true));
+                    // A single day off
+                    take(6 + Math.floor(rand() * 6)).forEach(empIdx => {
+                        planFor(empIdx, weekISO).outDays[dayKeys[Math.floor(rand() * 5)]] = true;
+                    });
+                    // Two days in a row
+                    take(2 + Math.floor(rand() * 3)).forEach(empIdx => {
+                        const first = Math.floor(rand() * 4);
+                        planFor(empIdx, weekISO).outDays[dayKeys[first]] = true;
+                        planFor(empIdx, weekISO).outDays[dayKeys[first + 1]] = true;
+                    });
+                    // Three days in a row
+                    take(1).forEach(empIdx => {
+                        const first = Math.floor(rand() * 3);
+                        [0, 1, 2].forEach(n => planFor(empIdx, weekISO).outDays[dayKeys[first + n]] = true);
+                    });
+
+                    // Two people the supervisor has put on a set duty, and two kept off special duties
+                    // (on different roles, so they never compete for the same position)
+                    const qualifiedRest = order.slice(used).filter(empIdx => qualifiedRoleIds(empIdx).length > 0);
+                    const rolesGiven = [];
+                    qualifiedRest.slice(0, 2).forEach(empIdx => {
+                        const roleIds = qualifiedRoleIds(empIdx).filter(id => !rolesGiven.includes(id));
+                        const role = roles.find(r => r.id === roleIds[Math.floor(rand() * roleIds.length)]);
+                        if (role) {
+                            rolesGiven.push(role.id);
+                            planFor(empIdx, weekISO).duty = role.name;
+                        }
+                    });
+                    qualifiedRest.slice(2, 4).forEach(empIdx => planFor(empIdx, weekISO).duty = 'none');
+                }
+
+                // Calendar entries inside the four weeks: special hours, a half day and a closed day
+                testModeSavedCalendar = calendarEvents;
+                testModeSavedLog = dutyLog;
+                dutyLog = {};
+                calendarEvents = {};
+                calendarEvents[addDaysISO(currentWeekStart, 9)] = [{ id: 'test_cal_1', type: 'hours', start: '14:00', end: '15:00', label: 'All-staff meeting' }];
+                calendarEvents[addDaysISO(currentWeekStart, 18)] = [{ id: 'test_cal_2', type: 'half', half: 'am', label: 'Early close' }];
+                calendarEvents[addDaysISO(currentWeekStart, 21)] = [{ id: 'test_cal_3', type: 'closed', label: 'Office holiday' }];
+
                 employees = [];
                 sampleNames.forEach((fullName, idx) => {
                     const groups = ['A', 'B', 'C'];
@@ -3002,6 +5471,7 @@
                         name: fullName,
                         breakGroup: groups[groupOrder.indexOf(idx) % 3],
                         outDays: outDaysByIdx[idx] || { mon: false, tue: false, wed: false, thu: false, fri: false },
+                        plannedWeeks: plannedByIdx[idx] || {},
                         classCM: classCMStaff.has(idx),
                         cdl: cdlStaff.has(idx),
                         typing: true,
@@ -3054,10 +5524,18 @@
                 });
                 renderRoleConfig();
 
-                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training");
+                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training\n- Varied days off, assigned duties and calendar entries planned for the coming weeks");
             } else {
                 employees = [];
                 counterStations = [];
+                if (testModeSavedCalendar) {
+                    calendarEvents = testModeSavedCalendar;
+                    testModeSavedCalendar = null;
+                }
+                if (testModeSavedLog) {
+                    dutyLog = testModeSavedLog;
+                    testModeSavedLog = null;
+                }
                 if (testModeSavedConfig) {
                     Object.keys(testModeSavedConfig).forEach(k => {
                         const role = roles.find(r => r.id === k);
@@ -3076,6 +5554,7 @@
 
         // Initialize state on load
         renderRoleConfig();
+        updateWeekCounterDisplay();
         if (!loadSavedState()) {
             sortAndRenderEmployees();
             sortAndRenderCounters();
