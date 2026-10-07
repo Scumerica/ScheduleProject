@@ -1,0 +1,3 @@
+# Saved schedules hold real staff names and private notes - keep them out of the repo
+Storage/*
+!Storage/.gitkeep

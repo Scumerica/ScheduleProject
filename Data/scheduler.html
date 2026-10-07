@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Scheduling System</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --card-bg: #fafafa;
+            --summary-bg: #f8fafc;
+            --summary-hover: #f1f5f9;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --text-muted: #64748b;
+            --label-color: #4b5563;
+            --header-bg: #1e293b;
+            --banner-bg: #0f172a;
+            --table-th-bg: #f8fafc;
+            --stat-tag-bg: #e2e8f0;
+            --stat-tag-text: #334155;
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --card-bg: #0f172a;
+            --summary-bg: #334155;
+            --summary-hover: #475569;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --label-color: #cbd5e1;
+            --header-bg: #0b1120;
+            --banner-bg: #020617;
+            --table-th-bg: #0f172a;
+            --stat-tag-bg: #334155;
+            --stat-tag-text: #e2e8f0;
+            --input-bg: #0f172a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 70px 20px 20px 20px;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        /* Fixed Top Global Navigation Bar */
+        #app-header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 52px;
+            background-color: var(--banner-bg);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 999;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .banner-title {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            letter-spacing: 0.02em;
+        }
+
+        .banner-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Draggable & Resizable Window Styling */
+        .window {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            resize: both;
+            overflow: auto;
+            min-width: 320px;
+            min-height: 250px;
+            max-height: calc(100vh - 90px);
+            max-width: 90vw;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .window-header {
+            padding: 12px 16px;
+            background-color: var(--header-bg);
+            color: #ffffff;
+            font-weight: 600;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+            cursor: move;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .window-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Sticky Rules Accordion Container */
+        .sticky-rules {
+            position: sticky;
+            top: -16px;
+            background: var(--panel-bg);
+            z-index: 5;
+            padding-top: 2px;
+            margin-bottom: 12px;
+        }
+
+        /* Collapsible Section Accordions */
+        details {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            background: var(--panel-bg);
+        }
+
+        summary {
+            font-weight: 600;
+            padding: 10px 12px;
+            cursor: pointer;
+            background-color: var(--summary-bg);
+            border-radius: 6px;
+            user-select: none;
+            color: var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        summary:hover {
+            background-color: var(--summary-hover);
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid var(--border);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .collapsible-content {
+            padding: 12px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--label-color);
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background-color: var(--input-bg);
+            color: var(--text);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Rule Config Grid */
+        .rule-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.9fr 0.9fr 0.9fr;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .rule-row header {
+            font-weight: 600;
+            color: var(--label-color);
+        }
+
+        /* Role list: order buttons, name, three settings, rename/delete */
+        .role-row {
+            display: grid;
+            grid-template-columns: 46px 1.3fr 0.8fr 0.8fr 0.8fr 46px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .role-row header {
+            font-weight: 600;
+            color: var(--label-color);
+        }
+        .role-row label {
+            margin-bottom: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .role-row input {
+            min-width: 0;
+        }
+        .role-actions {
+            display: flex;
+            gap: 2px;
+        }
+        .role-btn {
+            padding: 2px 5px;
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+        .role-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+        /* Clickable > / = marker between two roles */
+        .role-sep {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: -4px 0 4px 52px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .role-sep .role-btn {
+            min-width: 22px;
+            background-color: #64748b;
+            font-weight: 700;
+        }
+        .role-sep .role-btn.tied {
+            background-color: #d97706;
+        }
+
+        /* Cards & Lists */
+        .employee-card, .counter-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: var(--card-bg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            padding: 8px 12px;
+            background-color: var(--summary-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        details.employee-card[open] .card-header,
+        details.counter-card[open] .card-header {
+            border-bottom: 1px solid var(--border);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .card-body {
+            padding: 10px 12px;
+        }
+
+        /* Grouped Toggle Rows */
+        .toggle-group-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .toggle-group-row:last-of-type {
+            margin-bottom: 8px;
+        }
+
+        .toggle-group-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--label-color);
+            min-width: 105px;
+            flex-shrink: 0;
+        }
+
+        .toggle-group-items {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toggle-group-items label {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.78rem;
+            font-weight: normal;
+            cursor: pointer;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        /* Counter Card Grid */
+        .toggles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .toggles-grid label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        /* Status Visual Tracker */
+        .rotation-tracker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .stat-tag {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--stat-tag-bg);
+            color: var(--stat-tag-text);
+            font-weight: 600;
+        }
+
+        .stat-tag.active-role {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .stat-tag.on-break {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        [data-theme="dark"] .stat-tag.active-role {
+            background: #1e3a8a;
+            color: #bfdbfe;
+            border-color: #3b82f6;
+        }
+
+        [data-theme="dark"] .stat-tag.on-break {
+            background: #7f1d1d;
+            color: #fecaca;
+            border-color: #ef4444;
+        }
+
+        /* Shift Group Counter Summary Bar */
+        .shift-summary-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background-color: var(--summary-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .shift-summary-card {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .shift-summary-card .group-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .shift-summary-card .group-count {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Diagnostics & Coverage Warnings Panel */
+        #diagnostic-panel {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .alert-box {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .alert-box.warning {
+            background-color: #fffbeeb0;
+            border-color: #fde68a;
+            color: #b45309;
+        }
+
+        .alert-box.error {
+            background-color: #fef2f2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        [data-theme="dark"] .alert-box.warning {
+            background-color: #451a03;
+            border-color: #78350f;
+            color: #fde68a;
+        }
+
+        [data-theme="dark"] .alert-box.error {
+            background-color: #450a0a;
+            border-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--table-th-bg);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .sort-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            font-weight: 700;
+            color: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .sort-btn:hover,
+        .sort-btn.active {
+            background: none;
+            color: var(--primary);
+        }
+
+        .sort-btn .sort-arrow {
+            font-size: 0.7rem;
+            opacity: 0.45;
+        }
+
+        .sort-btn.active .sort-arrow {
+            opacity: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge.out {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge.unassigned {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge.empty {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .badge {
+            background-color: #0c4a6e;
+            color: #bae6fd;
+        }
+
+        [data-theme="dark"] .badge.out {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        [data-theme="dark"] .badge.unassigned {
+            background-color: #334155;
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .badge.empty {
+            background-color: #78350f;
+            color: #fef08a;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-warning {
+            background-color: #f59e0b;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+
+        .btn-export {
+            background-color: #059669;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
+        .btn-export:hover {
+            background-color: #047857;
+        }
+
+        /* Initial Window Positions & Sizes */
+        #win-employees { top: 72px; left: 20px; width: 440px; height: 720px; }
+        #win-schedule { top: 72px; left: 480px; width: 880px; height: 720px; }
+        #win-config { top: 72px; left: 1380px; width: 460px; height: 720px; }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed Top Control Banner -->
+    <header id="app-header-bar">
+        <div class="banner-title">
+            <span>🗓️ Modular Scheduling System</span>
+            <select id="office-select" style="padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; font-weight: 600; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); min-width: 220px;">
+                <!-- Populated via JS -->
+            </select>
+        </div>
+        <div class="banner-controls">
+            <button id="btn-open-schedule" class="btn-export" style="background-color: #6366f1; padding: 5px 10px; font-size: 0.75rem;">Open</button>
+            <button id="btn-save" class="btn-export" style="background-color: #3b82f6; padding: 5px 10px; font-size: 0.75rem;">Save</button>
+            <button id="btn-export-json" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Export (JSON)</button>
+            <button id="btn-trigger-import-json" class="btn-export" style="background-color: #0284c7; padding: 5px 10px; font-size: 0.75rem;">Import (JSON)</button>
+            <button id="btn-export-daily" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Daily CSV</button>
+            <button id="btn-export-weekly" class="btn-export" style="background-color: #059669; padding: 5px 10px; font-size: 0.75rem;">Weekly CSV</button>
+            <button id="btn-theme-toggle" style="background-color: #475569; padding: 5px 12px; font-size: 0.8rem;" title="Switch Theme">🌙 Dark</button>
+            <button id="btn-test-mode" style="background-color: #8b5cf6; padding: 5px 12px; font-size: 0.8rem;">Test Mode</button>
+        </div>
+    </header>
+
+    <!-- Hidden file input for JSON imports -->
+    <input type="file" id="json-file-input" accept=".json" style="display: none;">
+
+    <!-- Window 1: Employee Roster -->
+    <div id="win-employees" class="window">
+        <div class="window-header">
+            <span>Employees Manager</span>
+        </div>
+        <div class="window-body">
+            <details open>
+                <summary>Import / Add Names</summary>
+                <div class="collapsible-content">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="import-names">Names List (Commas or line breaks)</label>
+                        <textarea id="import-names" placeholder="Alice Smith, Bob Jones&#10;Charlie Brown&#10;David Miller"></textarea>
+                        <button id="btn-import-emp" style="margin-top: 6px; width: 100%;">Add to Roster</button>
+                    </div>
+                </div>
+            </details>
+
+            <details open>
+                <summary id="summary-employee-roster">Employee Roster - Cards: 0</summary>
+                <div class="collapsible-content">
+                    <button id="btn-clear-all-out" class="btn-warning" style="margin-bottom: 8px; width: 100%;">Clear All Days Off (Everyone)</button>
+                    <div id="employee-list"></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Window 2: Configuration & Counter Assignment Rules -->
+    <div id="win-config" class="window">
+        <div class="window-header">
+            <span>Required Quotas & Counter Setup</span>
+        </div>
+        <div class="window-body">
+            <div class="sticky-rules">
+                <details open style="margin-bottom: 0;">
+                    <summary>Position Quotas & Break Rules</summary>
+                    <div class="collapsible-content">
+                        <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.75rem;">
+                            💡 Tip: Required is staff per <strong>day</strong>. Max Rot and Break Rot cooldown are both in <strong>days</strong> (5 = one work week). Positions are held for the whole week, so use a Max Rot of 5 or more. Days out do not count toward the cooldown. Enter <strong>-1</strong> for unlimited/zero cooldown.
+                        </small>
+                        <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.75rem;">
+                            ↕ The list order is the role hierarchy: roles higher up are staffed first when staff are short, and are listed first in the schedule. Use ▲ ▼ to reorder, ✎ to rename, ✕ to delete a custom role. Click the <strong>&gt;</strong> / <strong>=</strong> button between two roles to make them equal priority; equal roles share a shortage instead of one going first.
+                        </small>
+                        <div id="role-hierarchy-summary" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg);"></div>
+                        <div class="role-row" style="border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px;">
+                            <header>Order</header>
+                            <header>Position</header>
+                            <header>Required</header>
+                            <header>Max Rot</header>
+                            <header>Break Rot</header>
+                            <span></span>
+                        </div>
+
+                        <div id="role-config-list"></div>
+
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="new-role-name" placeholder="New role name" maxlength="40" style="flex: 1; min-width: 0;">
+                            <button id="btn-add-role">Add Role</button>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+                            <label for="cfg-max-aux-week" style="flex: 1; font-size: 0.8rem;">
+                                <strong>Duty Limit</strong> (days per 2 weeks)
+                                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: normal;">Most days one person can work any special duty (everything except Typing) in 10 work days. 5 = no duty two weeks in a row. -1 = no limit.</small>
+                            </label>
+                            <input type="number" id="cfg-max-aux-week" value="5" min="-1" style="width: 60px;">
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <details open>
+                <summary>Add Counter/Station</summary>
+                <div class="collapsible-content">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="new-counter-num">Station Numbers (Commas, line breaks, or ranges like 7-56)</label>
+                        <textarea id="new-counter-num" placeholder="1, 2, 3&#10;7-56"></textarea>
+                        <button id="btn-add-counter" style="margin-top: 6px; width: 100%;">Add Stations</button>
+                    </div>
+                </div>
+            </details>
+
+            <details open>
+                <summary id="summary-counter-config">Counter/Station Config: 0</summary>
+                <div class="collapsible-content">
+                    <div id="counter-list"></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Window 3: Live Schedule Display -->
+    <div id="win-schedule" class="window">
+        <div class="window-header">
+            <span>Current Shift Schedule</span>
+        </div>
+        <div class="window-body">
+            <!-- Schedule Controls Panel -->
+            <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <select id="schedule-day" style="flex: 1; padding: 8px 10px; font-size: 0.9rem; font-weight: 600;">
+                        <option value="mon">Monday</option>
+                        <option value="tue">Tuesday</option>
+                        <option value="wed">Wednesday</option>
+                        <option value="thu">Thursday</option>
+                        <option value="fri">Friday</option>
+                    </select>
+                    <input type="text" id="week-rotation-counter" value="Week Rotation Counter: 1" readonly style="flex: 1; padding: 8px 10px; font-size: 0.9rem; font-weight: 600; text-align: center; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);">
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button id="btn-previous-week" style="background-color: #475569;">Previous Week</button>
+                        <button id="btn-previous" style="background-color: #64748b;">Previous Day</button>
+                        <button id="btn-advance" style="background-color: #10b981;">Advance Day</button>
+                        <button id="btn-advance-week" style="background-color: #059669;">Advance Week</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="diagnostic-panel"></div>
+
+            <div class="shift-summary-bar">
+                <div class="shift-summary-card">
+                    <span class="group-label">Group A</span>
+                    <span class="group-count" id="count-group-a">0</span>
+                </div>
+                <div class="shift-summary-card">
+                    <span class="group-label">Group B</span>
+                    <span class="group-count" id="count-group-b">0</span>
+                </div>
+                <div class="shift-summary-card">
+                    <span class="group-label">Group C</span>
+                    <span class="group-count" id="count-group-c">0</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th><button class="sort-btn" data-sort="name" title="Sort by employee name">Employee / Station <span class="sort-arrow"></span></button></th>
+                        <th><button class="sort-btn" data-sort="position" title="Sort by assigned position">Assigned Position <span class="sort-arrow"></span></button></th>
+                        <th><button class="sort-btn" data-sort="am" title="Sort by AM break time">AM Break <span class="sort-arrow"></span></button></th>
+                        <th><button class="sort-btn" data-sort="lunch" title="Sort by lunch time">Lunch <span class="sort-arrow"></span></button></th>
+                        <th><button class="sort-btn" data-sort="pm" title="Sort by PM break time">PM Break <span class="sort-arrow"></span></button></th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let employees = [];
+        let counterStations = [];
+        let activeAssignments = {};
+        let currentWeekNum = 1;
+        let stateHistoryStack = [];
+
+        // Roles in hierarchy order: roles higher in the list are staffed first and listed first.
+        // "name" appears in the schedule; "prop" is the checkbox flag on employees and stations.
+        const DEFAULT_ROLES = [
+            { id: 'info', prop: 'info', name: 'Information Desk', label: 'Info Desk', req: 1, rot: 5, brk: 25 },
+            { id: 'cdl', prop: 'cdl', name: 'CDL Examiner', label: 'CDL', req: 1, rot: 5, brk: 5 },
+            { id: 'classcm', prop: 'classCM', name: 'Class C/M Examiner', label: 'Class C/M', req: 2, rot: 5, brk: 5 },
+            { id: 'banker', prop: 'banker', name: 'Banker', label: 'Banker', req: 1, rot: 5, brk: 15 },
+            { id: 'training', prop: 'training', name: 'Training', label: 'Training', req: 0, rot: -1, brk: -1 },
+            { id: 'testing', prop: 'testing', name: 'Testing', label: 'Testing', req: 0, rot: 5, brk: 5 }
+        ];
+        let roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
+        let typingConfig = { req: -1, rot: -1, brk: -1 };
+
+        function getRoleNames() {
+            return roles.map(r => r.name);
+        }
+
+        function isBuiltInRole(id) {
+            return DEFAULT_ROLES.some(r => r.id === id);
+        }
+
+        function escapeHTML(text) {
+            return String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        }
+
+        // "Banker (Counter 3)" -> "Banker"; null when the position is not one of the roles
+        function getPositionRole(pos) {
+            if (!pos) return null;
+            const base = pos.replace(/\s*\(Counter\s+\d+\)$/i, '');
+            return roles.some(r => r.name === base) ? base : null;
+        }
+
+        const DPS_OFFICES = [
+            "Garland Mega Center",
+            "Carrollton Mega Center",
+            "Dallas-South Mega Center",
+            "Fort Worth Mega Center",
+            "Houston-Spring Mega Center",
+            "Houston North Mega Center",
+            "Houston Gessner Mega Center",
+            "Rosenberg Mega Center",
+            "San Antonio-Leon Valley Mega Center",
+            "Austin N. Lamar Office",
+            "El Paso Scott Simpson Office",
+            "El Paso Gateway Office",
+            "Plano Office",
+            "Lewisville Office",
+            "Tyler Office",
+            "Waco Office",
+            "Corpus Christi Office",
+            "Lubbock Office",
+            "Amarillo Office",
+            "Abilene Office",
+            "Midland Office",
+            "Beaumont Office",
+            "Bryan Office",
+            "Laredo Office",
+            "Wichita Falls Office"
+        ];
+
+        // Populate Office Select Dropdown
+        const officeSelect = document.getElementById('office-select');
+        DPS_OFFICES.forEach(office => {
+            const opt = document.createElement('option');
+            opt.value = office;
+            opt.textContent = office;
+            officeSelect.appendChild(opt);
+        });
+
+        const BREAK_SCHEDULES = {
+            'A': { am: '9:10 AM', lunch: '11:00 AM', pm: '3:10 PM' },
+            'B': { am: '9:30 AM', lunch: '12:00 PM', pm: '3:30 PM' },
+            'C': { am: '10:40 AM', lunch: '1:00 PM', pm: '3:45 PM' }
+        };
+
+        const DAYS_MAP = [
+            { key: 'mon', label: 'Mon', full: 'Monday' },
+            { key: 'tue', label: 'Tue', full: 'Tuesday' },
+            { key: 'wed', label: 'Wed', full: 'Wednesday' },
+            { key: 'thu', label: 'Thu', full: 'Thursday' },
+            { key: 'fri', label: 'Fri', full: 'Friday' }
+        ];
+
+        // IndexedDB Helpers for File System Access Handle persistence
+        const DB_NAME = 'SchedulerFolderDB';
+        const STORE_NAME = 'handles';
+
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveDirHandle(handle) {
+            const db = await getDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(handle, 'storageDir');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function getDirHandle() {
+            const db = await getDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const req = tx.objectStore(STORE_NAME).get('storageDir');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        // Theme Toggle Engine
+        const btnThemeToggle = document.getElementById('btn-theme-toggle');
+        
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                btnThemeToggle.textContent = '☀️ Light';
+                btnThemeToggle.style.backgroundColor = '#d97706';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                btnThemeToggle.textContent = '🌙 Dark';
+                btnThemeToggle.style.backgroundColor = '#475569';
+            }
+            localStorage.setItem('scheduler_theme', theme);
+        }
+
+        btnThemeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        const savedTheme = localStorage.getItem('scheduler_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(savedTheme);
+
+        // Window Dragging Mechanism
+        document.querySelectorAll('.window').forEach(win => {
+            const header = win.querySelector('.window-header');
+            let isDragging = false;
+            let startMouseX, startMouseY;
+            let startWinLeft, startWinTop;
+
+            header.addEventListener('mousedown', dragStart);
+
+            function dragStart(e) {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                
+                document.querySelectorAll('.window').forEach(w => w.style.zIndex = "1");
+                win.style.zIndex = "10";
+
+                isDragging = true;
+                startMouseX = e.clientX;
+                startMouseY = e.clientY;
+
+                startWinLeft = win.offsetLeft;
+                startWinTop = win.offsetTop;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', dragEnd);
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const deltaX = e.clientX - startMouseX;
+                const deltaY = e.clientY - startMouseY;
+
+                win.style.left = `${Math.max(10, startWinLeft + deltaX)}px`;
+                win.style.top = `${Math.max(60, startWinTop + deltaY)}px`;
+            }
+
+            function dragEnd() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', dragEnd);
+            }
+        });
+
+        // Import Names Handler
+        document.getElementById('btn-import-emp').addEventListener('click', () => {
+            const importInput = document.getElementById('import-names');
+            const rawText = importInput.value;
+            if (!rawText.trim()) return;
+
+            const rawNames = rawText.split(/,|\r?\n/);
+            rawNames.forEach(rawName => {
+                const cleanName = rawName.trim();
+                if (cleanName) addEmployee(cleanName);
+            });
+
+            importInput.value = '';
+            sortAndRenderEmployees();
+            generateSchedule();
+        });
+
+        // Column header sort buttons: click to sort by that column, click again to reverse
+        let scheduleSort = { key: 'name', dir: 1 };
+
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (scheduleSort.key === btn.dataset.sort) {
+                    scheduleSort.dir = -scheduleSort.dir;
+                } else {
+                    scheduleSort = { key: btn.dataset.sort, dir: 1 };
+                }
+                generateSchedule();
+            });
+        });
+
+        document.getElementById('schedule-day').addEventListener('change', () => {
+            generateSchedule();
+        });
+
+        function getBaseGroupIndex(groupChar) {
+            if (groupChar === 'B') return 1;
+            if (groupChar === 'C') return 2;
+            return 0; // 'A'
+        }
+
+        function getEmployeeActiveGroup(emp, weekNum) {
+            const baseIdx = getBaseGroupIndex(emp.breakGroup || 'A');
+            const groups = ['A', 'B', 'C'];
+            return groups[(baseIdx + (weekNum - 1)) % 3];
+        }
+
+        function addEmployee(name) {
+            const groups = ['A', 'B', 'C'];
+            const assignedGroup = groups[employees.length % groups.length];
+
+            const newEmp = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                name: name,
+                breakGroup: assignedGroup,
+                outDays: { mon: false, tue: false, wed: false, thu: false, fri: false },
+                classCM: false,
+                cdl: false,
+                typing: true,
+                banker: false,
+                info: false,
+                training: false,
+                testing: false,
+                frozen: false,
+                frozenPosition: '',
+                fixedCounter: '',
+                publicNotes: '',
+                privateNotes: '',
+                history: {},
+                shiftsSinceLastAux: {}
+            };
+            employees.push(newEmp);
+        }
+
+        function parseNameParts(fullName) {
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length === 1) return { first: parts[0], last: '' };
+            const last = parts.pop();
+            const first = parts.join(' ');
+            return { first, last };
+        }
+
+        function formatDisplayName(fullName) {
+            const { first, last } = parseNameParts(fullName);
+            return last ? `${last}, ${first}` : fullName;
+        }
+
+        function getOutDaysSummary(outDays) {
+            if (!outDays) return '';
+            const activeDays = DAYS_MAP.filter(d => outDays[d.key]).map(d => d.label);
+            return activeDays.join(', ');
+        }
+
+        function sortAndRenderEmployees() {
+            employees.sort((a, b) => {
+                const nameA = parseNameParts(a.name);
+                const nameB = parseNameParts(b.name);
+                if (nameA.last || nameB.last) {
+                    const comp = nameA.last.localeCompare(nameB.last);
+                    if (comp !== 0) return comp;
+                }
+                return nameA.first.localeCompare(nameB.first);
+            });
+
+            document.getElementById('summary-employee-roster').textContent = `Employee Roster - Cards: ${employees.length}`;
+
+            const listEl = document.getElementById('employee-list');
+            listEl.innerHTML = '';
+
+            const allTrackedRoles = [
+                ...roles.map(r => ({ name: r.name, prop: r.prop, label: r.label })),
+                { name: 'Typing', prop: 'typing', label: 'Typing' }
+            ];
+
+            employees.forEach(emp => {
+                const displayName = formatDisplayName(emp.name);
+                let trackerHTML = '';
+
+                allTrackedRoles.forEach(r => {
+                    if (emp[r.prop]) {
+                        const rules = getRoleRules(r.name);
+                        if (!rules) return;
+
+                        const hist = emp.history[r.name] || { consecutive: 0, breakRemaining: 0 };
+                        const shortName = escapeHTML(r.label);
+
+                        if (rules.breakRot !== -1 && hist.breakRemaining > 0) {
+                            trackerHTML += `<span class="stat-tag on-break">${shortName}: Break (${hist.breakRemaining}d left)</span>`;
+                        } else if (rules.maxRot !== -1 && hist.consecutive > 0) {
+                            trackerHTML += `<span class="stat-tag active-role">${shortName}: ${hist.consecutive}/${rules.maxRot}d</span>`;
+                        } else if (rules.maxRot === -1 && hist.consecutive > 0) {
+                            trackerHTML += `<span class="stat-tag active-role">${shortName}: ${hist.consecutive}d/∞</span>`;
+                        } else {
+                            trackerHTML += `<span class="stat-tag">${shortName}: Ready</span>`;
+                        }
+                    }
+                });
+
+                if (!emp.outDays) emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                if (!emp.breakGroup) {
+                    const groups = ['A', 'B', 'C'];
+                    emp.breakGroup = groups[employees.indexOf(emp) % groups.length];
+                }
+
+                const activeGrp = getEmployeeActiveGroup(emp, currentWeekNum);
+
+                const card = document.createElement('details');
+                card.className = 'employee-card';
+                card.innerHTML = `
+                    <summary class="card-header">
+                        <span>${displayName}</span>
+                        <div style="display: flex; gap: 4px;" onclick="event.stopPropagation();">
+                            <button class="btn-warning" onclick="clearEmployeeDuties('${emp.id}')">Clear</button>
+                            <button class="btn-danger" onclick="removeEmployee('${emp.id}')">Remove</button>
+                        </div>
+                    </summary>
+
+                    <div class="card-body">
+                        <div class="toggle-group-row">
+                            <span class="toggle-group-label">Break Group:</span>
+                            <div class="toggle-group-items">
+                                <select onchange="updateBreakGroup('${emp.id}', this.value)" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: 600;">
+                                    <option value="A" ${emp.breakGroup === 'A' ? 'selected' : ''}>Group A (Active Now: Grp ${activeGrp})</option>
+                                    <option value="B" ${emp.breakGroup === 'B' ? 'selected' : ''}>Group B (Active Now: Grp ${activeGrp})</option>
+                                    <option value="C" ${emp.breakGroup === 'C' ? 'selected' : ''}>Group C (Active Now: Grp ${activeGrp})</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="toggle-group-row">
+                            <span class="toggle-group-label">Out:</span>
+                            <div class="toggle-group-items">
+                                <label><input type="checkbox" ${emp.outDays.mon ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'mon', this.checked)"> M</label>
+                                <label><input type="checkbox" ${emp.outDays.tue ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'tue', this.checked)"> T</label>
+                                <label><input type="checkbox" ${emp.outDays.wed ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'wed', this.checked)"> W</label>
+                                <label><input type="checkbox" ${emp.outDays.thu ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'thu', this.checked)"> Th</label>
+                                <label><input type="checkbox" ${emp.outDays.fri ? 'checked' : ''} onchange="updateOutDay('${emp.id}', 'fri', this.checked)"> F</label>
+                                <button class="btn-warning" onclick="setAllOutDays('${emp.id}', true, this)">All Days</button>
+                                <button class="btn-warning" onclick="setAllOutDays('${emp.id}', false, this)">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="toggle-group-row">
+                            <span class="toggle-group-label">Duties:</span>
+                            <div class="toggle-group-items">
+                                <label><input type="checkbox" ${emp.typing !== false ? 'checked' : ''} onchange="updateToggle('${emp.id}', 'typing', this.checked)"> Typing</label>
+                                ${roles.map(r => `<label><input type="checkbox" ${emp[r.prop] ? 'checked' : ''} onchange="updateToggle('${emp.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}</label>`).join('\n                                ')}
+                                <button class="btn-warning" onclick="clearAllDuties('${emp.id}')">Clear All</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
+                                <label style="margin-bottom: 0; white-space: nowrap; font-size: 0.8rem;">Fixed Station #:</label>
+                                <input type="number" placeholder="Optional" value="${emp.fixedCounter || ''}" min="1" onchange="updateFixedCounter('${emp.id}', this.value)" style="padding: 4px 8px;">
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; cursor: pointer; margin-bottom: 0; white-space: nowrap;">
+                                <input type="checkbox" ${emp.frozen ? 'checked' : ''} onchange="updateToggle('${emp.id}', 'frozen', this.checked)"> Freeze
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 6px;">
+                            <label style="font-size: 0.75rem; color: #0284c7;">Public Notes (Exported):</label>
+                            <input type="text" placeholder="Public schedule note..." value="${emp.publicNotes || ''}" onchange="updatePublicNotes('${emp.id}', this.value)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.75rem; color: #b45309;">Private Notes (Internal only):</label>
+                            <input type="text" placeholder="Private internal note..." value="${emp.privateNotes || ''}" onchange="updatePrivateNotes('${emp.id}', this.value)">
+                        </div>
+
+                        ${trackerHTML ? `<div class="rotation-tracker">${trackerHTML}</div>` : ''}
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function updateBreakGroup(id, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                const groups = ['A', 'B', 'C'];
+                const targetIdx = groups.indexOf(val);
+                const baseIdx = (targetIdx - (currentWeekNum - 1) % 3 + 3) % 3;
+                emp.breakGroup = groups[baseIdx];
+                sortAndRenderEmployees();
+                generateSchedule();
+            }
+        }
+
+        function clearEmployeeDuties(id) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                roles.forEach(r => emp[r.prop] = false);
+                emp.typing = false;
+                emp.frozen = false;
+                emp.frozenPosition = '';
+                emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                sortAndRenderEmployees();
+                generateSchedule();
+            }
+        }
+
+        function removeEmployee(id) {
+            employees = employees.filter(e => e.id !== id);
+            sortAndRenderEmployees();
+            generateSchedule();
+        }
+
+        function updateOutDay(id, day, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                if (!emp.outDays) emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                emp.outDays[day] = val;
+                generateSchedule();
+            }
+        }
+
+        // "Clear All" button in the Duties row: unticks every role but leaves Typing as it is
+        function clearAllDuties(id) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                roles.forEach(r => emp[r.prop] = false);
+                sortAndRenderEmployees();
+                document.querySelectorAll('#employee-list .employee-card')[employees.indexOf(emp)].open = true;
+                generateSchedule();
+            }
+        }
+
+        // "All Days" / "Clear" buttons on an employee card
+        function setAllOutDays(id, val, btn) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                emp.outDays = { mon: val, tue: val, wed: val, thu: val, fri: val };
+                btn.closest('.toggle-group-items').querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = val);
+                generateSchedule();
+            }
+        }
+
+        document.getElementById('btn-clear-all-out').addEventListener('click', () => {
+            const outCount = employees.filter(e => e.outDays && Object.values(e.outDays).some(v => v)).length;
+            if (outCount === 0) return;
+            if (!confirm(`Clear all days off for ${outCount} employee(s)?`)) return;
+
+            employees.forEach(emp => {
+                emp.outDays = { mon: false, tue: false, wed: false, thu: false, fri: false };
+            });
+            sortAndRenderEmployees();
+            generateSchedule();
+        });
+
+        function updateToggle(id, prop, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                emp[prop] = val;
+                if (prop === 'frozen' && val && activeAssignments[emp.id]) {
+                    emp.frozenPosition = activeAssignments[emp.id];
+                } else if (prop === 'frozen' && !val) {
+                    emp.frozenPosition = '';
+                }
+                sortAndRenderEmployees();
+                generateSchedule();
+            }
+        }
+
+        function updateFixedCounter(id, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) {
+                emp.fixedCounter = val ? parseInt(val) : '';
+                generateSchedule();
+            }
+        }
+
+        function updatePublicNotes(id, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) emp.publicNotes = val;
+            generateSchedule();
+        }
+
+        function updatePrivateNotes(id, val) {
+            const emp = employees.find(e => e.id === id);
+            if (emp) emp.privateNotes = val;
+        }
+
+        // Counter Station Management
+        document.getElementById('btn-add-counter').addEventListener('click', () => {
+            const input = document.getElementById('new-counter-num');
+            const rawText = input.value;
+            if (!rawText.trim()) return;
+
+            let numbers = [];
+            let invalid = [];
+            rawText.split(/,|\r?\n/).forEach(rawPart => {
+                const part = rawPart.trim();
+                if (!part) return;
+
+                const range = part.match(/^(\d+)\s*-\s*(\d+)$/);
+                if (range && parseInt(range[1]) >= 1 && parseInt(range[2]) >= parseInt(range[1]) && parseInt(range[2]) - parseInt(range[1]) < 500) {
+                    for (let n = parseInt(range[1]); n <= parseInt(range[2]); n++) numbers.push(n);
+                } else if (/^\d+$/.test(part) && parseInt(part) >= 1) {
+                    numbers.push(parseInt(part));
+                } else {
+                    invalid.push(part);
+                }
+            });
+
+            numbers.forEach(num => {
+                if (counterStations.some(cntr => cntr.number === num)) return;
+
+                const allowed = { counter: true };
+                roles.forEach(r => allowed[r.prop] = true);
+
+                counterStations.push({
+                    id: Date.now().toString() + '_' + num,
+                    number: num,
+                    allowed: allowed
+                });
+            });
+
+            if (invalid.length > 0) {
+                alert(`These entries were skipped because they are not station numbers: ${invalid.join(', ')}`);
+            }
+
+            input.value = '';
+            sortAndRenderCounters();
+            generateSchedule();
+        });
+
+        function sortAndRenderCounters() {
+            counterStations.sort((a, b) => a.number - b.number);
+            
+            document.getElementById('summary-counter-config').textContent = `Counter/Station Config: ${counterStations.length}`;
+
+            const listEl = document.getElementById('counter-list');
+            listEl.innerHTML = '';
+
+            counterStations.forEach(cntr => {
+                const card = document.createElement('details');
+                card.className = 'counter-card';
+                card.innerHTML = `
+                    <summary class="card-header">
+                        <span>Counter #${cntr.number}</span>
+                        <div style="display: flex; gap: 4px;" onclick="event.stopPropagation();">
+                            <button class="btn-warning" onclick="clearCounterTypes('${cntr.id}')">Clear</button>
+                            <button class="btn-danger" onclick="removeCounter('${cntr.id}')">Remove</button>
+                        </div>
+                    </summary>
+                    <div class="card-body">
+                        <div class="toggles-grid">
+                            <label><input type="checkbox" ${cntr.allowed.counter ? 'checked' : ''} onchange="updateCounterType('${cntr.id}', 'counter', this.checked)"> Typing</label>
+                            ${roles.map(r => `<label><input type="checkbox" ${cntr.allowed[r.prop] ? 'checked' : ''} onchange="updateCounterType('${cntr.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}</label>`).join('\n                            ')}
+                        </div>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function clearCounterTypes(id) {
+            const cntr = counterStations.find(c => c.id === id);
+            if (cntr) {
+                Object.keys(cntr.allowed).forEach(key => cntr.allowed[key] = false);
+                sortAndRenderCounters();
+                generateSchedule();
+            }
+        }
+
+        function removeCounter(id) {
+            counterStations = counterStations.filter(c => c.id !== id);
+            sortAndRenderCounters();
+            generateSchedule();
+        }
+
+        function updateCounterType(id, type, val) {
+            const cntr = counterStations.find(c => c.id === id);
+            if (cntr) {
+                cntr.allowed[type] = val;
+                generateSchedule();
+            }
+        }
+
+        function getRoleRules(roleName) {
+            const role = roleName === 'Typing' ? { ...typingConfig, prop: 'typing' } : roles.find(r => r.name === roleName);
+            if (!role) return null;
+
+            const reqVal = parseInt(role.req);
+            const rotVal = parseInt(role.rot);
+            const brkVal = parseInt(role.brk);
+
+            return {
+                req: isNaN(reqVal) ? 0 : reqVal,
+                maxRot: isNaN(rotVal) ? 1 : rotVal,
+                breakRot: isNaN(brkVal) ? -1 : brkVal,
+                toggleProp: role.prop
+            };
+        }
+
+        // ==========================================
+        // ROLE MANAGEMENT (custom roles & hierarchy)
+        // ==========================================
+
+        function renderRoleConfig() {
+            const listEl = document.getElementById('role-config-list');
+            listEl.innerHTML = '';
+
+            const settingInputs = (id, cfg) => `
+                    <input type="number" id="cfg-cap-${id}" value="${isNaN(parseInt(cfg.req)) ? '' : cfg.req}" min="-1" oninput="updateRoleSetting('${id}', 'req', this.value)">
+                    <input type="number" id="cfg-rot-${id}" value="${isNaN(parseInt(cfg.rot)) ? '' : cfg.rot}" min="-1" oninput="updateRoleSetting('${id}', 'rot', this.value)">
+                    <input type="number" id="cfg-brk-${id}" value="${isNaN(parseInt(cfg.brk)) ? '' : cfg.brk}" min="-1" oninput="updateRoleSetting('${id}', 'brk', this.value)">`;
+
+            const tiers = getRoleTierMap();
+            document.getElementById('role-hierarchy-summary').textContent = roles
+                .map((r, idx) => (idx === 0 ? '' : (r.tieWithPrev ? ' = ' : ' > ')) + r.label)
+                .join('');
+
+            roles.forEach((role, idx) => {
+                if (idx > 0) {
+                    const sep = document.createElement('div');
+                    sep.className = 'role-sep';
+                    sep.innerHTML = `
+                        <button class="role-btn ${role.tieWithPrev ? 'tied' : ''}" title="Click to switch between higher priority (>) and equal priority (=)" onclick="toggleRoleTie('${role.id}')">${role.tieWithPrev ? '=' : '>'}</button>
+                        <span>${role.tieWithPrev ? 'equal priority' : 'higher priority than'}</span>
+                    `;
+                    listEl.appendChild(sep);
+                }
+
+                const row = document.createElement('div');
+                row.className = 'role-row';
+                row.innerHTML = `
+                    <div class="role-actions">
+                        <button class="role-btn" title="Move up (higher priority)" onclick="moveRole('${role.id}', -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                        <button class="role-btn" title="Move down (lower priority)" onclick="moveRole('${role.id}', 1)" ${idx === roles.length - 1 ? 'disabled' : ''}>▼</button>
+                    </div>
+                    <label title="${escapeHTML(role.name)}">${tiers[role.name] + 1}. ${escapeHTML(role.label)}</label>
+                    ${settingInputs(role.id, role)}
+                    <div class="role-actions">
+                        <button class="role-btn" title="Rename" onclick="renameRole('${role.id}')">✎</button>
+                        ${isBuiltInRole(role.id) ? '' : `<button class="role-btn btn-danger" title="Delete this role" onclick="deleteRole('${role.id}')">✕</button>`}
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+
+            const typingRow = document.createElement('div');
+            typingRow.className = 'role-row';
+            typingRow.innerHTML = `
+                    <span></span>
+                    <label title="Everyone not on a role above works a typing station">Typing</label>
+                    ${settingInputs('typing', typingConfig)}
+                    <span></span>
+            `;
+            listEl.appendChild(typingRow);
+        }
+
+        function refreshAfterRoleChange() {
+            renderRoleConfig();
+            sortAndRenderEmployees();
+            sortAndRenderCounters();
+            generateSchedule();
+        }
+
+        function updateRoleSetting(id, field, value) {
+            const target = id === 'typing' ? typingConfig : roles.find(r => r.id === id);
+            if (!target) return;
+            target[field] = parseInt(value);
+            sortAndRenderEmployees();
+            generateSchedule();
+        }
+
+        function moveRole(id, delta) {
+            const idx = roles.findIndex(r => r.id === id);
+            const target = idx + delta;
+            if (idx < 0 || target < 0 || target >= roles.length) return;
+
+            // The > and = markers stay where they are; only the two roles trade places
+            const ties = roles.map(r => !!r.tieWithPrev);
+            [roles[idx], roles[target]] = [roles[target], roles[idx]];
+            roles.forEach((r, i) => r.tieWithPrev = ties[i]);
+            refreshAfterRoleChange();
+        }
+
+        function toggleRoleTie(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+            role.tieWithPrev = !role.tieWithPrev;
+            refreshAfterRoleChange();
+        }
+
+        // Tier number for each role: a role marked "=" shares the tier of the role above it
+        function getRoleTierMap() {
+            const tiers = {};
+            let tier = 0;
+            roles.forEach((r, idx) => {
+                if (idx > 0 && !r.tieWithPrev) tier++;
+                tiers[r.name] = tier;
+            });
+            return tiers;
+        }
+
+        // Orders open slots by tier. Roles of equal priority take turns (one slot each, then a second
+        // each, ...) so that when staff are short the shortage is shared between them.
+        function sortByHierarchy(slots) {
+            const tiers = getRoleTierMap();
+            const names = getRoleNames();
+            const seen = {};
+            slots.forEach(s => {
+                seen[s.role] = (seen[s.role] || 0) + 1;
+                s.turn = seen[s.role];
+            });
+            return slots.sort((a, b) => (tiers[a.role] - tiers[b.role]) || (a.turn - b.turn) || (names.indexOf(a.role) - names.indexOf(b.role)));
+        }
+
+        // Returns an error message, or '' when the name can be used
+        function validateRoleName(name, ignoreId) {
+            if (!name) return 'Please enter a role name.';
+            if (name.length > 40) return 'Role names can be up to 40 characters.';
+            if (/^(out|unassigned|counter|typing)\b/i.test(name)) return 'Role names cannot start with Out, Unassigned, Counter or Typing.';
+            if (/\(Counter\s+\d+\)$/i.test(name)) return 'Role names cannot end with a counter number.';
+            if (roles.some(r => r.id !== ignoreId && (r.name.toLowerCase() === name.toLowerCase() || r.label.toLowerCase() === name.toLowerCase()))) {
+                return `A role named "${name}" already exists.`;
+            }
+            return '';
+        }
+
+        document.getElementById('btn-add-role').addEventListener('click', () => {
+            const input = document.getElementById('new-role-name');
+            const name = input.value.trim().replace(/\s+/g, ' ');
+            const error = validateRoleName(name, null);
+            if (error) {
+                alert(error);
+                return;
+            }
+
+            const id = 'role_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            roles.push({ id: id, prop: id, name: name, label: name, req: 0, rot: 5, brk: 5 });
+            input.value = '';
+            refreshAfterRoleChange();
+        });
+
+        // Carries an employee's history and current/frozen position over to the new role name
+        function renameRoleInEmployees(list, oldName, newName) {
+            list.forEach(emp => {
+                if (emp.history && emp.history[oldName]) {
+                    emp.history[newName] = emp.history[oldName];
+                    delete emp.history[oldName];
+                }
+                if (emp.shiftsSinceLastAux && emp.shiftsSinceLastAux[oldName] !== undefined) {
+                    emp.shiftsSinceLastAux[newName] = emp.shiftsSinceLastAux[oldName];
+                    delete emp.shiftsSinceLastAux[oldName];
+                }
+                if (emp.weekRole === oldName) emp.weekRole = newName;
+                if (emp.owedRole === oldName) emp.owedRole = newName;
+                if (emp.frozenPosition && getPositionRole(emp.frozenPosition) === oldName) {
+                    emp.frozenPosition = newName + emp.frozenPosition.slice(oldName.length);
+                }
+            });
+        }
+
+        function renameRole(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+
+            const answer = prompt(`Rename "${role.name}" to:`, role.name);
+            if (answer === null) return;
+            const newName = answer.trim().replace(/\s+/g, ' ');
+            if (newName === role.name) return;
+
+            const error = validateRoleName(newName, id);
+            if (error) {
+                alert(error);
+                return;
+            }
+
+            // Must run while the old name is still a known role
+            renameRoleInEmployees(employees, role.name, newName);
+            stateHistoryStack.forEach(snapshot => renameRoleInEmployees(snapshot.employees || [], role.name, newName));
+
+            role.name = newName;
+            role.label = newName;
+            refreshAfterRoleChange();
+        }
+
+        function deleteRole(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role || isBuiltInRole(id)) return;
+
+            const holders = employees.filter(e => e[role.prop]).length;
+            if (!confirm(`Delete the role "${role.name}"? It will be removed from ${holders} employee(s) and from every station.`)) return;
+
+            employees.forEach(emp => {
+                delete emp[role.prop];
+                if (emp.history) delete emp.history[role.name];
+                if (emp.shiftsSinceLastAux) delete emp.shiftsSinceLastAux[role.name];
+                if (emp.weekRole === role.name) releaseWeekRole(emp);
+                if (emp.owedRole === role.name) emp.owedRole = '';
+                if (emp.frozen && getPositionRole(emp.frozenPosition) === role.name) {
+                    emp.frozen = false;
+                    emp.frozenPosition = '';
+                }
+            });
+            counterStations.forEach(cntr => delete cntr.allowed[role.prop]);
+
+            roles = roles.filter(r => r.id !== id);
+            refreshAfterRoleChange();
+        }
+
+        function buildConfigState() {
+            let configState = {};
+            roles.forEach(r => {
+                if (isBuiltInRole(r.id)) configState[r.id] = { req: r.req, rot: r.rot, brk: r.brk };
+            });
+            configState.typing = { ...typingConfig };
+            configState.maxAuxPerWeek = getMaxAuxPerWeek();
+            configState.restUnit = 'days';
+            return configState;
+        }
+
+        // Restores roles (order, custom roles, settings) from a saved file. Older files have no role list,
+        // only per-role settings, and stored Break Rot in weeks.
+        function applySavedConfig(data) {
+            const hasRoleList = Array.isArray(data.roles) && data.roles.length > 0;
+
+            if (hasRoleList) {
+                roles = data.roles
+                    .filter(r => r && r.id && r.prop && r.name)
+                    .map(r => ({ id: r.id, prop: r.prop, name: r.name, label: r.label || r.name, req: r.req, rot: r.rot, brk: r.brk, tieWithPrev: !!r.tieWithPrev }));
+                DEFAULT_ROLES.forEach(def => {
+                    if (!roles.some(r => r.id === def.id)) roles.push({ ...def });
+                });
+            } else if (data.config) {
+                roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
+            }
+
+            if (data.config) {
+                const weeksToDays = data.config.restUnit !== 'days';
+                const applySettings = (target, saved) => {
+                    if (!saved) return;
+                    target.req = saved.req;
+                    target.rot = saved.rot;
+                    target.brk = (weeksToDays && saved.brk > 0) ? saved.brk * 5 : saved.brk;
+                };
+
+                if (!hasRoleList) {
+                    roles.forEach(r => applySettings(r, data.config[r.id] || (r.id === 'classcm' ? data.config.classc : null)));
+                }
+                applySettings(typingConfig, data.config.typing);
+
+                if (data.config.maxAuxPerWeek !== undefined) {
+                    document.getElementById('cfg-max-aux-week').value = data.config.maxAuxPerWeek;
+                }
+            }
+
+            renderRoleConfig();
+        }
+
+        function getMaxAuxPerWeek() {
+            const val = parseInt(document.getElementById('cfg-max-aux-week').value);
+            return isNaN(val) ? -1 : val;
+        }
+
+        // A rest period longer than the present qualified pool can sustain would leave slots empty,
+        // so this returns how many remaining rest shifts are ignored for the role today.
+        function getRestWaiveThreshold(rules, presentQualifiedCount) {
+            if (rules.breakRot === -1 || rules.maxRot === -1 || rules.req <= 0) return 0;
+            const sustainableRest = Math.max(0, Math.floor(rules.maxRot * (presentQualifiedCount / rules.req - 1)));
+            return Math.max(0, rules.breakRot - sustainableRest);
+        }
+
+        function isEmployeeOutToday(emp, selectedDay) {
+            if (!emp.outDays) return false;
+            return !!emp.outDays[selectedDay];
+        }
+
+        function getFormattedOutPosition(emp) {
+            const days = getOutDaysSummary(emp.outDays);
+            return days ? `Out (${days})` : 'Out';
+        }
+
+        function checkCoverageErrors(selectedDay, weekNum) {
+            const diagnosticPanel = document.getElementById('diagnostic-panel');
+            diagnosticPanel.innerHTML = '';
+
+            const activeEmps = employees.filter(e => !isEmployeeOutToday(e, selectedDay));
+            const activeCounters = counterStations.filter(cntr => Object.values(cntr.allowed).some(v => v === true));
+
+            let hasGroupCoverageError = false;
+            let errorMessages = [];
+
+            getRoleNames().forEach(role => {
+                const rules = getRoleRules(role);
+                if (rules.req <= 0) return;
+
+                const restThreshold = getRestWaiveThreshold(rules, activeEmps.filter(e => e[rules.toggleProp]).length);
+
+                const groups = ['A', 'B', 'C'];
+                groups.forEach(grp => {
+                    const groupEmps = activeEmps.filter(e => getEmployeeActiveGroup(e, weekNum) === grp);
+                    const qualifiedInGroup = groupEmps.filter(e => e[rules.toggleProp]);
+                    const availableInGroup = qualifiedInGroup.filter(e => {
+                        if (rules.breakRot === -1) return true;
+                        const hist = e.history[role] || { consecutive: 0, breakRemaining: 0 };
+                        return hist.breakRemaining <= restThreshold;
+                    });
+
+                    const totalGroupMembers = employees.filter(e => getEmployeeActiveGroup(e, weekNum) === grp && e[rules.toggleProp]);
+                    const outGroupMembers = totalGroupMembers.filter(e => isEmployeeOutToday(e, selectedDay));
+
+                    if (outGroupMembers.length > 0 && availableInGroup.length === 0 && totalGroupMembers.length > 0) {
+                        hasGroupCoverageError = true;
+                        errorMessages.push(`⚠️ Intra-Group Shortage: Break Group ${grp} has staff out for ${role}, and no other member in Group ${grp} is available to cover.`);
+                    }
+                });
+
+                const qualifiedEmps = activeEmps.filter(e => e[rules.toggleProp]);
+                const availableEmps = qualifiedEmps.filter(e => {
+                    if (rules.breakRot === -1) return true;
+                    const hist = e.history[role] || { consecutive: 0, breakRemaining: 0 };
+                    return hist.breakRemaining <= restThreshold;
+                });
+
+                if (qualifiedEmps.length < rules.req) {
+                    diagnosticPanel.appendChild(createAlertBox('error', `⚠️ Staff Shortage: Required ${rules.req} ${role}(s), but only ${qualifiedEmps.length} active employee(s) have this role enabled.`));
+                } else if (availableEmps.length < rules.req) {
+                    diagnosticPanel.appendChild(createAlertBox('warning', `⚠️ Rotation Delay: Required ${rules.req} ${role}(s), but ${qualifiedEmps.length - availableEmps.length} qualified staff member(s) are currently on break.`));
+                }
+
+                const matchingCounters = activeCounters.filter(cntr => cntr.allowed[rules.toggleProp]);
+                if (matchingCounters.length === 0) {
+                    diagnosticPanel.appendChild(createAlertBox('error', `⚠️ Station Error: Required ${rules.req} ${role}(s), but NO active Counter Station allows this position.`));
+                } else if (matchingCounters.length < rules.req) {
+                    diagnosticPanel.appendChild(createAlertBox('warning', `⚠️ Station Bottleneck: Required ${rules.req} ${role}(s), but only ${matchingCounters.length} station(s) permit this role.`));
+                }
+            });
+
+            errorMessages.forEach(msg => {
+                diagnosticPanel.appendChild(createAlertBox('error', msg));
+            });
+
+            return hasGroupCoverageError;
+        }
+
+        function createAlertBox(type, message) {
+            const div = document.createElement('div');
+            div.className = `alert-box ${type}`;
+            div.textContent = message;
+            return div;
+        }
+
+        const DUTY_WINDOW_DAYS = 10;
+
+        function getRestRemaining(emp, role, rules, restThreshold) {
+            if (rules.breakRot === -1) return 0;
+            const hist = emp.history[role] || { consecutive: 0, breakRemaining: 0 };
+            return Math.max(0, hist.breakRemaining - restThreshold);
+        }
+
+        function getRecentAuxCount(emp) {
+            return (emp.recentAux || []).reduce((sum, v) => sum + v, 0);
+        }
+
+        function isUnderDutyLimit(emp) {
+            const maxAux = getMaxAuxPerWeek();
+            return maxAux === -1 || getRecentAuxCount(emp) < maxAux;
+        }
+
+        function releaseWeekRole(emp) {
+            emp.weekRole = '';
+            emp.weekStation = '';
+            emp.weekWaiver = '';
+            emp.weekDaysOut = 0;
+        }
+
+        // Positions and stations are held for the whole week. This fills any vacant weekly position
+        // and gives everyone a station for the week; anything already settled is left alone.
+        function ensureWeekPlan() {
+            const daysOutCount = emp => DAYS_MAP.filter(d => emp.outDays && emp.outDays[d.key]).length;
+            const stationByNumber = num => counterStations.find(c => c.number === num);
+            const QUOTA_ROLES = getRoleNames();
+
+            // Vacancies are listed in hierarchy order
+            let vacancies = [];
+            QUOTA_ROLES.forEach(role => {
+                const rules = getRoleRules(role);
+                const frozenCount = employees.filter(e => e.frozen && getPositionRole(e.frozenPosition) === role).length;
+                const needed = Math.max(0, rules.req - frozenCount);
+
+                employees.filter(e => e.weekRole === role).forEach(e => {
+                    if (!e[rules.toggleProp] || e.frozen || daysOutCount(e) === 5) releaseWeekRole(e);
+                });
+                const holders = employees.filter(e => e.weekRole === role);
+                holders.slice(needed).forEach(releaseWeekRole);
+
+                const poolSize = employees.filter(e => e[rules.toggleProp] && daysOutCount(e) < 5).length;
+                const restThreshold = getRestWaiveThreshold(rules, poolSize);
+                for (let i = Math.min(holders.length, needed); i < needed; i++) {
+                    vacancies.push({ role: role, rules: rules, restThreshold: restThreshold });
+                }
+            });
+            employees.forEach(e => {
+                if (e.weekRole && !QUOTA_ROLES.includes(e.weekRole)) releaseWeekRole(e);
+            });
+
+            const isFree = e => !e.weekRole && !e.frozen && daysOutCount(e) < 5;
+            const restLeft = (e, v) => getRestRemaining(e, v.role, v.rules, v.restThreshold);
+            const isReady = (e, v) => isFree(e) && e[v.rules.toggleProp] && daysOutCount(e) <= 2 && restLeft(e, v) <= 0 && isUnderDutyLimit(e);
+
+            // Fairness order: longest since holding a weekly position, then fewest duty days overall, then longest since this role
+            const byFairness = role => (a, b) => {
+                const heldA = a.shiftsSinceHeld || 0;
+                const heldB = b.shiftsSinceHeld || 0;
+                if (heldA !== heldB) return heldB - heldA;
+                const totalA = a.auxTotal || 0;
+                const totalB = b.auxTotal || 0;
+                if (totalA !== totalB) return totalA - totalB;
+                const idleA = (a.shiftsSinceLastAux && a.shiftsSinceLastAux[role]) || 0;
+                const idleB = (b.shiftsSinceLastAux && b.shiftsSinceLastAux[role]) || 0;
+                return idleB - idleA;
+            };
+
+            const appoint = (emp, vacancy, waiver = '') => {
+                emp.weekRole = vacancy.role;
+                emp.weekStation = '';
+                emp.weekWaiver = waiver;
+                emp.weekDaysOut = 0;
+                emp.owedRole = '';
+                vacancy.filled = true;
+            };
+
+            // Anyone who was out 3+ days of their duty week goes back on the same position first
+            employees.forEach(emp => {
+                if (!emp.owedRole || !isFree(emp)) return;
+                const vacancy = vacancies.find(v => !v.filled && v.role === emp.owedRole);
+                if (vacancy && emp[vacancy.rules.toggleProp]) appoint(emp, vacancy);
+            });
+
+            // Fixed-station staff take a position their station allows
+            employees.forEach(emp => {
+                if (!emp.fixedCounter || !isFree(emp)) return;
+                const station = stationByNumber(emp.fixedCounter);
+                if (!station) return;
+                const vacancy = vacancies.find(v => !v.filled && station.allowed[v.rules.toggleProp] && isReady(emp, v));
+                if (vacancy) appoint(emp, vacancy);
+            });
+
+            // Match ready staff to vacancies in hierarchy order. Each vacancy takes its fairest candidate;
+            // a higher role only gives someone up to a lower role if it has another candidate to take
+            // instead, so when staff are short it is the lower roles that go without. Roles of equal
+            // priority take turns, so they share a shortage.
+            const openVacancies = sortByHierarchy(vacancies.filter(v => !v.filled));
+            openVacancies.forEach(v => {
+                v.candidates = employees.filter(e => isReady(e, v)).sort(byFairness(v.role));
+            });
+
+            const vacancyOfEmp = {};
+            function matchVacancy(index, visited) {
+                for (let emp of openVacancies[index].candidates) {
+                    if (visited.has(emp.id)) continue;
+                    visited.add(emp.id);
+                    if (vacancyOfEmp[emp.id] === undefined || matchVacancy(vacancyOfEmp[emp.id], visited)) {
+                        vacancyOfEmp[emp.id] = index;
+                        openVacancies[index].emp = emp;
+                        return true;
+                    }
+                }
+                return false;
+            }
+            openVacancies.forEach((v, index) => matchVacancy(index, new Set()));
+            openVacancies.forEach(v => {
+                if (v.emp) appoint(v.emp, v);
+            });
+
+            // Before leaving a position vacant, waive the rest period (closest to finishing first),
+            // then the duty limit. Higher roles get first call here too.
+            openVacancies.filter(v => !v.filled).forEach(vacancy => {
+                const byRestLeft = (a, b) => restLeft(a, vacancy) - restLeft(b, vacancy);
+                const qualified = employees.filter(e => isFree(e) && e[vacancy.rules.toggleProp]).sort(byFairness(vacancy.role));
+
+                let emp = qualified.filter(isUnderDutyLimit).sort(byRestLeft)[0];
+                if (!emp) emp = [...qualified].sort((a, b) => byRestLeft(a, b) || getRecentAuxCount(a) - getRecentAuxCount(b))[0];
+                if (!emp) return;
+
+                let waiver = [];
+                if (restLeft(emp, vacancy) > 0) {
+                    waiver.push(`⚠️ Rest Waived: ${formatDisplayName(emp.name)} holds ${vacancy.role} this week with ${restLeft(emp, vacancy)} rest day(s) remaining. No rested staff were available.`);
+                }
+                if (!isUnderDutyLimit(emp)) {
+                    waiver.push(`⚠️ Duty Limit Waived: ${formatDisplayName(emp.name)} holds ${vacancy.role} this week with ${getRecentAuxCount(emp)} duty day(s) in the last ${DUTY_WINDOW_DAYS - 1} days. No one under the limit was available.`);
+                }
+                appoint(emp, vacancy, waiver.join(' '));
+            });
+
+            // Stations for the week: frozen and fixed stations are reserved, existing stations are kept,
+            // then position holders and typing staff (most-often-Unassigned first) take what is left.
+            const ownerOf = new Map();
+            const settled = new Set();
+            const wantedProp = e => e.weekRole ? getRoleRules(e.weekRole).toggleProp : 'counter';
+            const canUse = (e, station) => station && !ownerOf.has(station.id) && station.allowed[wantedProp(e)];
+
+            employees.filter(e => e.frozen).forEach(e => {
+                const match = (e.frozenPosition || '').match(/Counter\s+(\d+)/i);
+                const station = match ? stationByNumber(parseInt(match[1])) : null;
+                if (station) ownerOf.set(station.id, e.id);
+            });
+
+            const stationStaff = employees.filter(e => !e.frozen && daysOutCount(e) < 5 && (e.weekRole || e.typing !== false));
+            employees.forEach(e => {
+                if (!stationStaff.includes(e)) e.weekStation = '';
+            });
+
+            stationStaff.forEach(e => {
+                if (!e.fixedCounter) return;
+                const station = stationByNumber(e.fixedCounter);
+                if (station && !ownerOf.has(station.id) && (!e.weekRole || station.allowed[wantedProp(e)])) {
+                    e.weekStation = station.number;
+                    ownerOf.set(station.id, e.id);
+                    settled.add(e.id);
+                }
+            });
+
+            stationStaff.forEach(e => {
+                if (settled.has(e.id)) return;
+                const station = e.weekStation ? stationByNumber(e.weekStation) : null;
+                if (canUse(e, station)) {
+                    ownerOf.set(station.id, e.id);
+                    settled.add(e.id);
+                } else {
+                    e.weekStation = '';
+                }
+            });
+
+            const waiting = stationStaff.filter(e => !settled.has(e.id));
+            const typingQueue = waiting.filter(e => !e.weekRole).sort((a, b) => (b.unassignedCount || 0) - (a.unassignedCount || 0));
+            [...waiting.filter(e => e.weekRole), ...typingQueue].forEach(e => {
+                const station = counterStations.find(c => canUse(e, c));
+                if (station) {
+                    e.weekStation = station.number;
+                    ownerOf.set(station.id, e.id);
+                }
+            });
+        }
+
+        function computeAssignmentsForDay(dayKey, weekNum) {
+            const QUOTA_ROLES = getRoleNames();
+
+            // Slots are listed in hierarchy order
+            let slotsToFill = [];
+            QUOTA_ROLES.forEach(role => {
+                const rules = getRoleRules(role);
+                if (rules.req > 0) {
+                    for (let i = 0; i < rules.req; i++) {
+                        slotsToFill.push({ role: role, rules: rules });
+                    }
+                }
+            });
+
+            let assignments = {};
+            let notices = [];
+
+            const availableEmps = employees.filter(emp => {
+                if (isEmployeeOutToday(emp, dayKey)) {
+                    assignments[emp.id] = getFormattedOutPosition(emp);
+                    return false;
+                }
+                return true;
+            });
+
+            let occupiedCounters = new Set();
+            let auxAssignments = {};
+
+            const restThresholds = {};
+            QUOTA_ROLES.forEach(role => {
+                const rules = getRoleRules(role);
+                const presentQualified = availableEmps.filter(e => e[rules.toggleProp]).length;
+                restThresholds[role] = getRestWaiveThreshold(rules, presentQualified);
+                if (rules.req > 0 && restThresholds[role] > 0) {
+                    notices.push(`⚠️ Rest Shortened: ${role} rest reduced from ${rules.breakRot} to ${rules.breakRot - restThresholds[role]} day(s). Only ${presentQualified} qualified staff are present for ${rules.req} position(s).`);
+                }
+            });
+
+            function restRemaining(emp, role, rules) {
+                return getRestRemaining(emp, role, rules, restThresholds[role]);
+            }
+
+            function isEligible(emp, role, rules) {
+                if (!emp[rules.toggleProp]) return false;
+                const hist = emp.history[role] || { consecutive: 0, breakRemaining: 0 };
+                const breakOk = restRemaining(emp, role, rules) <= 0;
+                const rotOk = (rules.maxRot === -1) || (hist.consecutive < rules.maxRot);
+                return breakOk && rotOk && isUnderDutyLimit(emp);
+            }
+
+            // Cover order: longest since any specialty duty, then fewest duty days overall, then longest since this role
+            function getPrioritizedCandidates(role) {
+                return [...availableEmps].sort((a, b) => {
+                    const sinceA = a.shiftsSinceAnyAux || 0;
+                    const sinceB = b.shiftsSinceAnyAux || 0;
+                    if (sinceA !== sinceB) return sinceB - sinceA;
+                    const totalA = a.auxTotal || 0;
+                    const totalB = b.auxTotal || 0;
+                    if (totalA !== totalB) return totalA - totalB;
+                    const idleA = (a.shiftsSinceLastAux && a.shiftsSinceLastAux[role]) || 0;
+                    const idleB = (b.shiftsSinceLastAux && b.shiftsSinceLastAux[role]) || 0;
+                    return idleB - idleA;
+                });
+            }
+
+            function placeAtStation(emp, role, rules, preferredNumber) {
+                let targetStation = null;
+                if (preferredNumber) {
+                    targetStation = counterStations.find(c => c.number === preferredNumber && !occupiedCounters.has(c.id) && c.allowed[rules.toggleProp]);
+                }
+                if (!targetStation && rules.toggleProp !== 'info' && emp.fixedCounter) {
+                    targetStation = counterStations.find(c => c.number === emp.fixedCounter && !occupiedCounters.has(c.id) && c.allowed[rules.toggleProp]);
+                }
+                if (!targetStation) {
+                    targetStation = counterStations.find(c => !occupiedCounters.has(c.id) && c.allowed[rules.toggleProp]);
+                }
+
+                if (targetStation) {
+                    auxAssignments[emp.id] = `${role} (Counter ${targetStation.number})`;
+                    occupiedCounters.add(targetStation.id);
+                } else {
+                    auxAssignments[emp.id] = role;
+                }
+            }
+
+            // Pass -0.5: Honor Frozen assignments
+            availableEmps.forEach(emp => {
+                if (emp.frozen) {
+                    if (!emp.frozenPosition && activeAssignments[emp.id] && !activeAssignments[emp.id].startsWith("Out") && activeAssignments[emp.id] !== "Unassigned") {
+                        emp.frozenPosition = activeAssignments[emp.id];
+                    }
+                    if (emp.frozenPosition && !emp.frozenPosition.startsWith("Out") && emp.frozenPosition !== "Unassigned") {
+                        let posStr = emp.frozenPosition;
+                        let counterMatch = posStr.match(/Counter\s+(\d+)/i);
+                        let stationNum = counterMatch ? parseInt(counterMatch[1]) : null;
+
+                        if (stationNum) {
+                            const targetStation = counterStations.find(c => c.number === stationNum && !occupiedCounters.has(c.id));
+                            if (targetStation) {
+                                let matchedRole = QUOTA_ROLES.find(r => getPositionRole(posStr) === r && targetStation.allowed[getRoleRules(r).toggleProp]);
+                                if (matchedRole) {
+                                    const slotNeeded = slotsToFill.find(s => s.role === matchedRole && !s.filled);
+                                    if (slotNeeded) slotNeeded.filled = true;
+                                    auxAssignments[emp.id] = posStr;
+                                    occupiedCounters.add(targetStation.id);
+                                } else if (targetStation.allowed.counter && posStr.startsWith('Counter')) {
+                                    auxAssignments[emp.id] = posStr;
+                                    occupiedCounters.add(targetStation.id);
+                                }
+                            }
+                        } else {
+                            for (let role of QUOTA_ROLES) {
+                                if (getPositionRole(posStr) === role) {
+                                    const rules = getRoleRules(role);
+                                    const slotNeeded = slotsToFill.find(s => s.role === role && !s.filled);
+                                    if (slotNeeded && isEligible(emp, role, rules)) {
+                                        slotNeeded.filled = true;
+                                        const targetStation = counterStations.find(c => !occupiedCounters.has(c.id) && c.allowed[rules.toggleProp]);
+                                        if (targetStation) {
+                                            auxAssignments[emp.id] = `${role} (Counter ${targetStation.number})`;
+                                            occupiedCounters.add(targetStation.id);
+                                        } else {
+                                            auxAssignments[emp.id] = role;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Pass 0: Everyone holding a position this week works it at their own station
+            availableEmps.forEach(emp => {
+                if (auxAssignments[emp.id] || !emp.weekRole) return;
+                const slot = slotsToFill.find(s => s.role === emp.weekRole && !s.filled);
+                if (!slot) return;
+                slot.filled = true;
+                placeAtStation(emp, slot.role, slot.rules, emp.weekStation);
+                if (emp.weekWaiver) notices.push(emp.weekWaiver);
+            });
+
+            slotsToFill = slotsToFill.filter(s => !s.filled);
+
+            // Pass 1: Cover for the day where the holder is out. The stand-in comes from the holder's
+            // break group when possible, takes the holder's station, and keeps their own weekly position.
+            const outHolders = employees.filter(e => e.weekRole && isEmployeeOutToday(e, dayKey));
+            slotsToFill.forEach(slot => {
+                const idx = outHolders.findIndex(e => e.weekRole === slot.role);
+                slot.outHolder = idx >= 0 ? outHolders.splice(idx, 1)[0] : null;
+            });
+
+            // Higher roles in the hierarchy get their cover first; equal roles take turns
+            sortByHierarchy(slotsToFill);
+            const canCover = e => !auxAssignments[e.id] && !e.weekRole;
+
+            slotsToFill.forEach(slot => {
+                const qualified = getPrioritizedCandidates(slot.role).filter(e => canCover(e) && e[slot.rules.toggleProp]);
+                const ready = qualified.filter(e => isEligible(e, slot.role, slot.rules));
+                const coverGroup = slot.outHolder ? getEmployeeActiveGroup(slot.outHolder, weekNum) : null;
+                const byRestLeft = (a, b) => restRemaining(a, slot.role, slot.rules) - restRemaining(b, slot.role, slot.rules);
+
+                let emp = ready.find(e => getEmployeeActiveGroup(e, weekNum) === coverGroup) || ready[0];
+                if (!emp) emp = qualified.filter(isUnderDutyLimit).sort(byRestLeft)[0];
+                if (!emp) emp = [...qualified].sort((a, b) => byRestLeft(a, b) || getRecentAuxCount(a) - getRecentAuxCount(b))[0];
+                if (!emp) return;
+
+                const restLeft = restRemaining(emp, slot.role, slot.rules);
+                if (restLeft > 0) {
+                    notices.push(`⚠️ Rest Waived: ${formatDisplayName(emp.name)} covers ${slot.role} today with ${restLeft} rest day(s) remaining. No rested staff were available.`);
+                }
+                if (!isUnderDutyLimit(emp)) {
+                    notices.push(`⚠️ Duty Limit Waived: ${formatDisplayName(emp.name)} covers ${slot.role} today with ${getRecentAuxCount(emp)} duty day(s) in the last ${DUTY_WINDOW_DAYS - 1} days. No one under the limit was available.`);
+                }
+                placeAtStation(emp, slot.role, slot.rules, slot.outHolder ? slot.outHolder.weekStation : null);
+            });
+
+            Object.assign(assignments, auxAssignments);
+
+            const leftoverEmps = availableEmps.filter(emp => !assignments[emp.id]);
+
+            // Typing staff keep their station for the week
+            leftoverEmps.forEach(emp => {
+                if (emp.weekRole || !emp.weekStation) return;
+                const station = counterStations.find(cntr => cntr.number === emp.weekStation);
+                if (station && !occupiedCounters.has(station.id)) {
+                    assignments[emp.id] = `Counter ${station.number}`;
+                    occupiedCounters.add(station.id);
+                }
+            });
+
+            // Anyone without a station takes one that is free today, most-often-Unassigned first
+            leftoverEmps
+                .filter(emp => !assignments[emp.id])
+                .sort((a, b) => (b.unassignedCount || 0) - (a.unassignedCount || 0))
+                .forEach(emp => {
+                    if (emp.typing === false) {
+                        assignments[emp.id] = "Unassigned";
+                        return;
+                    }
+
+                    const openCounter = counterStations.find(cntr => !occupiedCounters.has(cntr.id) && cntr.allowed.counter);
+                    if (openCounter) {
+                        assignments[emp.id] = `Counter ${openCounter.number}`;
+                        occupiedCounters.add(openCounter.id);
+                    } else {
+                        assignments[emp.id] = "Unassigned";
+                    }
+                });
+
+            employees.forEach(emp => {
+                if (emp.frozen && assignments[emp.id]) {
+                    emp.frozenPosition = assignments[emp.id];
+                }
+            });
+
+            return { assignments, occupiedCounters, notices };
+        }
+
+        function generateSchedule() {
+            ensureWeekPlan();
+
+            const selectedDay = document.getElementById('schedule-day').value;
+            const hasShortage = checkCoverageErrors(selectedDay, currentWeekNum);
+
+            const { assignments, occupiedCounters, notices } = computeAssignmentsForDay(selectedDay, currentWeekNum);
+
+            const diagnosticPanel = document.getElementById('diagnostic-panel');
+            notices.forEach(msg => diagnosticPanel.appendChild(createAlertBox('warning', msg)));
+            
+            if (hasShortage) {
+                Object.keys(assignments).forEach(id => {
+                    if (assignments[id] === "Unassigned") {
+                        assignments[id] = "Unassigned (Intra-Group Shortage)";
+                    }
+                });
+            }
+
+            activeAssignments = assignments;
+            renderScheduleTable(occupiedCounters, currentWeekNum);
+        }
+
+        function calculateBreakGroups(weekNum, dayAssignments = activeAssignments) {
+            let groupAssignments = {};
+            employees.forEach(emp => {
+                const pos = dayAssignments[emp.id];
+                if (!pos || pos.startsWith("Out")) {
+                    groupAssignments[emp.id] = null;
+                    return;
+                }
+                groupAssignments[emp.id] = getEmployeeActiveGroup(emp, weekNum);
+            });
+            return groupAssignments;
+        }
+
+        function renderScheduleTable(occupiedCounters = new Set(), weekNum = 1) {
+            const tbody = document.getElementById('schedule-tbody');
+            tbody.innerHTML = '';
+
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                const isActive = btn.dataset.sort === scheduleSort.key;
+                btn.classList.toggle('active', isActive);
+                btn.querySelector('.sort-arrow').textContent = isActive ? (scheduleSort.dir === 1 ? '▲' : '▼') : '⇅';
+            });
+
+            // "9:10 AM" -> minutes since midnight, so break columns sort by time of day
+            const timeToMinutes = text => {
+                const match = text.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (!match) return null;
+                const hours = (parseInt(match[1]) % 12) + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+                return hours * 60 + parseInt(match[2]);
+            };
+
+            const breakGroups = calculateBreakGroups(weekNum, activeAssignments);
+
+            let countA = 0, countB = 0, countC = 0;
+            Object.values(breakGroups).forEach(grp => {
+                if (grp === 'A') countA++;
+                if (grp === 'B') countB++;
+                if (grp === 'C') countC++;
+            });
+
+            document.getElementById('count-group-a').textContent = countA;
+            document.getElementById('count-group-b').textContent = countB;
+            document.getElementById('count-group-c').textContent = countC;
+
+            let empRows = employees.map(emp => {
+                const displayName = formatDisplayName(emp.name);
+                const pos = activeAssignments[emp.id] || "Unassigned";
+                let badgeClass = "badge";
+                if (pos.startsWith("Out")) badgeClass += " out";
+                if (pos === "Unassigned" || pos.includes("Shortage")) badgeClass += " unassigned";
+
+                const grp = breakGroups[emp.id];
+                const breakInfo = grp ? BREAK_SCHEDULES[grp] : null;
+
+                return {
+                    id: emp.id,
+                    type: 'employee',
+                    name: displayName,
+                    pos: pos,
+                    badgeClass: badgeClass,
+                    amText: breakInfo ? `${breakInfo.am} (${grp})` : '-',
+                    lunchText: breakInfo ? `${breakInfo.lunch} (${grp})` : '-',
+                    pmText: breakInfo ? `${breakInfo.pm} (${grp})` : '-',
+                    breakTimes: breakInfo ? { am: timeToMinutes(breakInfo.am), lunch: timeToMinutes(breakInfo.lunch), pm: timeToMinutes(breakInfo.pm) } : null,
+                    publicNotes: emp.publicNotes || ''
+                };
+            });
+
+            // Roles in hierarchy order, then typing counters, Unassigned, Out
+            const roleNames = getRoleNames();
+            function getPositionPriority(pos) {
+                const posRole = getPositionRole(pos);
+                if (posRole) return roleNames.indexOf(posRole);
+                if (pos.startsWith('Counter')) return roleNames.length;
+                if (pos === 'Unassigned' || pos.includes('Shortage')) return roleNames.length + 1;
+                if (pos.startsWith('Out')) return roleNames.length + 2;
+                return roleNames.length + 3;
+            }
+
+            const getStationNumber = pos => {
+                const match = pos.match(/Counter\s+(\d+)/i);
+                return match ? parseInt(match[1]) : Infinity;
+            };
+
+            const dir = scheduleSort.dir;
+            const byName = (a, b) => a.name.localeCompare(b.name);
+
+            if (scheduleSort.key === 'position') {
+                empRows.sort((a, b) => {
+                    const priA = getPositionPriority(a.pos);
+                    const priB = getPositionPriority(b.pos);
+                    if (priA !== priB) return dir * (priA - priB);
+                    const stationA = getStationNumber(a.pos);
+                    const stationB = getStationNumber(b.pos);
+                    if (stationA !== stationB) return dir * (stationA - stationB);
+                    return byName(a, b);
+                });
+            } else if (['am', 'lunch', 'pm'].includes(scheduleSort.key)) {
+                // Staff who are out have no break time and always go last
+                empRows.sort((a, b) => {
+                    if (!a.breakTimes || !b.breakTimes) {
+                        if (a.breakTimes) return -1;
+                        if (b.breakTimes) return 1;
+                        return byName(a, b);
+                    }
+                    const diff = a.breakTimes[scheduleSort.key] - b.breakTimes[scheduleSort.key];
+                    return diff !== 0 ? dir * diff : byName(a, b);
+                });
+            } else {
+                empRows.sort((a, b) => dir * byName(a, b));
+            }
+
+            empRows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${row.name}</strong></td>
+                    <td><span class="${row.badgeClass}">${escapeHTML(row.pos)}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${row.amText}</td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;"><strong>${row.lunchText}</strong></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${row.pmText}</td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">${row.publicNotes}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            counterStations.forEach(cntr => {
+                if (!occupiedCounters.has(cntr.id)) {
+                    const isStationConfigured = Object.values(cntr.allowed).some(v => v === true);
+                    const tr = document.createElement('tr');
+                    
+                    if (!isStationConfigured) {
+                        tr.innerHTML = `
+                            <td><strong style="color: var(--text-muted);">Counter ${cntr.number}</strong></td>
+                            <td><span class="badge out">Out of Service</span></td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--text-muted); font-size: 0.85rem;">Station Offline</td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td><strong style="color: var(--text-muted);">Counter ${cntr.number}</strong></td>
+                            <td><span class="badge empty">Empty</span></td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--border);">-</td>
+                            <td style="color: var(--text-muted); font-size: 0.85rem;">Unstaffed Station</td>
+                        `;
+                    }
+                    tbody.appendChild(tr);
+                }
+            });
+        }
+
+        // ==========================================
+        // SCHEDULE EXPORT UTILITIES (CSV)
+        // ==========================================
+
+        function escapeCSV(val) {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+                str = '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('btn-export-daily').addEventListener('click', () => {
+            const daySelect = document.getElementById('schedule-day');
+            const dayKey = daySelect.value;
+            const dayLabel = daySelect.options[daySelect.selectedIndex].text;
+            const currentOffice = document.getElementById('office-select').value;
+            const formattedOffice = currentOffice.replace(/\s+/g, '_');
+            
+            const { assignments } = computeAssignmentsForDay(dayKey, currentWeekNum);
+            const breakGroups = calculateBreakGroups(currentWeekNum, assignments);
+
+            let rows = [];
+            rows.push([`DAILY SCHEDULE REPORT - ${currentOffice.toUpperCase()} - ${dayLabel.toUpperCase()} (WEEK ${currentWeekNum})`]);
+            rows.push([`Generated: ${new Date().toLocaleDateString()}`]);
+            rows.push([]);
+            rows.push(['Employee Name', 'Assigned Position', 'AM Break', 'Lunch', 'PM Break', 'Notes']);
+
+            employees.forEach(emp => {
+                const displayName = formatDisplayName(emp.name);
+                let pos = assignments[emp.id] || 'Unassigned';
+                const grp = breakGroups[emp.id];
+                const breakInfo = grp ? BREAK_SCHEDULES[grp] : null;
+
+                const activeGrp = getEmployeeActiveGroup(emp, currentWeekNum);
+                const isOut = isEmployeeOutToday(emp, dayKey);
+                if (isOut) {
+                    const groupEmps = employees.filter(e => getEmployeeActiveGroup(e, currentWeekNum) === activeGrp && e.classCM);
+                    const availableInGroup = groupEmps.filter(e => !isEmployeeOutToday(e, dayKey));
+                    if (availableInGroup.length === 0) {
+                        pos += ` [UNCOVERED SHORTAGE IN GRP ${activeGrp}]`;
+                    }
+                }
+
+                rows.push([
+                    displayName,
+                    pos,
+                    breakInfo ? `${breakInfo.am} (${grp})` : '-',
+                    breakInfo ? `${breakInfo.lunch} (${grp})` : '-',
+                    breakInfo ? `${breakInfo.pm} (${grp})` : '-',
+                    emp.publicNotes || ''
+                ]);
+            });
+
+            const csvString = rows.map(r => r.map(escapeCSV).join(',')).join('\r\n');
+            downloadCSV(csvString, `${formattedOffice}_daily_schedule_${dayKey}_w${currentWeekNum}_${new Date().toISOString().slice(0,10)}.csv`);
+        });
+
+        document.getElementById('btn-export-weekly').addEventListener('click', () => {
+            const currentOffice = document.getElementById('office-select').value;
+            const formattedOffice = currentOffice.replace(/\s+/g, '_');
+            let weeklyData = {};
+            DAYS_MAP.forEach(day => {
+                const { assignments } = computeAssignmentsForDay(day.key, currentWeekNum);
+                const breakGroups = calculateBreakGroups(currentWeekNum, assignments);
+                weeklyData[day.key] = { assignments, breakGroups };
+            });
+
+            let rows = [];
+            rows.push([`WEEKLY MASTER SCHEDULE REPORT - ${currentOffice.toUpperCase()} (MON - FRI) - WEEK ${currentWeekNum}`]);
+            rows.push([`Generated: ${new Date().toLocaleDateString()}`]);
+            rows.push([]);
+
+            let headers = ['Employee Name'];
+            DAYS_MAP.forEach(day => {
+                headers.push(`${day.full} Position`);
+                headers.push(`${day.full} Break Grp`);
+            });
+            headers.push('Notes');
+            rows.push(headers);
+
+            employees.forEach(emp => {
+                const displayName = formatDisplayName(emp.name);
+                let row = [displayName];
+
+                DAYS_MAP.forEach(day => {
+                    let dayAssign = weeklyData[day.key].assignments[emp.id] || 'Unassigned';
+                    const grp = weeklyData[day.key].breakGroups[emp.id] || '-';
+
+                    const activeGrp = getEmployeeActiveGroup(emp, currentWeekNum);
+                    const isOut = isEmployeeOutToday(emp, day.key);
+                    if (isOut) {
+                        const groupEmps = employees.filter(e => getEmployeeActiveGroup(e, currentWeekNum) === activeGrp && e.classCM);
+                        const availableInGroup = groupEmps.filter(e => !isEmployeeOutToday(e, day.key));
+                        if (availableInGroup.length === 0) {
+                            dayAssign += ` [UNCOVERED SHORTAGE GRP ${activeGrp}]`;
+                        }
+                    }
+
+                    row.push(dayAssign);
+                    row.push(grp);
+                });
+
+                row.push(emp.publicNotes || '');
+                rows.push(row);
+            });
+
+            const csvString = rows.map(r => r.map(escapeCSV).join(',')).join('\r\n');
+            downloadCSV(csvString, `${formattedOffice}_weekly_schedule_master_w${currentWeekNum}_${new Date().toISOString().slice(0,10)}.csv`);
+        });
+
+        // Save State to Browser LocalStorage & Dynamic filename in storage folder
+        async function saveAppState() {
+            const configState = buildConfigState();
+
+            const now = new Date();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const customTimestamp = `${mm}.${dd}.${yy}_${hh}.${min}.${ss}`;
+            const currentOffice = document.getElementById('office-select').value;
+            const formattedOffice = currentOffice.replace(/\s+/g, '_');
+            const dynamicFilename = `${formattedOffice}_schedule_${customTimestamp}.json`;
+
+            const state = {
+                version: "2.4",
+                timestamp: customTimestamp,
+                currentWeekNum: currentWeekNum,
+                selectedOffice: currentOffice,
+                selectedDay: document.getElementById('schedule-day').value,
+                sortMode: scheduleSort.key,
+                sortDir: scheduleSort.dir,
+                config: configState,
+                roles: roles,
+                counterStations: counterStations,
+                employees: employees,
+                stateHistoryStack: stateHistoryStack
+            };
+
+            localStorage.setItem('modular_scheduler_app_state', JSON.stringify(state));
+
+            try {
+                let dirHandle = await getDirHandle();
+                if (!dirHandle) {
+                    alert("Please select your 'storage' folder. You will only need to do this once!");
+                    dirHandle = await window.showDirectoryPicker();
+                    await saveDirHandle(dirHandle);
+                }
+
+                if ((await dirHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+                    if ((await dirHandle.requestPermission({ mode: 'readwrite' })) !== 'granted') {
+                        throw new Error("Folder permission denied.");
+                    }
+                }
+
+                const fileHandle = await dirHandle.getFileHandle(dynamicFilename, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(JSON.stringify(state, null, 2));
+                await writable.close();
+
+                alert(`Schedule successfully saved as '${dynamicFilename}' in your storage folder!`);
+            } catch (err) {
+                console.warn('Direct folder write skipped/cancelled:', err);
+                alert('Schedule saved to browser memory! (To change your persistent storage folder, use Export JSON).');
+            }
+        }
+
+        document.getElementById('btn-save').addEventListener('click', saveAppState);
+
+        function loadSavedState() {
+            const saved = localStorage.getItem('modular_scheduler_app_state');
+            if (!saved) return false;
+
+            try {
+                const data = JSON.parse(saved);
+
+                if (data.currentWeekNum !== undefined) {
+                    currentWeekNum = data.currentWeekNum;
+                    document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+                }
+
+                if (data.selectedOffice) {
+                    document.getElementById('office-select').value = data.selectedOffice;
+                }
+
+                if (data.selectedDay) {
+                    document.getElementById('schedule-day').value = data.selectedDay;
+                }
+
+                if (data.sortMode) {
+                    scheduleSort = { key: data.sortMode, dir: data.sortDir === -1 ? -1 : 1 };
+                }
+
+                if (data.stateHistoryStack) {
+                    stateHistoryStack = data.stateHistoryStack;
+                }
+
+                applySavedConfig(data);
+
+                if (Array.isArray(data.counterStations)) {
+                    counterStations = data.counterStations.map(c => {
+                        if (c.allowed && c.allowed.classC !== undefined) {
+                            c.allowed.classCM = c.allowed.classC;
+                            delete c.allowed.classC;
+                        }
+                        return c;
+                    });
+                }
+
+                if (Array.isArray(data.employees)) {
+                    employees = data.employees.map(emp => {
+                        if (!emp.outDays) {
+                            emp.outDays = {
+                                mon: !!emp.out,
+                                tue: !!emp.out,
+                                wed: !!emp.out,
+                                thu: !!emp.out,
+                                fri: !!emp.out
+                            };
+                        }
+                        if (emp.classCM === undefined && emp.classC !== undefined) {
+                            emp.classCM = emp.classC;
+                        }
+                        if (emp.publicNotes === undefined) emp.publicNotes = emp.notes || '';
+                        if (emp.privateNotes === undefined) emp.privateNotes = '';
+                        if (emp.training === undefined) emp.training = false;
+                        if (emp.testing === undefined) emp.testing = false;
+                        if (emp.frozen === undefined) emp.frozen = false;
+                        if (emp.frozenPosition === undefined) emp.frozenPosition = '';
+                        if (emp.breakGroup === undefined) emp.breakGroup = 'A';
+                        return emp;
+                    });
+                }
+
+                sortAndRenderEmployees();
+                sortAndRenderCounters();
+                generateSchedule();
+                return true;
+            } catch (err) {
+                console.error('Failed to load saved state:', err);
+                return false;
+            }
+        }
+
+        // Advance Shift with State History Snapshot
+        function advanceShift() {
+            // Push current state snapshot to history stack before advancing
+            const currentStateSnapshot = {
+                currentWeekNum: currentWeekNum,
+                selectedDay: document.getElementById('schedule-day').value,
+                employees: JSON.parse(JSON.stringify(employees)),
+                counterStations: JSON.parse(JSON.stringify(counterStations))
+            };
+            stateHistoryStack.push(currentStateSnapshot);
+
+            const allRoles = [...getRoleNames(), 'Typing'];
+
+            employees.forEach(emp => {
+                const assigned = activeAssignments[emp.id];
+                if (!assigned) return;
+
+                // Days out never count toward rest, but they are counted against a position holder's week
+                if (assigned.startsWith("Out")) {
+                    if (emp.weekRole && !emp.frozen) emp.weekDaysOut = (emp.weekDaysOut || 0) + 1;
+                    return;
+                }
+
+                if (emp.frozen) return;
+
+                if (!emp.shiftsSinceLastAux) emp.shiftsSinceLastAux = {};
+
+                const assignedRole = getPositionRole(assigned);
+                const workedWeekRole = !!emp.weekRole && assignedRole === emp.weekRole;
+
+                allRoles.forEach(role => {
+                    const rules = getRoleRules(role);
+                    if (!rules) return;
+
+                    if (!emp.history[role]) {
+                        emp.history[role] = { consecutive: 0, breakRemaining: 0 };
+                    }
+
+                    const isMatch = (role === 'Typing' && assigned.startsWith('Counter')) || assignedRole === role;
+
+                    if (isMatch) {
+                        emp.history[role].consecutive++;
+                        emp.shiftsSinceLastAux[role] = 0;
+
+                        if (rules.maxRot !== -1 && emp.history[role].consecutive >= rules.maxRot) {
+                            emp.history[role].breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
+                            emp.history[role].consecutive = 0;
+                            if (emp.weekRole === role) releaseWeekRole(emp);
+                        }
+                    } else {
+                        emp.history[role].consecutive = 0;
+                        if (emp.history[role].breakRemaining > 0) {
+                            emp.history[role].breakRemaining--;
+                        }
+                        emp.shiftsSinceLastAux[role] = (emp.shiftsSinceLastAux[role] || 0) + 1;
+                    }
+                });
+
+                const didAux = !!assignedRole;
+                emp.recentAux = [...(emp.recentAux || []), didAux ? 1 : 0].slice(-(DUTY_WINDOW_DAYS - 1));
+                emp.shiftsSinceHeld = workedWeekRole ? 0 : (emp.shiftsSinceHeld || 0) + 1;
+                emp.auxTotal = (emp.auxTotal || 0) + (didAux ? 1 : 0);
+                emp.shiftsSinceAnyAux = didAux ? 0 : (emp.shiftsSinceAnyAux || 0) + 1;
+                if (assigned.startsWith('Unassigned')) {
+                    emp.unassignedCount = (emp.unassignedCount || 0) + 1;
+                }
+            });
+
+            const daySelect = document.getElementById('schedule-day');
+            const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            let currentDayIdx = daysOrder.indexOf(daySelect.value);
+
+            if (currentDayIdx < 4) {
+                daySelect.value = daysOrder[currentDayIdx + 1];
+            } else {
+                daySelect.value = 'mon';
+                currentWeekNum = (currentWeekNum % 3) + 1;
+                document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+
+                // New week: positions and stations rotate
+                employees.forEach(emp => {
+                    if (emp.frozen) return;
+                    if (!emp.weekRole) {
+                        emp.weekStation = '';
+                        return;
+                    }
+
+                    const role = emp.weekRole;
+                    const rules = getRoleRules(role);
+                    if (!emp.history[role]) {
+                        emp.history[role] = { consecutive: 0, breakRemaining: 0 };
+                    }
+
+                    if ((emp.weekDaysOut || 0) >= 3) {
+                        // Out 3+ days of their duty week: no rest earned, same position again next week
+                        emp.history[role].consecutive = 0;
+                        releaseWeekRole(emp);
+                        emp.owedRole = role;
+                    } else if (rules.maxRot !== -1 && rules.maxRot - emp.history[role].consecutive < 5) {
+                        // Max Rot does not leave room for another full week
+                        emp.history[role].breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
+                        emp.history[role].consecutive = 0;
+                        releaseWeekRole(emp);
+                    } else {
+                        emp.weekDaysOut = 0;
+                    }
+                });
+            }
+
+            sortAndRenderEmployees();
+            generateSchedule();
+        }
+
+        document.getElementById('btn-advance').addEventListener('click', advanceShift);
+
+        // Advance Week: five work days, landing on the same weekday next week
+        document.getElementById('btn-advance-week').addEventListener('click', () => {
+            for (let i = 0; i < 5; i++) advanceShift();
+        });
+
+        // Previous Day / Previous Week: Restores an earlier shift state from history stack
+        function previousShift(steps) {
+            if (stateHistoryStack.length === 0) {
+                alert("No previous shift history available to go back to.");
+                return;
+            }
+
+            let prevState = stateHistoryStack.pop();
+            for (let i = 1; i < steps && stateHistoryStack.length > 0; i++) {
+                prevState = stateHistoryStack.pop();
+            }
+            currentWeekNum = prevState.currentWeekNum;
+            document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+            document.getElementById('schedule-day').value = prevState.selectedDay;
+            employees = prevState.employees;
+            counterStations = prevState.counterStations;
+
+            sortAndRenderEmployees();
+            sortAndRenderCounters();
+            generateSchedule();
+        }
+
+        document.getElementById('btn-previous').addEventListener('click', () => previousShift(1));
+        document.getElementById('btn-previous-week').addEventListener('click', () => previousShift(5));
+
+        document.getElementById('cfg-max-aux-week').addEventListener('input', () => {
+            sortAndRenderEmployees();
+            generateSchedule();
+        });
+
+        // PARSE & APPLY JSON STATE HELPER
+        function parseAndApplyJSONState(jsonText) {
+            try {
+                const data = JSON.parse(jsonText);
+
+                if (data.currentWeekNum !== undefined) {
+                    currentWeekNum = data.currentWeekNum;
+                    document.getElementById('week-rotation-counter').value = `Week Rotation Counter: ${currentWeekNum}`;
+                }
+
+                if (data.selectedOffice) {
+                    document.getElementById('office-select').value = data.selectedOffice;
+                }
+
+                if (data.selectedDay) {
+                    document.getElementById('schedule-day').value = data.selectedDay;
+                }
+
+                if (data.stateHistoryStack) {
+                    stateHistoryStack = data.stateHistoryStack;
+                }
+
+                applySavedConfig(data);
+
+                if (Array.isArray(data.counterStations)) {
+                    counterStations = data.counterStations.map(c => {
+                        if (c.allowed && c.allowed.classC !== undefined) {
+                            c.allowed.classCM = c.allowed.classC;
+                            delete c.allowed.classC;
+                        }
+                        return c;
+                    });
+                }
+
+                if (Array.isArray(data.employees)) {
+                    employees = data.employees.map(emp => {
+                        if (!emp.outDays) {
+                            emp.outDays = {
+                                mon: !!emp.out,
+                                tue: !!emp.out,
+                                wed: !!emp.out,
+                                thu: !!emp.out,
+                                fri: !!emp.out
+                            };
+                        }
+                        if (emp.classCM === undefined && emp.classC !== undefined) {
+                            emp.classCM = emp.classC;
+                        }
+                        if (emp.publicNotes === undefined) emp.publicNotes = emp.notes || '';
+                        if (emp.privateNotes === undefined) emp.privateNotes = '';
+                        if (emp.training === undefined) emp.training = false;
+                        if (emp.testing === undefined) emp.testing = false;
+                        if (emp.frozen === undefined) emp.frozen = false;
+                        if (emp.frozenPosition === undefined) emp.frozenPosition = '';
+                        if (emp.breakGroup === undefined) emp.breakGroup = 'A';
+                        return emp;
+                    });
+                }
+
+                sortAndRenderEmployees();
+                sortAndRenderCounters();
+                generateSchedule();
+
+                alert('Schedule state successfully loaded!');
+            } catch (err) {
+                console.error(err);
+                alert('Invalid JSON file. Please ensure this is a valid schedule save file.');
+            }
+        }
+
+        // Open Button in Top Banner: Opens storage folder / file selector to load JSON
+        document.getElementById('btn-open-schedule').addEventListener('click', async () => {
+            try {
+                if ('showOpenFilePicker' in window) {
+                    const [fileHandle] = await window.showOpenFilePicker({
+                        types: [{ description: 'JSON Schedule Files', accept: { 'application/json': ['.json'] } }],
+                        multiple: false
+                    });
+                    const file = await fileHandle.getFile();
+                    const text = await file.text();
+                    parseAndApplyJSONState(text);
+                } else {
+                    const fileInput = document.getElementById('json-file-input');
+                    fileInput.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (evt) => parseAndApplyJSONState(evt.target.result);
+                        reader.readAsText(file);
+                    };
+                    fileInput.click();
+                }
+            } catch (err) {
+                console.warn('Open cancelled or failed:', err);
+            }
+        });
+
+        // JSON Save State Engine (Export) in Top Banner
+        document.getElementById('btn-export-json').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const configState = buildConfigState();
+
+            const now = new Date();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const customTimestamp = `${mm}.${dd}.${yy}_${hh}.${min}.${ss}`;
+            const currentOffice = document.getElementById('office-select').value;
+            const formattedOffice = currentOffice.replace(/\s+/g, '_');
+            const dynamicFilename = `${formattedOffice}_schedule_${customTimestamp}.json`;
+
+            const fullState = {
+                version: "2.4",
+                timestamp: customTimestamp,
+                currentWeekNum: currentWeekNum,
+                selectedOffice: currentOffice,
+                selectedDay: document.getElementById('schedule-day').value,
+                sortMode: scheduleSort.key,
+                sortDir: scheduleSort.dir,
+                config: configState,
+                roles: roles,
+                counterStations: counterStations,
+                employees: employees,
+                stateHistoryStack: stateHistoryStack
+            };
+
+            const blob = new Blob([JSON.stringify(fullState, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = dynamicFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('btn-trigger-import-json').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const fileInput = document.getElementById('json-file-input');
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => parseAndApplyJSONState(evt.target.result);
+                reader.readAsText(file);
+            };
+            fileInput.click();
+        });
+
+        /* TEST MODE */
+        let testModeActive = false;
+        let testModeSavedConfig = null;
+
+        document.getElementById('btn-test-mode').addEventListener('click', () => {
+            testModeActive = !testModeActive;
+
+            if (testModeActive) {
+                const sampleNames = [
+                    "Aiden Bennett", "Noah Brooks", "Liam Carter", "Isabella Foster", "Olivia Harper",
+                    "Jackson Hayes", "Ava Mitchell", "Sophia Reed", "Emma Sullivan", "Mason Thompson",
+                    "Lucas Vance", "Mia Walker", "Ethan Wright", "Amelia Young", "Benjamin Cole",
+                    "Charlotte Davis", "Daniel Evans", "Harper King", "James Lee", "Evelyn Martin",
+                    "Alexander Perez", "Abigail Roberts", "Henry Scott", "Emily Turner", "Michael White",
+                    "Grace Adams", "Samuel Baker", "Chloe Campbell", "David Diaz", "Ella Edwards",
+                    "Joseph Flores", "Victoria Garcia", "Carter Gomez", "Lily Griffin", "Owen Hall",
+                    "Zoe Hernandez", "Wyatt Hughes", "Nora Jackson", "Gabriel Jenkins", "Hannah Johnson",
+                    "Julian Kelly", "Layla Long", "Levi Lopez", "Aria Morgan", "Isaac Murphy",
+                    "Scarlett Nguyen", "Anthony Ortiz", "Penelope Parker", "Dylan Patel", "Riley Phillips",
+                    "Lincoln Ramirez", "Stella Rivera", "Nathan Rogers", "Hazel Sanchez", "Caleb Simmons",
+                    "Aurora Stewart", "Christian Torres", "Violet Vasquez", "Eli Ward", "Lucy Washington",
+                    "Adrian Watson", "Naomi Williams", "Thomas Wood", "Savannah Zimmerman"
+                ];
+
+                // Seeded so Test Mode builds the same office every time
+                let seed = 20261007;
+                const rand = () => {
+                    seed = (seed + 0x6D2B79F5) | 0;
+                    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                };
+                const shuffledIndexes = () => {
+                    const idx = sampleNames.map((_, i) => i);
+                    for (let i = idx.length - 1; i > 0; i--) {
+                        const j = Math.floor(rand() * (i + 1));
+                        [idx[i], idx[j]] = [idx[j], idx[i]];
+                    }
+                    return idx;
+                };
+                const pickSome = (count) => new Set(shuffledIndexes().slice(0, count));
+
+                const groupOrder = shuffledIndexes();
+                const infoStaff = pickSome(46);
+                const classCMStaff = pickSome(20);
+                const cdlStaff = pickSome(10);
+                const bankerStaff = pickSome(12);
+                const trainingStaff = pickSome(8);
+
+                // Absences: 2 out all week, 10 out one day, 3 out two days (~5 of 64 out per day)
+                const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                const absenceOrder = shuffledIndexes();
+                const outDaysByIdx = {};
+                absenceOrder.slice(0, 15).forEach((empIdx, n) => {
+                    const out = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                    if (n < 2) {
+                        dayKeys.forEach(d => out[d] = true);
+                    } else if (n < 12) {
+                        out[dayKeys[n % 5]] = true;
+                    } else {
+                        out[dayKeys[n % 5]] = true;
+                        out[dayKeys[(n + 1) % 5]] = true;
+                    }
+                    outDaysByIdx[empIdx] = out;
+                });
+
+                employees = [];
+                sampleNames.forEach((fullName, idx) => {
+                    const groups = ['A', 'B', 'C'];
+                    employees.push({
+                        id: 'test_emp_' + idx,
+                        name: fullName,
+                        breakGroup: groups[groupOrder.indexOf(idx) % 3],
+                        outDays: outDaysByIdx[idx] || { mon: false, tue: false, wed: false, thu: false, fri: false },
+                        classCM: classCMStaff.has(idx),
+                        cdl: cdlStaff.has(idx),
+                        typing: true,
+                        banker: bankerStaff.has(idx),
+                        info: infoStaff.has(idx),
+                        training: trainingStaff.has(idx),
+                        frozen: false,
+                        frozenPosition: '',
+                        fixedCounter: '',
+                        publicNotes: trainingStaff.has(idx) ? 'Certified Trainer' : '',
+                        privateNotes: 'Staff File #' + (idx + 101),
+                        history: {},
+                        shiftsSinceLastAux: {}
+                    });
+                });
+
+                // 1-6 information desks, 7-56 typing stations, 57-65 desks for road test / CDL / other duties
+                counterStations = [];
+                for (let i = 1; i <= 65; i++) {
+                    let allowed = { counter: false, info: false, banker: false, cdl: false, classCM: false, training: false };
+
+                    if (i <= 6) allowed.info = true;
+                    else if (i <= 56) allowed.counter = true;
+                    else if (i <= 60) allowed.classCM = true;
+                    else if (i <= 62) allowed.cdl = true;
+                    else if (i === 63) allowed.banker = true;
+                    else allowed.training = true;
+
+                    counterStations.push({
+                        id: 'test_cntr_' + i,
+                        number: i,
+                        allowed: allowed
+                    });
+                }
+
+                // Daily staffing: 6 info desks, 4 road test, 2 CDL, 3 other duties (1 banker + 2 training)
+                const testConfig = {
+                    info: { req: 6, rot: 5, brk: 5 },
+                    classcm: { req: 4, rot: 5, brk: 5 },
+                    cdl: { req: 2, rot: 5, brk: 5 },
+                    banker: { req: 1, rot: 5, brk: 15 },
+                    training: { req: 2, rot: 5, brk: 5 }
+                };
+                testModeSavedConfig = {};
+                Object.keys(testConfig).forEach(k => {
+                    const role = roles.find(r => r.id === k);
+                    if (!role) return;
+                    testModeSavedConfig[k] = { req: role.req, rot: role.rot, brk: role.brk };
+                    Object.assign(role, testConfig[k]);
+                });
+                renderRoleConfig();
+
+                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training");
+            } else {
+                employees = [];
+                counterStations = [];
+                if (testModeSavedConfig) {
+                    Object.keys(testModeSavedConfig).forEach(k => {
+                        const role = roles.find(r => r.id === k);
+                        if (role) Object.assign(role, testModeSavedConfig[k]);
+                    });
+                    testModeSavedConfig = null;
+                    renderRoleConfig();
+                }
+                alert("Test Mode Deactivated.");
+            }
+
+            sortAndRenderEmployees();
+            sortAndRenderCounters();
+            generateSchedule();
+        });
+
+        // Initialize state on load
+        renderRoleConfig();
+        if (!loadSavedState()) {
+            sortAndRenderEmployees();
+            sortAndRenderCounters();
+            generateSchedule();
+        }
+    </script>
+</body>
+</html>
