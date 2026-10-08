@@ -1097,23 +1097,121 @@
         }
 
         /* Appointments to Publish page */
+        .ap-period {
+            margin: 4px 0 10px 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        /* The headline numbers above the table */
+        .ap-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ap-card {
+            min-width: 130px;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--panel-bg);
+        }
+        .ap-card.ap-main {
+            border-color: var(--primary);
+            box-shadow: inset 0 3px 0 var(--primary);
+        }
+        .ap-card-value {
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1.15;
+            font-variant-numeric: tabular-nums;
+        }
+        .ap-card-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .ap-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--panel-bg);
+        }
+        .full-view table.ap-table {
+            border: none;
+            font-size: 0.95rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .ap-table th,
+        .ap-table td {
+            padding: 7px 12px;
+            white-space: nowrap;
+        }
         .ap-table th:not(:first-child),
         .ap-table td:not(:first-child) {
+            min-width: 62px;
             text-align: center;
         }
-        .ap-table tr.ap-group td {
-            background-color: var(--summary-bg);
-            font-weight: 600;
-        }
-        .ap-table tr.ap-total td {
-            border-top: 2px solid var(--border);
-            font-weight: 600;
-        }
+        .ap-table th small,
         .ap-table td small {
             display: block;
             color: var(--text-muted);
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: normal;
+        }
+        /* The names stay put when a wide table is scrolled sideways */
+        .ap-table th:first-child,
+        .ap-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            min-width: 250px;
+            background-color: var(--panel-bg);
+        }
+        .ap-table th:first-child {
+            background-color: var(--table-th-bg);
+        }
+        /* Groups are shaded headings; each level of nesting keeps its colour from the Settings page */
+        .ap-table tr { --ag-colour: #2563eb; }
+        .ap-table tr.ap-l2 { --ag-colour: #0d9488; }
+        .ap-table tr.ap-l3 { --ag-colour: #d97706; }
+        .ap-table tr.ap-l4 { --ag-colour: #9333ea; }
+        .ap-table tr.ap-l5 { --ag-colour: #db2777; }
+        .ap-table tr.ap-group td {
+            background-color: var(--summary-bg);
+            font-weight: 700;
+        }
+        .ap-table tr.ap-group td:first-child,
+        .ap-table tr.ap-type td:first-child {
+            box-shadow: inset 4px 0 0 var(--ag-colour);
+        }
+        .ap-table tr.ap-type:hover td,
+        .ap-table tr.ap-total:hover td,
+        .ap-table tr.ap-info:hover td {
+            background-color: var(--summary-hover);
+        }
+        .ap-table tr.ap-section td {
+            position: static;
+            padding-top: 18px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        .ap-table tr.ap-grand td {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .ap-table .ap-sum {
+            border-left: 2px solid var(--border);
+            font-weight: 700;
+        }
+        /* Zeros and closed days step back so the real numbers stand out */
+        .ap-table td.ap-faint {
+            color: var(--text-muted);
+            opacity: 0.55;
         }
         #ap-warnings .alert-box {
             margin-bottom: 8px;
@@ -1522,6 +1620,7 @@
         </div>
         <div class="banner-controls">
             <button id="btn-save" style="background-color: #3b82f6; padding: 6px 16px; font-size: 0.8rem;" title="Save the schedule to this browser and your storage folder">Save</button>
+            <button id="btn-update" style="background-color: #059669; padding: 6px 16px; font-size: 0.8rem;" title="Recalculate the schedule and redraw the screen you are on with every change made so far">Update</button>
 
             <div class="menu">
                 <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">File ▾</button>
@@ -1669,6 +1768,16 @@
                     <tbody id="settings-roadtest"></tbody>
                 </table>
                 <button id="btn-roadtest-copy" style="margin-top: 8px; background-color: #64748b;">Copy Monday to All Days</button>
+            </div>
+
+            <div class="help-card">
+                <h2>CDL road test hours</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">When CDL road tests take place on each day, if that differs from the other road tests. An appointment group uses these when its hours are set to CDL road test hours.</small>
+                <table class="settings-table">
+                    <thead><tr><th>Day</th><th>From</th><th>To</th></tr></thead>
+                    <tbody id="settings-cdltest"></tbody>
+                </table>
+                <button id="btn-cdltest-copy" style="margin-top: 8px; background-color: #64748b;">Copy Monday to All Days</button>
             </div>
 
             <div class="help-card">
@@ -2037,11 +2146,10 @@
         <div class="ev-header">
             <div>
                 <div id="ap-title" class="ev-title"></div>
-                <div class="ev-subtitle">Worked out from who the schedule has in each group's positions hour by hour (after breaks, lunches, time off and the after-lunch swap), the transaction times and the group weights. Today onward is a forecast.</div>
+                <div class="ev-subtitle">How many appointments to post, from who the schedule has on each position. Breaks, lunches, time off and the after-lunch swap are taken out. Today onward is a forecast.</div>
             </div>
             <div class="ev-controls ev-no-print">
-                <select id="ap-week" style="width: auto;"></select>
-                <select id="ap-day" style="width: auto;" title="Show the whole week, or one day hour by hour"></select>
+                <select id="ap-week" style="width: auto;" title="Which week to show"></select>
                 <button id="ap-export" style="background-color: #059669;">Export CSV</button>
                 <button id="ap-print" style="background-color: #059669;">Print</button>
                 <button id="ap-settings" style="background-color: #64748b;">Edit Groups</button>
@@ -2049,13 +2157,19 @@
             </div>
         </div>
 
+        <div id="ap-days" class="ev-days ev-no-print"></div>
         <div id="ap-calendar-notes" class="fw-legend"></div>
         <div id="ap-warnings"></div>
 
-        <table class="ap-table">
-            <thead id="ap-thead"></thead>
-            <tbody id="ap-tbody"></tbody>
-        </table>
+        <div id="ap-period" class="ap-period"></div>
+        <div id="ap-cards" class="ap-cards"></div>
+
+        <div class="ap-wrap">
+            <table class="ap-table">
+                <thead id="ap-thead"></thead>
+                <tbody id="ap-tbody"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Hidden file input for JSON imports -->
@@ -2871,8 +2985,7 @@
                                 <button class="btn-warning" onclick="setPartialOut('${emp.id}')">Set</button>
                                 ${DAYS_MAP.map((d, i) => {
                                     const date = addDaysISO(planWeekStart, i);
-                                    const partial = partialOutOf(emp, date);
-                                    return partial ? `<span class="stat-tag">${d.label} ${formatClock(partial.start)}–${formatClock(partial.end)} <button class="btn-danger" style="padding: 0 5px;" title="Remove" onclick="removePartialOut('${emp.id}', '${date}')">✕</button></span>` : '';
+                                    return partialOutOf(emp, date).map(off => `<span class="stat-tag">${d.label} ${formatClock(off.start)}–${formatClock(off.end)} <button class="btn-danger" style="padding: 0 5px;" title="Remove" onclick="removePartialOut('${emp.id}', '${date}', '${off.start}')">✕</button></span>`).join('');
                                 }).join('')}
                             </div>
                         </div>
@@ -2965,8 +3078,8 @@
             }
         }
 
-        // Part-day time off: emp.partialOut['YYYY-MM-DD'] = { start, end } as 'HH:MM', one stretch per day.
-        // It does not change who holds which position; the appointment counts leave those hours out.
+        // Part-day time off: emp.partialOut['YYYY-MM-DD'] = [{ start, end }] as 'HH:MM', any number of
+        // stretches a day. It does not change who holds which position; the appointment counts leave those hours out.
         function setPartialOut(id) {
             const emp = employees.find(e => e.id === id);
             if (!emp) return;
@@ -2977,16 +3090,23 @@
                 return;
             }
             const date = scheduleDateOf(document.getElementById('po-day-' + id).value, planWeekStart);
+            const existing = partialOutOf(emp, date);
+            if (existing.some(off => start < off.end && off.start < end)) {
+                alert('That overlaps time off already set for the day. Remove the other one first, or pick times that do not overlap.');
+                return;
+            }
             if (!emp.partialOut) emp.partialOut = {};
-            emp.partialOut[date] = { start: start, end: end };
+            emp.partialOut[date] = existing.concat({ start: start, end: end });
             sortAndRenderEmployees();
             generateSchedule();
         }
 
-        function removePartialOut(id, date) {
+        // Removes the stretch that starts at the given time
+        function removePartialOut(id, date, start) {
             const emp = employees.find(e => e.id === id);
             if (!emp || !emp.partialOut) return;
-            delete emp.partialOut[date];
+            emp.partialOut[date] = partialOutOf(emp, date).filter(off => off.start !== start);
+            if (emp.partialOut[date].length === 0) delete emp.partialOut[date];
             sortAndRenderEmployees();
             generateSchedule();
         }
@@ -3019,7 +3139,7 @@
         }
 
         document.getElementById('btn-clear-all-out').addEventListener('click', () => {
-            const hasPartial = e => DAYS_MAP.some((d, i) => partialOutOf(e, addDaysISO(planWeekStart, i)));
+            const hasPartial = e => DAYS_MAP.some((d, i) => partialOutOf(e, addDaysISO(planWeekStart, i)).length > 0);
             const outCount = employees.filter(e => Object.values(getPlanOutDays(e, planWeekStart)).some(v => v) || hasPartial(e)).length;
             if (outCount === 0) return;
             if (!confirm(`Clear all days off and part-day time off for the week of ${formatWeekRange(planWeekStart)} for ${outCount} employee(s)?`)) return;
@@ -3432,6 +3552,7 @@
             configState.lunchSwap = document.getElementById('cfg-lunch-swap').checked;
             configState.breakSchedules = BREAK_SCHEDULES;
             configState.roadTestHours = roadTestHours;
+            configState.cdlTestHours = cdlTestHours;
             configState.transactionTimes = transactionTimes;
             configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes };
             configState.restUnit = 'days';
@@ -3487,6 +3608,10 @@
                 const savedRoadTest = data.config.roadTestHours || {};
                 DAYS_MAP.forEach(d => {
                     if (savedRoadTest[d.key]) roadTestHours[d.key] = { start: savedRoadTest[d.key].start || '', end: savedRoadTest[d.key].end || '' };
+                });
+                const savedCdlTest = data.config.cdlTestHours || {};
+                DAYS_MAP.forEach(d => {
+                    if (savedCdlTest[d.key]) cdlTestHours[d.key] = { start: savedCdlTest[d.key].start || '', end: savedCdlTest[d.key].end || '' };
                 });
                 const savedTransactions = data.config.transactionTimes || {};
                 TRANSACTION_TYPES.forEach(type => {
@@ -4493,6 +4618,9 @@
         // Daily road test window, 'HH:MM' 24-hour ('' until set)
         let roadTestHours = {};
         DAYS_MAP.forEach(d => roadTestHours[d.key] = { start: '', end: '' });
+        // Daily CDL road test window, kept apart because it is usually shorter
+        let cdlTestHours = {};
+        DAYS_MAP.forEach(d => cdlTestHours[d.key] = { start: '', end: '' });
 
         // "9:10 AM" -> "09:10", for the time boxes
         function clockTo24(text) {
@@ -4514,6 +4642,13 @@
                     <td><strong>${d.full}</strong></td>
                     <td><input type="time" value="${roadTestHours[d.key].start}" onchange="updateRoadTestHours('${d.key}', 'start', this.value)"></td>
                     <td><input type="time" value="${roadTestHours[d.key].end}" onchange="updateRoadTestHours('${d.key}', 'end', this.value)"></td>
+                </tr>`).join('');
+
+            document.getElementById('settings-cdltest').innerHTML = DAYS_MAP.map(d => `
+                <tr>
+                    <td><strong>${d.full}</strong></td>
+                    <td><input type="time" value="${cdlTestHours[d.key].start}" onchange="updateCdlTestHours('${d.key}', 'start', this.value)"></td>
+                    <td><input type="time" value="${cdlTestHours[d.key].end}" onchange="updateCdlTestHours('${d.key}', 'end', this.value)"></td>
                 </tr>`).join('');
 
             document.getElementById('settings-transactions').innerHTML = TRANSACTION_TYPES.map(type => `
@@ -4548,6 +4683,16 @@
             const hours = roadTestHours[dayKey];
             if (hours.start && hours.end && hours.start >= hours.end) {
                 alert('The road test end time must be later than the start time.');
+                hours[edge] = '';
+                renderSettingsPage();
+            }
+        }
+
+        function updateCdlTestHours(dayKey, edge, value) {
+            cdlTestHours[dayKey][edge] = value;
+            const hours = cdlTestHours[dayKey];
+            if (hours.start && hours.end && hours.start >= hours.end) {
+                alert('The CDL road test end time must be later than the start time.');
                 hours[edge] = '';
                 renderSettingsPage();
             }
@@ -4600,6 +4745,11 @@
             renderSettingsPage();
         });
 
+        document.getElementById('btn-cdltest-copy').addEventListener('click', () => {
+            DAYS_MAP.forEach(d => cdlTestHours[d.key] = { ...cdlTestHours.mon });
+            renderSettingsPage();
+        });
+
         // Puts back any standard position that has been removed, with its standard settings
         document.getElementById('btn-restore-roles').addEventListener('click', () => {
             const missing = DEFAULT_ROLES.filter(def => !roles.some(r => r.id === def.id));
@@ -4635,12 +4785,23 @@
             const type = (txn, weight) => ({ id: newAppointmentId(), txn: txn, weight: weight });
             const group = (name, weight, positions, hours, children) => ({ id: newAppointmentId(), name: name, weight: weight, positions: positions, hours: hours, children: children });
             return [
-                group('Typing', 100, [TYPING_POSITION], 'office', [type('short', 50), type('long', 50)]),
+                group('Typing', 100, [TYPING_POSITION], 'office', [type('short', 35), type('long', 65)]),
                 group('Driving tests', 100, [], 'roadtest', [
                     group('Class C road tests', 50, ['classcm'], 'roadtest', [type('roadTestC', 100)]),
-                    group('CDL road tests', 50, ['cdl'], 'roadtest', [type('roadTestCDL', 100)])
+                    group('CDL road tests', 50, ['cdl'], 'cdl', [type('roadTestCDL', 100)])
                 ])
             ];
+        }
+
+        // The sets of daily hours a group can serve its appointments in
+        const APPOINTMENT_HOUR_SETS = [
+            { key: 'office', label: 'Appointment hours', table: () => appointmentHours },
+            { key: 'roadtest', label: 'Road test hours', table: () => roadTestHours },
+            { key: 'cdl', label: 'CDL road test hours', table: () => cdlTestHours }
+        ];
+
+        function appointmentHourSet(key) {
+            return APPOINTMENT_HOUR_SETS.find(set => set.key === key) || APPOINTMENT_HOUR_SETS[0];
         }
 
         let appointmentGroups = defaultAppointmentGroups();
@@ -4671,7 +4832,7 @@
                         name: String(node.name || 'Group'),
                         weight: clampWeight(node.weight),
                         positions: Array.isArray(node.positions) ? node.positions.map(String) : [],
-                        hours: node.hours === 'roadtest' ? 'roadtest' : 'office',
+                        hours: appointmentHourSet(node.hours).key,
                         children: cleanAppointmentNodes(node.children, depth + 1)
                     };
                 }
@@ -4722,7 +4883,7 @@
         // The part of a day a group serves appointments, as minutes since midnight, after the office
         // calendar has been applied. null when the hours are not set or nothing is left of the day.
         function appointmentWindow(hoursKey, dayKey, iso) {
-            const hours = (hoursKey === 'roadtest' ? roadTestHours : appointmentHours)[dayKey];
+            const hours = appointmentHourSet(hoursKey).table()[dayKey];
             let start = clockMinutes(hours.start);
             let end = clockMinutes(hours.end);
             if (start === null || end === null || isOfficeClosed(iso)) return null;
@@ -4768,8 +4929,12 @@
         const AWAY_OFF = '#off';
         const DAY_MINUTES = 24 * 60;
 
+        // The stretches a person is off on a date, earliest first: [{ start, end }] as 'HH:MM'.
+        // Files saved when only one stretch a day was allowed hold a single { start, end } instead.
         function partialOutOf(emp, iso) {
-            return (emp.partialOut || {})[iso] || null;
+            const saved = (emp.partialOut || {})[iso];
+            if (!saved) return [];
+            return (Array.isArray(saved) ? saved : [saved]).slice().sort((a, b) => a.start.localeCompare(b.start));
         }
 
         // Where everyone is for each minute of a day: timelines[emp id][minute] = a position id,
@@ -4802,8 +4967,7 @@
                 ['am', 'lunch', 'pm'].forEach(slot => {
                     if (startOf(slot) !== null) line.fill(AWAY_BREAK, startOf(slot), Math.min(DAY_MINUTES, startOf(slot) + breakMinutes[slot]));
                 });
-                const partial = partialOutOf(emp, iso);
-                if (partial) line.fill(AWAY_OFF, clockMinutes(partial.start), clockMinutes(partial.end));
+                partialOutOf(emp, iso).forEach(off => line.fill(AWAY_OFF, clockMinutes(off.start), clockMinutes(off.end)));
             });
             return timelines;
         }
@@ -4910,8 +5074,8 @@
                 }
                 const staffed = staffedAbove || node.positions.length > 0;
                 node.positions.forEach(p => (positionUse[p] = positionUse[p] || []).push(node.name));
-                if (node.positions.length > 0 && hoursBlank(node.hours === 'roadtest' ? roadTestHours : appointmentHours)) {
-                    warnings.push(`"${node.name}" uses the ${node.hours === 'roadtest' ? 'road test hours' : 'appointment hours'}, which are not set for any day.`);
+                if (node.positions.length > 0 && hoursBlank(appointmentHourSet(node.hours).table())) {
+                    warnings.push(`"${node.name}" uses the ${appointmentHourSet(node.hours).label.toLowerCase().replace('cdl', 'CDL')}, which are not set for any day.`);
                 }
                 if (!staffed && node.children.some(child => !isAppointmentGroup(child))) {
                     warnings.push(`"${node.name}" has no positions ticked, and neither has any group above it, so its appointment types have no staff time.`);
@@ -4979,7 +5143,7 @@
                 const staffOpen = appointmentStaffOpen.has(node.id);
                 const staffedBy = choices.filter(c => node.positions.includes(c.id)).map(c => c.label);
                 const staffText = staffedBy.length > 0
-                    ? `${staffedBy.join(', ')} · ${node.hours === 'roadtest' ? 'road test hours' : 'appointment hours'}`
+                    ? `${staffedBy.join(', ')} · ${appointmentHourSet(node.hours).label}`
                     : (depth > 1 ? 'its share of the group above' : 'no positions of its own');
                 const summary = appointmentWeightSummary(node);
 
@@ -4999,8 +5163,7 @@
                                 ${node.positions.length > 0 ? `
                                     <span class="ag-caption">during</span>
                                     <select onchange="updateAppointmentNode('${node.id}', 'hours', this.value)">
-                                        <option value="office" ${node.hours === 'office' ? 'selected' : ''}>Appointment hours</option>
-                                        <option value="roadtest" ${node.hours === 'roadtest' ? 'selected' : ''}>Road test hours</option>
+                                        ${APPOINTMENT_HOUR_SETS.map(set => `<option value="${set.key}" ${node.hours === set.key ? 'selected' : ''}>${set.label}</option>`).join('')}
                                     </select>` : ''}
                                 <button class="ag-link" onclick="toggleAppointmentStaff('${node.id}')">Done</button>
                             </div>` : ''}
@@ -5151,12 +5314,19 @@
             return { weekStart: weekStart, days: days, rows: rows };
         }
 
-        // The table the page is showing: the five days of a week, or one day hour by hour. Drawn on the
+        // '' shows the whole week by day; '0' to '4' shows that day of the week hour by hour
+        let appointmentDayChoice = '';
+
+        // What the page is showing: the five days of a week, or one day hour by hour. Drawn on the
         // screen and written to the CSV from the same rows.
-        // { columns: [label], totalLabel, rows: [{ label, notes, depth, kind, cells: [{ text, detail }], total }], empty, fileTag }
+        // {
+        //   period, columns: [{ label, sub }], totalLabel, empty, weekStart, fileTag,
+        //   cards: [{ label, value, main }],
+        //   rows: [{ kind: 'group' | 'type' | 'section' | 'total' | 'grand' | 'info', label, notes, depth, level,
+        //            cells: [{ text, detail, faint }], total }]
+        // }
         function buildAppointmentTable() {
             const week = parseInt(document.getElementById('ap-week').value) || 0;
-            const dayChoice = document.getElementById('ap-day').value;
             const report = buildAppointmentReport(week);
             const choices = appointmentPositionChoices();
             const sum = list => list.reduce((total, n) => total + n, 0);
@@ -5164,11 +5334,12 @@
 
             // Each column picks its own figures { minutes, count } out of a row's five day cells
             const columns = [];
-            const day = dayChoice === '' ? null : report.days[parseInt(dayChoice)];
+            const day = appointmentDayChoice === '' ? null : report.days[parseInt(appointmentDayChoice)];
             let empty = '';
             if (!day) {
                 report.days.forEach((d, i) => columns.push({
-                    label: `${DAYS_MAP[i].label} ${parseISODate(d.iso).getMonth() + 1}/${parseISODate(d.iso).getDate()}`,
+                    label: DAYS_MAP[i].full,
+                    sub: `${MONTH_NAMES[parseISODate(d.iso).getMonth()].slice(0, 3)} ${parseISODate(d.iso).getDate()}`,
                     blank: d.closed ? 'Closed' : (d.results ? '' : '–'),
                     pick: cells => cells[i],
                     detail: (node, fig) => (node.positions.length > 0 ? `${fig.staff} staff · ` : '') + `${tenths(fig.minutes)} h`
@@ -5180,9 +5351,10 @@
             } else if (!day.range) {
                 empty = 'No group has hours set for this day. Set them under Settings.';
             } else {
-                const dayIdx = parseInt(dayChoice);
+                const dayIdx = parseInt(appointmentDayChoice);
                 for (let h = Math.floor(day.range.start / 60); h * 60 < day.range.end; h++) columns.push({
-                    label: formatClock(`${h}:00`),
+                    label: `${(h % 12) || 12} ${h < 12 ? 'AM' : 'PM'}`,
+                    sub: '',
                     blank: '',
                     hour: h,
                     pick: cells => cells[dayIdx] ? cells[dayIdx].hours[h] : null,
@@ -5191,8 +5363,9 @@
                 });
             }
 
-            const cellOf = (col, count, detail) => ({ text: col.blank || String(count), detail: col.blank ? '' : detail });
+            const cellOf = (col, count, detail) => ({ text: col.blank || String(count), detail: col.blank ? '' : detail, faint: !!col.blank || count === 0 });
             const typeCounts = {};
+            const typeUses = {};
 
             const rows = report.rows.map(row => {
                 const node = row.node;
@@ -5200,10 +5373,10 @@
                 const notes = [];
                 if (isGroup) {
                     const staffedBy = choices.filter(c => node.positions.includes(c.id)).map(c => c.label);
-                    if (staffedBy.length > 0) notes.push(`staffed by ${staffedBy.join(', ')}`);
-                    if (row.depth > 0) notes.push(`weight ${node.weight}%`);
+                    if (staffedBy.length > 0) notes.push(`Staffed by ${staffedBy.join(', ')}`);
+                    if (row.depth > 0) notes.push(`${node.weight}% of the group above`);
                 } else {
-                    notes.push(`weight ${node.weight}%`, transactionTimes[node.txn] > 0 ? `${transactionTimes[node.txn]} min each` : 'no time set');
+                    notes.push(transactionTimes[node.txn] > 0 ? `${transactionTimes[node.txn]} min each` : 'no time set', `${node.weight}% of this group`);
                 }
 
                 const figures = columns.map(col => col.pick(row.cells));
@@ -5212,40 +5385,55 @@
                 if (!isGroup) {
                     typeCounts[node.txn] = typeCounts[node.txn] || columns.map(() => 0);
                     counts.forEach((count, c) => typeCounts[node.txn][c] += count);
+                    typeUses[node.txn] = (typeUses[node.txn] || 0) + 1;
                 }
 
                 return {
+                    kind: isGroup ? 'group' : 'type',
                     label: appointmentNodeLabel(node),
                     notes: notes.join(' · '),
                     depth: row.depth,
-                    kind: isGroup ? 'group' : '',
+                    // An appointment type carries the colour of the group it sits in
+                    level: isGroup ? row.depth + 1 : row.depth,
                     // A group that only holds other groups has no minutes of its own to show
                     cells: columns.map((col, c) => cellOf(col, counts[c], isGroup && figures[c] && figures[c].minutes > 0 ? col.detail(node, figures[c]) : '')),
                     total: sum(counts)
                 };
             });
 
+            const sectionRow = label => rows.push({ kind: 'section', label: label, notes: '', depth: 0, level: 0, cells: [], total: '' });
             const totalRow = (label, counts, kind) => rows.push({
-                label: label, notes: '', depth: 0, kind: kind,
+                kind: kind, label: label, notes: '', depth: 0, level: 0,
                 cells: columns.map((col, c) => cellOf(col, counts[c], '')),
                 total: sum(counts)
             });
             const typeKeys = TRANSACTION_TYPES.filter(t => typeCounts[t.key]);
-            typeKeys.forEach((t, n) => totalRow(`All ${t.label}`, typeCounts[t.key], n === 0 ? 'total' : ''));
-            if (typeKeys.length > 0) totalRow('All appointments', columns.map((col, c) => sum(typeKeys.map(t => typeCounts[t.key][c]))), 'total');
+            const allCounts = columns.map((col, c) => sum(typeKeys.map(t => typeCounts[t.key][c])));
+            if (typeKeys.length > 0) {
+                sectionRow('Totals');
+                // Listed by type only when a type is split over more than one group; otherwise the rows above already say it
+                if (typeKeys.some(t => typeUses[t.key] > 1)) typeKeys.forEach(t => totalRow(`All ${t.label}`, typeCounts[t.key], 'total'));
+                totalRow('All appointments', allCounts, 'grand');
+            }
 
             // By the hour, the staff time that breaks and time off take out of each hour is listed too
             if (day && columns.length > 0) {
-                [['Staff on break or lunch', day.away.break], ['Staff off (all or part of the day)', day.away.off]].forEach(([label, minutes], n) => rows.push({
-                    label: label, notes: 'people away, averaged over the hour', depth: 0, kind: n === 0 ? 'total' : '',
-                    cells: columns.map(col => ({ text: tenths(minutes[col.hour]), detail: '' })),
+                sectionRow('People away, averaged over each hour');
+                [['On break or lunch', day.away.break], ['Off for all or part of the day', day.away.off]].forEach(([label, minutes]) => rows.push({
+                    kind: 'info', label: label, notes: '', depth: 0, level: 0,
+                    cells: columns.map(col => ({ text: tenths(minutes[col.hour]), detail: '', faint: minutes[col.hour] === 0 })),
                     total: ''
                 }));
             }
 
+            const cards = [{ label: day ? 'Appointments this day' : 'Appointments this week', value: sum(allCounts), main: true }]
+                .concat(typeKeys.map(t => ({ label: t.label, value: sum(typeCounts[t.key]), main: false })));
+
             return {
-                columns: columns.map(col => col.label),
-                totalLabel: day ? 'Day' : 'Week',
+                period: day ? `${formatLongDate(day.iso)}, hour by hour` : `Week of ${formatWeekRange(report.weekStart, true)}, day by day`,
+                columns: columns.map(col => ({ label: col.label, sub: col.sub })),
+                totalLabel: day ? 'Day total' : 'Week total',
+                cards: columns.length > 0 ? cards : [],
                 rows: rows,
                 empty: empty,
                 weekStart: report.weekStart,
@@ -5255,15 +5443,28 @@
 
         function renderAppointmentsView() {
             const table = buildAppointmentTable();
+            const week = parseInt(document.getElementById('ap-week').value) || 0;
 
             document.getElementById('ap-title').textContent = `${document.getElementById('office-select').value}: Appointments to Publish`;
             document.getElementById('ap-calendar-notes').innerHTML = calendarNotesHTML(table.weekStart, 5);
             document.getElementById('ap-warnings').innerHTML = '';
             appointmentWarnings().forEach(msg => document.getElementById('ap-warnings').appendChild(createAlertBox('warning', msg)));
 
+            // Whole week, or one of its days by the hour
+            document.getElementById('ap-days').innerHTML =
+                [['', 'Whole week']].concat(DAYS_MAP.map((d, i) => [String(i), formatShortDate(addDaysISO(currentWeekStart, 7 * week + i))]))
+                    .map(([value, label]) => `<button class="ev-day${value === appointmentDayChoice ? ' active' : ''}" onclick="pickAppointmentDay('${value}')">${label}</button>`).join('');
+
+            document.getElementById('ap-period').textContent = table.period;
+            document.getElementById('ap-cards').innerHTML = table.cards.map(card => `
+                <div class="ap-card${card.main ? ' ap-main' : ''}">
+                    <div class="ap-card-value">${card.value}</div>
+                    <div class="ap-card-label">${escapeHTML(card.label)}</div>
+                </div>`).join('');
+
             const width = table.columns.length + 2;
             document.getElementById('ap-thead').innerHTML = `<tr><th>Group / appointment type</th>${
-                table.columns.map(label => `<th>${label}</th>`).join('')}<th>${table.totalLabel}</th></tr>`;
+                table.columns.map(col => `<th>${col.label}${col.sub ? `<small>${col.sub}</small>` : ''}</th>`).join('')}<th class="ap-sum">${table.totalLabel}</th></tr>`;
 
             let bodyHTML;
             if (appointmentGroups.length === 0) {
@@ -5271,24 +5472,20 @@
             } else if (table.empty) {
                 bodyHTML = `<tr><td colspan="${width}">${table.empty}</td></tr>`;
             } else {
-                bodyHTML = table.rows.map(row => `
-                    <tr class="${row.kind === 'group' ? 'ap-group' : (row.kind === 'total' ? 'ap-total' : '')}">
-                        <td style="padding-left: ${10 + row.depth * 22}px;">${escapeHTML(row.label)}${row.notes ? `<small>${escapeHTML(row.notes)}</small>` : ''}</td>
-                        ${row.cells.map(cell => `<td>${cell.text}${cell.detail ? `<small>${cell.detail}</small>` : ''}</td>`).join('')}
-                        <td><strong>${row.total}</strong></td>
+                bodyHTML = table.rows.map(row => row.kind === 'section'
+                    ? `<tr class="ap-section"><td colspan="${width}">${escapeHTML(row.label)}</td></tr>`
+                    : `<tr class="ap-${row.kind} ap-l${row.level}">
+                        <td style="padding-left: ${14 + row.depth * 22}px;">${escapeHTML(row.label)}${row.notes ? `<small>${escapeHTML(row.notes)}</small>` : ''}</td>
+                        ${row.cells.map(cell => `<td class="${cell.faint ? 'ap-faint' : ''}">${cell.text}${cell.detail ? `<small>${cell.detail}</small>` : ''}</td>`).join('')}
+                        <td class="ap-sum">${row.total}</td>
                     </tr>`).join('');
             }
             document.getElementById('ap-tbody').innerHTML = bodyHTML;
         }
 
-        // The day list names the dates of the week chosen, so it is refilled whenever the week changes
-        function fillAppointmentDayChoices() {
-            const week = parseInt(document.getElementById('ap-week').value) || 0;
-            const daySelect = document.getElementById('ap-day');
-            const chosen = daySelect.value;
-            daySelect.innerHTML = '<option value="">Whole week, by day</option>' + DAYS_MAP.map((d, i) =>
-                `<option value="${i}">${formatShortDate(addDaysISO(currentWeekStart, 7 * week + i))}, by hour</option>`).join('');
-            daySelect.value = chosen;
+        function pickAppointmentDay(value) {
+            appointmentDayChoice = value;
+            renderAppointmentsView();
         }
 
         function openAppointmentsView() {
@@ -5297,7 +5494,6 @@
             const chosen = weekSelect.value || '0';
             weekSelect.innerHTML = FOUR_WEEK_LABELS.map((label, w) => `<option value="${w}">${label} (${formatWeekRange(addDaysISO(currentWeekStart, 7 * w))})</option>`).join('');
             weekSelect.value = chosen;
-            fillAppointmentDayChoices();
             closeFullViews();
             document.body.classList.add('full-view-open');
             document.getElementById('appointments-view').hidden = false;
@@ -5317,15 +5513,11 @@
             openSettings();
         });
         document.getElementById('ap-print').addEventListener('click', () => window.print());
-        document.getElementById('ap-day').addEventListener('change', renderAppointmentsView);
-        document.getElementById('ap-week').addEventListener('change', () => {
-            fillAppointmentDayChoices();
-            renderAppointmentsView();
-        });
+        document.getElementById('ap-week').addEventListener('change', renderAppointmentsView);
 
         document.getElementById('ap-export').addEventListener('click', () => {
             const table = buildAppointmentTable();
-            const lines = [['Group / appointment type', 'Details'].concat(table.columns, [table.totalLabel])];
+            const lines = [['Group / appointment type', 'Details'].concat(table.columns.map(col => `${col.label} ${col.sub}`.trim()), [table.totalLabel])];
             table.rows.forEach(row => {
                 lines.push(['  '.repeat(row.depth) + row.label, row.notes].concat(row.cells.map(cell => cell.text), [row.total]));
             });
@@ -5975,8 +6167,8 @@
                 row.overrideText = activeOverrideText(emp, scheduleDateOf(document.getElementById('schedule-day').value));
 
                 // Part-day time off is shown ahead of the note; a full day out already says Out
-                const partial = row.pos.startsWith('Out') ? null : partialOutOf(emp, scheduleDateOf(document.getElementById('schedule-day').value));
-                row.partialHTML = partial ? `<strong>Off ${formatClock(partial.start)}–${formatClock(partial.end)}</strong> ` : '';
+                const partial = row.pos.startsWith('Out') ? [] : partialOutOf(emp, scheduleDateOf(document.getElementById('schedule-day').value));
+                row.partialHTML = partial.length > 0 ? `<strong>Off ${partial.map(off => `${formatClock(off.start)}–${formatClock(off.end)}`).join(', ')}</strong> ` : '';
 
                 const swap = scheduleLunchSwaps[row.id];
                 row.swapHTML = !swap ? '' : (swap.unpaired
@@ -6244,6 +6436,21 @@
         }
 
         document.getElementById('btn-save').addEventListener('click', saveAppState);
+
+        // Update: applies whatever has been changed, on any screen, to the schedule straight away
+        document.getElementById('btn-update').addEventListener('click', e => {
+            // A box still being typed in is committed first
+            if (document.activeElement && document.activeElement !== e.currentTarget) document.activeElement.blur();
+            renderRoleConfig();
+            sortAndRenderEmployees();
+            sortAndRenderCounters();
+            generateSchedule();
+            if (!document.getElementById('settings-view').hidden) renderSettingsPage();
+
+            const button = e.currentTarget;
+            button.textContent = 'Updated ✓';
+            setTimeout(() => button.textContent = 'Update', 1200);
+        });
 
         function loadSavedState() {
             const saved = localStorage.getItem('modular_scheduler_app_state');
@@ -6730,6 +6937,7 @@
         let testModeSavedConfig = null;
         let testModeSavedCalendar = null;
         let testModeSavedLog = null;
+        let testModeSavedTimes = null;
 
         document.getElementById('btn-test-mode').addEventListener('click', () => {
             testModeActive = !testModeActive;
@@ -6847,6 +7055,40 @@
                     qualifiedRest.slice(2, 4).forEach(empIdx => planFor(empIdx, weekISO).duty = 'none');
                 }
 
+                // Part-day time off: eight people this week and four in each later week are away for 2 to 4
+                // hours at some point in the day. Every third one has a second, shorter stretch the same day.
+                const partialByIdx = {};
+                const clock = minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+                for (let w = 0; w <= 3; w++) {
+                    shuffledIndexes().slice(0, w === 0 ? 8 : 4).forEach((empIdx, n) => {
+                        const date = addDaysISO(currentWeekStart, 7 * w + Math.floor(rand() * 5));
+                        // Between 7:00 AM and 6:00 PM, on the half hour
+                        const length = 120 + 30 * Math.floor(rand() * 5);
+                        const start = 420 + 30 * Math.floor(rand() * ((1080 - 420 - length) / 30 + 1));
+                        const slots = [{ start: clock(start), end: clock(start + length) }];
+                        if (n % 3 === 0) {
+                            if (start - 420 >= 120) slots.unshift({ start: clock(420), end: clock(480) });
+                            else slots.push({ start: clock(1020), end: clock(1080) });
+                        }
+                        if (!partialByIdx[empIdx]) partialByIdx[empIdx] = {};
+                        partialByIdx[empIdx][date] = slots;
+                    });
+                }
+
+                // Hours, transaction times and the appointment groups, put back when Test Mode is switched off
+                testModeSavedTimes = JSON.stringify({
+                    roadTestHours: roadTestHours, cdlTestHours: cdlTestHours, appointmentHours: appointmentHours,
+                    transactionTimes: transactionTimes, appointmentGroups: appointmentGroups
+                });
+                DAYS_MAP.forEach(d => {
+                    appointmentHours[d.key] = { start: '07:00', end: '18:00' };
+                    roadTestHours[d.key] = { start: '09:00', end: '15:00' };
+                    cdlTestHours[d.key] = { start: '09:00', end: '13:00' };
+                });
+                transactionTimes = { short: 20, long: 20, roadTestC: 30, roadTestCDL: 60 };
+                // Typing: 35% Short and 65% Long. Class C tests in the road test hours, CDL tests in their own.
+                appointmentGroups = defaultAppointmentGroups();
+
                 // Calendar entries inside the four weeks: special hours, a half day and a closed day
                 testModeSavedCalendar = calendarEvents;
                 testModeSavedLog = dutyLog;
@@ -6865,6 +7107,7 @@
                         breakGroup: groups[groupOrder.indexOf(idx) % 3],
                         outDays: outDaysByIdx[idx] || { mon: false, tue: false, wed: false, thu: false, fri: false },
                         plannedWeeks: plannedByIdx[idx] || {},
+                        partialOut: partialByIdx[idx] || {},
                         classCM: classCMStaff.has(idx),
                         cdl: cdlStaff.has(idx),
                         typing: true,
@@ -6917,10 +7160,19 @@
                 });
                 renderRoleConfig();
 
-                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training\n- Varied days off, assigned duties and calendar entries planned for the coming weeks");
+                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training\n- Varied days off, part-day time off, assigned duties and calendar entries planned for the coming weeks\n- Appointments 7 AM to 6 PM, road tests 9 AM to 3 PM, CDL road tests 9 AM to 1 PM\n- Short 20 min, Long 20 min, Class C road test 30 min, CDL road test 60 min\n- Typing appointments posted 35% Short, 65% Long");
             } else {
                 employees = [];
                 counterStations = [];
+                if (testModeSavedTimes) {
+                    const saved = JSON.parse(testModeSavedTimes);
+                    roadTestHours = saved.roadTestHours;
+                    cdlTestHours = saved.cdlTestHours;
+                    appointmentHours = saved.appointmentHours;
+                    transactionTimes = saved.transactionTimes;
+                    appointmentGroups = saved.appointmentGroups;
+                    testModeSavedTimes = null;
+                }
                 if (testModeSavedCalendar) {
                     calendarEvents = testModeSavedCalendar;
                     testModeSavedCalendar = null;
@@ -6943,6 +7195,7 @@
             sortAndRenderEmployees();
             sortAndRenderCounters();
             generateSchedule();
+            if (!document.getElementById('settings-view').hidden) renderSettingsPage();
         });
 
         // Initialize state on load
