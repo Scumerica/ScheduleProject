@@ -842,6 +842,143 @@
             color: #ffffff;
         }
 
+        /* Settings page */
+        /* Boxes sit in rows with the same gap on every side, the same height within a row, and each
+           can be dragged larger or smaller from its bottom-right corner */
+        .settings-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: stretch;
+            max-width: 1400px;
+        }
+        .settings-grid .help-card {
+            box-sizing: border-box;
+            margin-bottom: 0;
+            width: calc((100% - 16px) / 2);
+            min-width: 300px;
+            min-height: 140px;
+            max-width: 100%;
+            resize: both;
+            overflow: auto;
+        }
+        .settings-grid .help-card.settings-wide {
+            width: 100%;
+        }
+        @media (max-width: 720px) {
+            .settings-grid .help-card {
+                width: 100%;
+            }
+        }
+
+        /* A visible grip on everything that can be resized from its corner */
+        .settings-grid .help-card::-webkit-resizer,
+        .window::-webkit-resizer {
+            background: linear-gradient(135deg,
+                transparent 0 45%,
+                var(--text-muted) 45% 55%,
+                transparent 55% 65%,
+                var(--text-muted) 65% 75%,
+                transparent 75% 85%,
+                var(--text-muted) 85% 95%,
+                transparent 95%);
+        }
+        .settings-table th,
+        .settings-table td {
+            padding: 6px 8px;
+        }
+        .settings-table input {
+            min-width: 0;
+        }
+
+        /* Appointment groups editor (Settings) and the Appointments to Publish page */
+        .ag-group {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            background-color: var(--card-bg);
+        }
+        .ag-children {
+            margin: 6px 0 6px 14px;
+        }
+        .ag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        .ag-row input[type="text"] {
+            flex: 1;
+            min-width: 140px;
+            width: auto;
+            font-weight: 600;
+        }
+        .ag-row input[type="number"] {
+            width: 76px;
+        }
+        .ag-row select {
+            width: auto;
+        }
+        .ag-row button {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        .ag-txn {
+            padding: 4px 8px;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            background-color: var(--panel-bg);
+        }
+        .ag-txn-name {
+            flex: 1;
+            min-width: 140px;
+            font-weight: 600;
+        }
+        .ag-caption,
+        .ag-sum {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .ag-sum.over {
+            color: #b91c1c;
+            font-weight: 600;
+        }
+        .ag-chip {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 2px 8px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background-color: var(--panel-bg);
+            cursor: pointer;
+        }
+        .ap-table th:not(:first-child),
+        .ap-table td:not(:first-child) {
+            text-align: center;
+        }
+        .ap-table tr.ap-group td {
+            background-color: var(--summary-bg);
+            font-weight: 600;
+        }
+        .ap-table tr.ap-total td {
+            border-top: 2px solid var(--border);
+            font-weight: 600;
+        }
+        .ap-table td small {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: normal;
+        }
+        #ap-warnings .alert-box {
+            margin-bottom: 8px;
+        }
+
         /* Duty Counters page */
         .dc-period {
             display: flex;
@@ -1270,12 +1407,14 @@
                     <button id="btn-fourweek-view" title="This week and the next three, side by side">4-Week View</button>
                     <button id="btn-employee-view" title="Read-only schedule for staff">Employee View</button>
                     <button id="btn-duty-counters" title="How many days and times each person has worked each duty">Duty Counters</button>
+                    <button id="btn-appointments" title="How many appointments of each type to publish, from the group weights and the staff schedule">Appointments to Publish</button>
                 </div>
             </div>
 
             <div class="menu">
                 <button class="menu-toggle" aria-haspopup="true" aria-expanded="false">Options ▾</button>
                 <div class="menu-panel" hidden>
+                    <button id="btn-settings" title="Positions, quotas, break times, road test hours, transaction times and appointment groups">Settings</button>
                     <button id="btn-theme-toggle" title="Switch between the light and dark themes">🌙 Dark theme</button>
                     <button id="btn-test-mode" title="Load or remove the sample office">Test Mode</button>
                 </div>
@@ -1312,6 +1451,131 @@
             <tbody id="ev-tbody"></tbody>
         </table>
         <div id="ev-empty" class="ev-empty" hidden>No one matches that name.</div>
+    </div>
+
+    <!-- Settings: the office's backend variables, kept apart from the day-to-day windows -->
+    <div id="settings-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div class="ev-title">Settings</div>
+                <div class="ev-subtitle">Office-wide values the scheduler works from. Changes apply straight away and are saved with the schedule.</div>
+            </div>
+            <div class="ev-controls">
+                <button id="settings-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div class="settings-grid">
+            <div class="help-card settings-wide">
+                <h2>Positions and quotas</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">
+                    Required is staff per <strong>day</strong>. Max Rot and Break Rot are both in <strong>days</strong> (5 = one work week). Positions are held for the whole week, so use a Max Rot of 5 or more. Days out do not count toward the rest. Enter <strong>-1</strong> for no limit.
+                </small>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">
+                    The list order is the role hierarchy: positions higher up are staffed first when staff are short, and are listed first in the schedule. Use ▲ ▼ to reorder, ✎ to rename and ✕ to remove a position. Click the <strong>&gt;</strong> / <strong>=</strong> button between two positions to make them equal priority.
+                </small>
+                <div id="settings-hierarchy-summary" style="font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg);"></div>
+                <div class="role-row" style="border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px;">
+                    <header>Order</header>
+                    <header>Position</header>
+                    <header>Required</header>
+                    <header>Max Rot</header>
+                    <header>Break Rot</header>
+                    <span></span>
+                </div>
+
+                <div id="settings-role-list"></div>
+
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <input type="text" id="settings-new-role-name" placeholder="New position name" maxlength="40" style="flex: 1; min-width: 160px;">
+                    <button id="btn-settings-add-role">Add Position</button>
+                    <button id="btn-restore-roles" style="background-color: #64748b;" title="Put back any of the standard positions that have been removed">Restore Default Positions</button>
+                </div>
+            </div>
+
+            <div class="help-card">
+                <h2>Scheduling limits</h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="cfg-max-aux-week" style="flex: 1; margin-bottom: 0;">
+                        <strong>Duty Limit</strong> (days per 2 weeks)
+                        <small style="display: block; color: var(--text-muted); font-size: 0.8rem; font-weight: normal;">Most days one person can work any special duty (everything except Typing) in 10 work days. 5 = no duty two weeks in a row. -1 = no limit.</small>
+                    </label>
+                    <input type="number" id="cfg-max-aux-week" value="5" min="-1" style="width: 80px;">
+                </div>
+
+                <label style="display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); cursor: pointer;">
+                    <input type="checkbox" id="cfg-lunch-swap" checked style="margin-top: 4px;">
+                    <span>
+                        <strong>After-lunch swap</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.8rem; font-weight: normal;">Information Desk and Class C/M trade places after lunch, one for one. Anyone left without a partner is told to check with a supervisor.</small>
+                    </span>
+                </label>
+            </div>
+
+            <div class="help-card">
+                <h2>Lunch and break times</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">Each break group's times. The groups move to the next set of times every week.</small>
+                <table class="settings-table">
+                    <thead><tr><th>Group</th><th>AM break</th><th>Lunch</th><th>PM break</th></tr></thead>
+                    <tbody id="settings-breaks"></tbody>
+                </table>
+            </div>
+
+            <div class="help-card">
+                <h2>Road test hours</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">When road tests take place on each day at this office. Leave a day blank if none are given.</small>
+                <table class="settings-table">
+                    <thead><tr><th>Day</th><th>From</th><th>To</th></tr></thead>
+                    <tbody id="settings-roadtest"></tbody>
+                </table>
+                <button id="btn-roadtest-copy" style="margin-top: 8px; background-color: #64748b;">Copy Monday to All Days</button>
+            </div>
+
+            <div class="help-card">
+                <h2>Transaction time limits</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">How long each kind of transaction should take, in minutes. The appointment groups below use these to work out how many appointments fit.</small>
+                <table class="settings-table">
+                    <thead><tr><th>Transaction</th><th>Minutes</th></tr></thead>
+                    <tbody id="settings-transactions"></tbody>
+                </table>
+            </div>
+
+            <div class="help-card">
+                <h2>Appointment hours and break lengths</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">When counter appointments are served on each day, and how long each break takes a person away. Driving test groups can use the road test hours instead.</small>
+                <table class="settings-table">
+                    <thead><tr><th>Day</th><th>From</th><th>To</th></tr></thead>
+                    <tbody id="settings-appt-hours"></tbody>
+                </table>
+                <button id="btn-appt-hours-copy" style="margin-top: 8px; background-color: #64748b;">Copy Monday to All Days</button>
+                <table class="settings-table" style="margin-top: 12px;">
+                    <thead><tr><th>AM break (min)</th><th>Lunch (min)</th><th>PM break (min)</th></tr></thead>
+                    <tbody id="settings-break-minutes"></tbody>
+                </table>
+            </div>
+
+            <div class="help-card settings-wide">
+                <h2>Appointment groups and weights</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">
+                    A group collects appointment types and, if needed, other groups, up to 5 levels deep. Tick the positions that staff a group: the people the schedule puts in those positions each day supply its time. A group with nothing ticked works from the share its weight gives it of the group above.
+                </small>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">
+                    Each weight is a percentage (0 to 100) of the group it sits in. Weights that add up to less than 100 hold the rest back, unposted. The results are on <strong>Views ▾ Appointments to Publish</strong>.
+                </small>
+                <div class="ag-row">
+                    <span class="ag-caption">A weight is a share of</span>
+                    <select id="cfg-appt-split">
+                        <option value="count">the appointments posted (40% = 4 in every 10 appointments)</option>
+                        <option value="time">the staff time (40% = 40% of the group's minutes)</option>
+                    </select>
+                </div>
+                <div id="settings-appt-groups"></div>
+                <div class="ag-row">
+                    <button onclick="addAppointmentGroup('')">Add Group</button>
+                    <button id="btn-open-appointments-link" style="background-color: #059669;">Open Appointments to Publish</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Override dialog: set one person's duty for a day or a week -->
@@ -1510,6 +1774,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="help-card">
+                <h2>11. Appointments to publish</h2>
+                <p>The appointment groups in Settings turn the staff schedule into a number of appointments to post for each day. Nothing here changes who works where.</p>
+                <ol>
+                    <li><strong>Count the staff.</strong> For each group, the people the schedule puts in its ticked positions that day. Typing means anyone at a typing counter.</li>
+                    <li><strong>Count their minutes.</strong> Each person gives the group's hours for the day (appointment hours or road test hours), less any of their own breaks and lunch that fall inside those hours. A blocked day gives nothing; a half day or special hours shorten the day.</li>
+                    <li><strong>Share the minutes by weight.</strong> Each appointment type or sub-group takes its weight's share. A sub-group adds the minutes of its own ticked positions, if it has any, and shares the total out again.</li>
+                    <li><strong>Divide by the transaction time.</strong> An appointment type's minutes divided by its time limit, rounded down, is the number to publish.</li>
+                </ol>
+                <p>Weights can be read two ways, chosen in Settings. As a share of <strong>appointments</strong>, 40% Long and 60% Short posts 4 Long for every 6 Short. As a share of <strong>staff time</strong>, Long gets 40% of the minutes, which is fewer appointments because each one takes longer.</p>
+                <p>Weights in a group that add up to less than 100 leave the rest of its time unposted, for walk-ins or catching up. Weights over 100 are scaled down to fit.</p>
+            </div>
         </div>
     </div>
 
@@ -1617,6 +1894,31 @@
         <div id="fw-empty" class="ev-empty" hidden>No one matches that name.</div>
     </div>
 
+    <!-- Appointments to Publish: counts per appointment type, from the group weights and the staff schedule -->
+    <div id="appointments-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div id="ap-title" class="ev-title"></div>
+                <div class="ev-subtitle">Worked out from the staff the schedule puts in each group's positions, the hours they serve, the transaction times and the group weights. Today onward is a forecast.</div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <select id="ap-week" style="width: auto;"></select>
+                <button id="ap-export" style="background-color: #059669;">Export CSV</button>
+                <button id="ap-print" style="background-color: #059669;">Print</button>
+                <button id="ap-settings" style="background-color: #64748b;">Edit Groups</button>
+                <button id="ap-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div id="ap-calendar-notes" class="fw-legend"></div>
+        <div id="ap-warnings"></div>
+
+        <table class="ap-table">
+            <thead id="ap-thead"></thead>
+            <tbody id="ap-tbody"></tbody>
+        </table>
+    </div>
+
     <!-- Hidden file input for JSON imports -->
     <input type="file" id="json-file-input" accept=".json" style="display: none;">
 
@@ -1666,7 +1968,7 @@
                             💡 Tip: Required is staff per <strong>day</strong>. Max Rot and Break Rot cooldown are both in <strong>days</strong> (5 = one work week). Positions are held for the whole week, so use a Max Rot of 5 or more. Days out do not count toward the cooldown. Enter <strong>-1</strong> for unlimited/zero cooldown.
                         </small>
                         <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.75rem;">
-                            ↕ The list order is the role hierarchy: roles higher up are staffed first when staff are short, and are listed first in the schedule. Use ▲ ▼ to reorder, ✎ to rename, ✕ to delete a custom role. Click the <strong>&gt;</strong> / <strong>=</strong> button between two roles to make them equal priority; equal roles share a shortage instead of one going first.
+                            ↕ The list order is the role hierarchy: roles higher up are staffed first when staff are short, and are listed first in the schedule. Use ▲ ▼ to reorder, and click the <strong>&gt;</strong> / <strong>=</strong> button between two roles to make them equal priority. Use ✎ to rename any position. A position you added can also be removed (✕) here; the default positions can only be removed on the Settings page.
                         </small>
                         <div id="role-hierarchy-summary" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg);"></div>
                         <div class="role-row" style="border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px;">
@@ -1685,21 +1987,10 @@
                             <button id="btn-add-role">Add Role</button>
                         </div>
 
-                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
-                            <label for="cfg-max-aux-week" style="flex: 1; font-size: 0.8rem;">
-                                <strong>Duty Limit</strong> (days per 2 weeks)
-                                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: normal;">Most days one person can work any special duty (everything except Typing) in 10 work days. 5 = no duty two weeks in a row. -1 = no limit.</small>
-                            </label>
-                            <input type="number" id="cfg-max-aux-week" value="5" min="-1" style="width: 60px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 0.8rem;">
+                            <span style="flex: 1; color: var(--text-muted);">The Duty Limit, break times and default positions are on the Settings page.</span>
+                            <button id="btn-open-settings-link" style="white-space: nowrap;">Open Settings</button>
                         </div>
-
-                        <label style="display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 0.8rem; cursor: pointer;">
-                            <input type="checkbox" id="cfg-lunch-swap" checked style="margin-top: 2px;">
-                            <span>
-                                <strong>After-lunch swap</strong>
-                                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: normal;">Information Desk and Class C/M trade places after lunch, one for one. Anyone left without a partner is told to check with a supervisor.</small>
-                            </span>
-                        </label>
                     </div>
                 </details>
             </div>
@@ -2710,17 +3001,24 @@
         // ROLE MANAGEMENT (custom roles & hierarchy)
         // ==========================================
 
+        // The position list is drawn twice: on the main screen (quotas, order and renaming; a default
+        // position cannot be removed there) and on the Settings page (everything).
         function renderRoleConfig() {
-            const listEl = document.getElementById('role-config-list');
+            renderRoleList('role-config-list', 'role-hierarchy-summary', 'cfg', false);
+            renderRoleList('settings-role-list', 'settings-hierarchy-summary', 'set', true);
+        }
+
+        function renderRoleList(listId, summaryId, idPrefix, manageDefaults) {
+            const listEl = document.getElementById(listId);
             listEl.innerHTML = '';
 
             const settingInputs = (id, cfg) => `
-                    <input type="number" id="cfg-cap-${id}" value="${isNaN(parseInt(cfg.req)) ? '' : cfg.req}" min="-1" oninput="updateRoleSetting('${id}', 'req', this.value)">
-                    <input type="number" id="cfg-rot-${id}" value="${isNaN(parseInt(cfg.rot)) ? '' : cfg.rot}" min="-1" oninput="updateRoleSetting('${id}', 'rot', this.value)">
-                    <input type="number" id="cfg-brk-${id}" value="${isNaN(parseInt(cfg.brk)) ? '' : cfg.brk}" min="-1" oninput="updateRoleSetting('${id}', 'brk', this.value)">`;
+                    <input type="number" id="${idPrefix}-cap-${id}" value="${isNaN(parseInt(cfg.req)) ? '' : cfg.req}" min="-1" oninput="updateRoleSetting('${id}', 'req', this.value)">
+                    <input type="number" id="${idPrefix}-rot-${id}" value="${isNaN(parseInt(cfg.rot)) ? '' : cfg.rot}" min="-1" oninput="updateRoleSetting('${id}', 'rot', this.value)">
+                    <input type="number" id="${idPrefix}-brk-${id}" value="${isNaN(parseInt(cfg.brk)) ? '' : cfg.brk}" min="-1" oninput="updateRoleSetting('${id}', 'brk', this.value)">`;
 
             const tiers = getRoleTierMap();
-            document.getElementById('role-hierarchy-summary').textContent = roles
+            document.getElementById(summaryId).textContent = roles
                 .map((r, idx) => (idx === 0 ? '' : (r.tieWithPrev ? ' = ' : ' > ')) + r.label)
                 .join('');
 
@@ -2746,7 +3044,7 @@
                     ${settingInputs(role.id, role)}
                     <div class="role-actions">
                         <button class="role-btn" title="Rename" onclick="renameRole('${role.id}')">✎</button>
-                        ${isBuiltInRole(role.id) ? '' : `<button class="role-btn btn-danger" title="Delete this role" onclick="deleteRole('${role.id}')">✕</button>`}
+                        ${(manageDefaults || !isBuiltInRole(role.id)) ? `<button class="role-btn btn-danger" title="Remove this position" onclick="deleteRole('${role.id}')">✕</button>` : ''}
                     </div>
                 `;
                 listEl.appendChild(row);
@@ -2765,6 +3063,7 @@
 
         function refreshAfterRoleChange() {
             renderRoleConfig();
+            renderAppointmentGroups();
             sortAndRenderEmployees();
             sortAndRenderCounters();
             generateSchedule();
@@ -2833,8 +3132,11 @@
             return '';
         }
 
-        document.getElementById('btn-add-role').addEventListener('click', () => {
-            const input = document.getElementById('new-role-name');
+        document.getElementById('btn-add-role').addEventListener('click', () => addRoleFromInput('new-role-name'));
+        document.getElementById('btn-settings-add-role').addEventListener('click', () => addRoleFromInput('settings-new-role-name'));
+
+        function addRoleFromInput(inputId) {
+            const input = document.getElementById(inputId);
             const name = input.value.trim().replace(/\s+/g, ' ');
             const error = validateRoleName(name, null);
             if (error) {
@@ -2846,7 +3148,7 @@
             roles.push({ id: id, prop: id, name: name, label: name, req: 0, rot: 5, brk: 5 });
             input.value = '';
             refreshAfterRoleChange();
-        });
+        }
 
         // Carries an employee's history and current/frozen position over to the new role name
         function renameRoleInEmployees(list, oldName, newName) {
@@ -2900,10 +3202,11 @@
 
         function deleteRole(id) {
             const role = roles.find(r => r.id === id);
-            if (!role || isBuiltInRole(id)) return;
+            if (!role) return;
 
             const holders = employees.filter(e => e[role.prop]).length;
-            if (!confirm(`Delete the role "${role.name}"? It will be removed from ${holders} employee(s) and from every station.`)) return;
+            const restoreNote = isBuiltInRole(id) ? ' It is a default position, so Restore Default Positions can bring it back, but not who was ticked for it.' : '';
+            if (!confirm(`Remove the position "${role.name}"? It will be removed from ${holders} employee(s) and from every station.${restoreNote}`)) return;
 
             employees.forEach(emp => {
                 delete emp[role.prop];
@@ -2924,6 +3227,7 @@
                 }
             });
             counterStations.forEach(cntr => delete cntr.allowed[role.prop]);
+            dropAppointmentPosition(id);
 
             roles = roles.filter(r => r.id !== id);
             refreshAfterRoleChange();
@@ -2937,6 +3241,10 @@
             configState.typing = { ...typingConfig };
             configState.maxAuxPerWeek = getMaxAuxPerWeek();
             configState.lunchSwap = document.getElementById('cfg-lunch-swap').checked;
+            configState.breakSchedules = BREAK_SCHEDULES;
+            configState.roadTestHours = roadTestHours;
+            configState.transactionTimes = transactionTimes;
+            configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes };
             configState.restUnit = 'days';
             return configState;
         }
@@ -2957,9 +3265,6 @@
                 roles = data.roles
                     .filter(r => r && r.id && r.prop && r.name)
                     .map(r => ({ id: r.id, prop: r.prop, name: r.name, label: r.label || r.name, req: r.req, rot: r.rot, brk: r.brk, tieWithPrev: !!r.tieWithPrev }));
-                DEFAULT_ROLES.forEach(def => {
-                    if (!roles.some(r => r.id === def.id)) roles.push({ ...def });
-                });
             } else if (data.config) {
                 roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
             }
@@ -2984,6 +3289,33 @@
                 if (data.config.lunchSwap !== undefined) {
                     document.getElementById('cfg-lunch-swap').checked = !!data.config.lunchSwap;
                 }
+
+                // Settings page values
+                const savedBreaks = data.config.breakSchedules || {};
+                ['A', 'B', 'C'].forEach(grp => ['am', 'lunch', 'pm'].forEach(slot => {
+                    if (savedBreaks[grp] && clockTo24(savedBreaks[grp][slot])) BREAK_SCHEDULES[grp][slot] = savedBreaks[grp][slot];
+                }));
+                const savedRoadTest = data.config.roadTestHours || {};
+                DAYS_MAP.forEach(d => {
+                    if (savedRoadTest[d.key]) roadTestHours[d.key] = { start: savedRoadTest[d.key].start || '', end: savedRoadTest[d.key].end || '' };
+                });
+                const savedTransactions = data.config.transactionTimes || {};
+                TRANSACTION_TYPES.forEach(type => {
+                    if (savedTransactions[type.key] !== undefined) transactionTimes[type.key] = savedTransactions[type.key];
+                });
+
+                // Appointment groups; files saved before they existed keep what is already set
+                const savedAppointments = data.config.appointments || {};
+                if (Array.isArray(savedAppointments.groups)) appointmentGroups = cleanAppointmentNodes(savedAppointments.groups, 1);
+                if (savedAppointments.split) appointmentSplit = savedAppointments.split === 'time' ? 'time' : 'count';
+                DAYS_MAP.forEach(d => {
+                    const saved = (savedAppointments.hours || {})[d.key];
+                    if (saved) appointmentHours[d.key] = { start: saved.start || '', end: saved.end || '' };
+                });
+                ['am', 'lunch', 'pm'].forEach(slot => {
+                    const minutes = parseInt((savedAppointments.breakMinutes || {})[slot]);
+                    if (minutes >= 0) breakMinutes[slot] = minutes;
+                });
             }
 
             renderRoleConfig();
@@ -3951,6 +4283,660 @@
         document.getElementById('oc-today').addEventListener('click', () => selectOfficeCalendarDay(scheduleDateOf(document.getElementById('schedule-day').value)));
         document.getElementById('oc-type').addEventListener('change', renderOfficeCalendar);
         document.getElementById('oc-add').addEventListener('click', addCalendarEntry);
+
+        // ==========================================
+        // SETTINGS PAGE (the office's backend variables)
+        // ==========================================
+        // Break times live in BREAK_SCHEDULES. Road test hours and transaction times are stored here and
+        // read by the appointment groups further down; the staff scheduler itself does not use them.
+
+        const TRANSACTION_TYPES = [
+            { key: 'short', label: 'Short transaction' },
+            { key: 'long', label: 'Long transaction' },
+            { key: 'roadTestC', label: 'Road test: Class C' },
+            { key: 'roadTestCDL', label: 'Road test: CDL' }
+        ];
+        // Minutes for each transaction type ('' until set)
+        let transactionTimes = { short: '', long: '', roadTestC: '', roadTestCDL: '' };
+        // Daily road test window, 'HH:MM' 24-hour ('' until set)
+        let roadTestHours = {};
+        DAYS_MAP.forEach(d => roadTestHours[d.key] = { start: '', end: '' });
+
+        // "9:10 AM" -> "09:10", for the time boxes
+        function clockTo24(text) {
+            const match = (text || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return '';
+            const hours = (parseInt(match[1]) % 12) + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+            return `${String(hours).padStart(2, '0')}:${match[2]}`;
+        }
+
+        function renderSettingsPage() {
+            document.getElementById('settings-breaks').innerHTML = ['A', 'B', 'C'].map(grp => `
+                <tr>
+                    <td><strong>Group ${grp}</strong></td>
+                    ${['am', 'lunch', 'pm'].map(slot => `<td><input type="time" value="${clockTo24(BREAK_SCHEDULES[grp][slot])}" onchange="updateBreakTime('${grp}', '${slot}', this.value)"></td>`).join('')}
+                </tr>`).join('');
+
+            document.getElementById('settings-roadtest').innerHTML = DAYS_MAP.map(d => `
+                <tr>
+                    <td><strong>${d.full}</strong></td>
+                    <td><input type="time" value="${roadTestHours[d.key].start}" onchange="updateRoadTestHours('${d.key}', 'start', this.value)"></td>
+                    <td><input type="time" value="${roadTestHours[d.key].end}" onchange="updateRoadTestHours('${d.key}', 'end', this.value)"></td>
+                </tr>`).join('');
+
+            document.getElementById('settings-transactions').innerHTML = TRANSACTION_TYPES.map(type => `
+                <tr>
+                    <td><strong>${type.label}</strong></td>
+                    <td><input type="number" min="0" placeholder="minutes" value="${transactionTimes[type.key]}" oninput="updateTransactionTime('${type.key}', this.value)" onchange="renderAppointmentGroups()"></td>
+                </tr>`).join('');
+
+            document.getElementById('settings-appt-hours').innerHTML = DAYS_MAP.map(d => `
+                <tr>
+                    <td><strong>${d.full}</strong></td>
+                    <td><input type="time" value="${appointmentHours[d.key].start}" onchange="updateAppointmentHours('${d.key}', 'start', this.value)"></td>
+                    <td><input type="time" value="${appointmentHours[d.key].end}" onchange="updateAppointmentHours('${d.key}', 'end', this.value)"></td>
+                </tr>`).join('');
+
+            document.getElementById('settings-break-minutes').innerHTML = `<tr>${['am', 'lunch', 'pm'].map(slot =>
+                `<td><input type="number" min="0" value="${breakMinutes[slot]}" onchange="updateBreakMinutes('${slot}', this.value)"></td>`).join('')}</tr>`;
+
+            document.getElementById('cfg-appt-split').value = appointmentSplit;
+            renderAppointmentGroups();
+        }
+
+        function updateBreakTime(grp, slot, value) {
+            // A break time cannot be blank, so an emptied box goes back to what it was
+            if (value) BREAK_SCHEDULES[grp][slot] = formatClock(value);
+            renderSettingsPage();
+            generateSchedule();
+        }
+
+        function updateRoadTestHours(dayKey, edge, value) {
+            roadTestHours[dayKey][edge] = value;
+            const hours = roadTestHours[dayKey];
+            if (hours.start && hours.end && hours.start >= hours.end) {
+                alert('The road test end time must be later than the start time.');
+                hours[edge] = '';
+                renderSettingsPage();
+            }
+        }
+
+        function updateTransactionTime(key, value) {
+            const minutes = parseInt(value);
+            transactionTimes[key] = isNaN(minutes) || minutes < 0 ? '' : minutes;
+        }
+
+        function openSettings() {
+            // Quota boxes typed into on one screen are redrawn on the other
+            renderRoleConfig();
+            renderSettingsPage();
+            document.body.classList.add('full-view-open');
+            document.getElementById('settings-view').hidden = false;
+        }
+
+        function closeSettings() {
+            renderRoleConfig();
+            document.body.classList.remove('full-view-open');
+            document.getElementById('settings-view').hidden = true;
+        }
+
+        document.getElementById('btn-settings').addEventListener('click', openSettings);
+        document.getElementById('btn-open-settings-link').addEventListener('click', openSettings);
+        document.getElementById('settings-close').addEventListener('click', closeSettings);
+
+        document.getElementById('btn-roadtest-copy').addEventListener('click', () => {
+            DAYS_MAP.forEach(d => roadTestHours[d.key] = { ...roadTestHours.mon });
+            renderSettingsPage();
+        });
+
+        // Puts back any standard position that has been removed, with its standard settings
+        document.getElementById('btn-restore-roles').addEventListener('click', () => {
+            const missing = DEFAULT_ROLES.filter(def => !roles.some(r => r.id === def.id));
+            if (missing.length === 0) {
+                alert('All of the default positions are already in the list.');
+                return;
+            }
+            missing.forEach(def => {
+                const nameTaken = roles.some(r => r.name.toLowerCase() === def.name.toLowerCase() || r.label.toLowerCase() === def.label.toLowerCase());
+                if (!nameTaken) roles.push({ ...def });
+            });
+            refreshAfterRoleChange();
+        });
+
+        // ==========================================
+        // APPOINTMENT GROUPS (how many appointments to publish, from weights and the staff schedule)
+        // ==========================================
+        // appointmentGroups is a tree, at most MAX_GROUP_DEPTH groups deep.
+        // A group:               { id, name, weight, positions: [role id | 'typing'], hours: 'office' | 'roadtest', children: [] }
+        // An appointment type:   { id, txn: key in TRANSACTION_TYPES, weight }
+        // Each day a group's minutes are those of the staff scheduled in its positions, plus whatever its
+        // weight takes from the group above. The minutes are shared among its children by weight, and an
+        // appointment type's minutes divided by its transaction time is the number to publish.
+
+        const MAX_GROUP_DEPTH = 5;
+        const TYPING_POSITION = 'typing';
+
+        function newAppointmentId() {
+            return 'ag_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        }
+
+        function defaultAppointmentGroups() {
+            const type = (txn, weight) => ({ id: newAppointmentId(), txn: txn, weight: weight });
+            const group = (name, weight, positions, hours, children) => ({ id: newAppointmentId(), name: name, weight: weight, positions: positions, hours: hours, children: children });
+            return [
+                group('Typing', 100, [TYPING_POSITION], 'office', [type('short', 50), type('long', 50)]),
+                group('Driving tests', 100, [], 'roadtest', [
+                    group('Class C road tests', 50, ['classcm'], 'roadtest', [type('roadTestC', 100)]),
+                    group('CDL road tests', 50, ['cdl'], 'roadtest', [type('roadTestCDL', 100)])
+                ])
+            ];
+        }
+
+        let appointmentGroups = defaultAppointmentGroups();
+        // 'count': a weight is a share of the appointments posted. 'time': a share of the staff minutes.
+        let appointmentSplit = 'count';
+        // Daily window for counter appointments, 'HH:MM' 24-hour ('' until set)
+        let appointmentHours = {};
+        DAYS_MAP.forEach(d => appointmentHours[d.key] = { start: '', end: '' });
+        // How long each break takes a person away from their station
+        let breakMinutes = { am: 15, lunch: 60, pm: 15 };
+
+        function isAppointmentGroup(node) {
+            return Array.isArray(node.children);
+        }
+
+        function clampWeight(value) {
+            const weight = parseFloat(value);
+            return isNaN(weight) ? 0 : Math.min(100, Math.max(0, weight));
+        }
+
+        // Tidies a saved tree: drops anything unreadable and any group nested deeper than the limit
+        function cleanAppointmentNodes(list, depth) {
+            return list.filter(node => node && typeof node === 'object').map(node => {
+                if (Array.isArray(node.children)) {
+                    if (depth > MAX_GROUP_DEPTH) return null;
+                    return {
+                        id: node.id || newAppointmentId(),
+                        name: String(node.name || 'Group'),
+                        weight: clampWeight(node.weight),
+                        positions: Array.isArray(node.positions) ? node.positions.map(String) : [],
+                        hours: node.hours === 'roadtest' ? 'roadtest' : 'office',
+                        children: cleanAppointmentNodes(node.children, depth + 1)
+                    };
+                }
+                if (!TRANSACTION_TYPES.some(t => t.key === node.txn)) return null;
+                return { id: node.id || newAppointmentId(), txn: node.txn, weight: clampWeight(node.weight) };
+            }).filter(Boolean);
+        }
+
+        // Finds a node anywhere in the tree: { node, siblings, depth }, where a top-level group has depth 1
+        function findAppointmentNode(id, list = appointmentGroups, depth = 1) {
+            for (const node of list) {
+                if (node.id === id) return { node: node, siblings: list, depth: depth };
+                if (isAppointmentGroup(node)) {
+                    const found = findAppointmentNode(id, node.children, depth + 1);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        function forEachAppointmentGroup(visit, list = appointmentGroups) {
+            list.filter(isAppointmentGroup).forEach(group => {
+                visit(group);
+                forEachAppointmentGroup(visit, group.children);
+            });
+        }
+
+        function dropAppointmentPosition(positionId) {
+            forEachAppointmentGroup(group => group.positions = group.positions.filter(p => p !== positionId));
+        }
+
+        function appointmentPositionChoices() {
+            return [{ id: TYPING_POSITION, label: 'Typing' }].concat(roles.map(r => ({ id: r.id, label: r.label })));
+        }
+
+        function appointmentNodeLabel(node) {
+            return isAppointmentGroup(node) ? node.name : TRANSACTION_TYPES.find(t => t.key === node.txn).label;
+        }
+
+        // ---- The calculation ----
+
+        // 'HH:MM' -> minutes since midnight, null when blank
+        function clockMinutes(time) {
+            const [h, m] = (time || '').split(':').map(Number);
+            return isNaN(h) ? null : h * 60 + (m || 0);
+        }
+
+        // The part of a day a group serves appointments, as minutes since midnight, after the office
+        // calendar has been applied. null when the hours are not set or nothing is left of the day.
+        function appointmentWindow(hoursKey, dayKey, iso) {
+            const hours = (hoursKey === 'roadtest' ? roadTestHours : appointmentHours)[dayKey];
+            let start = clockMinutes(hours.start);
+            let end = clockMinutes(hours.end);
+            if (start === null || end === null || isOfficeClosed(iso)) return null;
+
+            getCalendarEntries(iso).forEach(entry => {
+                if (entry.type === 'half') {
+                    if (entry.half === 'pm') start = Math.max(start, 12 * 60);
+                    else end = Math.min(end, 12 * 60);
+                } else if (entry.type === 'hours') {
+                    start = Math.max(start, clockMinutes(entry.start));
+                    end = Math.min(end, clockMinutes(entry.end));
+                }
+            });
+            return end > start ? { start: start, end: end } : null;
+        }
+
+        // Minutes one person in a break group can serve inside a window: its length less their breaks
+        function workMinutesInWindow(win, breakGroup) {
+            let minutes = win.end - win.start;
+            ['am', 'lunch', 'pm'].forEach(slot => {
+                const from = clockMinutes(clockTo24(BREAK_SCHEDULES[breakGroup][slot]));
+                if (from === null) return;
+                minutes -= Math.max(0, Math.min(win.end, from + breakMinutes[slot]) - Math.max(win.start, from));
+            });
+            return Math.max(0, minutes);
+        }
+
+        // "Banker (Counter 3)" -> 'banker'; "Counter 12" -> 'typing'; Out and Unassigned -> null
+        function appointmentPositionOf(pos) {
+            if (!pos) return null;
+            const roleName = getPositionRole(pos);
+            if (roleName) return roles.find(r => r.name === roleName).id;
+            return pos.startsWith('Counter') ? TYPING_POSITION : null;
+        }
+
+        // Minutes one appointment takes on average in this part of the tree; null when nothing in it
+        // can be posted (no weight, or no transaction time set)
+        function appointmentAvgMinutes(node) {
+            if (!isAppointmentGroup(node)) return transactionTimes[node.txn] > 0 ? transactionTimes[node.txn] : null;
+
+            let weightSum = 0, weightedMinutes = 0, weightedRate = 0;
+            node.children.forEach(child => {
+                const avg = child.weight > 0 ? appointmentAvgMinutes(child) : null;
+                if (avg === null) return;
+                weightSum += child.weight;
+                weightedMinutes += child.weight * avg;
+                weightedRate += child.weight / avg;
+            });
+            if (weightSum === 0) return null;
+            return appointmentSplit === 'count' ? weightedMinutes / weightSum : weightSum / weightedRate;
+        }
+
+        // One day's figures for every node: results[node id] = { staff, minutes, count }.
+        // staff counts only the people in the group's own positions; minutes includes the share handed down.
+        function computeAppointmentDay(assignments, dayKey, weekNum, iso) {
+            const results = {};
+
+            const ownPool = group => {
+                const pool = { staff: 0, minutes: 0 };
+                const win = group.positions.length > 0 ? appointmentWindow(group.hours, dayKey, iso) : null;
+                if (!win) return pool;
+                employees.forEach(emp => {
+                    if (!group.positions.includes(appointmentPositionOf(assignments[emp.id]))) return;
+                    pool.staff++;
+                    pool.minutes += workMinutesInWindow(win, getEmployeeActiveGroup(emp, weekNum));
+                });
+                return pool;
+            };
+
+            const allocate = (node, handed) => {
+                if (!isAppointmentGroup(node)) {
+                    const each = transactionTimes[node.txn];
+                    const count = each > 0 ? Math.floor(handed / each + 1e-9) : 0;
+                    results[node.id] = { staff: 0, minutes: handed, count: count };
+                    return count;
+                }
+
+                const own = ownPool(node);
+                const minutes = own.minutes + handed;
+                const shares = node.children.map(child => {
+                    const avg = child.weight > 0 ? appointmentAvgMinutes(child) : null;
+                    if (avg === null) return 0;
+                    // By count each child gets minutes in proportion to weight x time per appointment
+                    return appointmentSplit === 'count' ? child.weight * avg : child.weight;
+                });
+                const shareSum = shares.reduce((sum, s) => sum + s, 0);
+                const weightSum = node.children.reduce((sum, child, i) => sum + (shares[i] > 0 ? child.weight : 0), 0);
+                // Weights under 100 hold the rest back; weights over 100 are scaled down to fit
+                const usable = minutes * Math.min(weightSum, 100) / 100;
+
+                let count = 0;
+                node.children.forEach((child, i) => {
+                    count += allocate(child, shareSum > 0 ? usable * shares[i] / shareSum : 0);
+                });
+                results[node.id] = { staff: own.staff, minutes: minutes, count: count };
+                return count;
+            };
+
+            appointmentGroups.forEach(group => allocate(group, 0));
+            return results;
+        }
+
+        // Set-up problems that would make the numbers wrong or empty
+        function appointmentWarnings() {
+            const warnings = [];
+            const hoursBlank = table => DAYS_MAP.every(d => !table[d.key].start || !table[d.key].end);
+            const positionUse = {};
+
+            const walk = (list, staffedAbove) => list.forEach(node => {
+                if (!isAppointmentGroup(node)) {
+                    if (!(transactionTimes[node.txn] > 0)) warnings.push(`${appointmentNodeLabel(node)} has no transaction time, so none can be posted. Set it under Transaction time limits.`);
+                    return;
+                }
+                const staffed = staffedAbove || node.positions.length > 0;
+                node.positions.forEach(p => (positionUse[p] = positionUse[p] || []).push(node.name));
+                if (node.positions.length > 0 && hoursBlank(node.hours === 'roadtest' ? roadTestHours : appointmentHours)) {
+                    warnings.push(`"${node.name}" uses the ${node.hours === 'roadtest' ? 'road test hours' : 'appointment hours'}, which are not set for any day.`);
+                }
+                if (!staffed && node.children.some(child => !isAppointmentGroup(child))) {
+                    warnings.push(`"${node.name}" has no positions ticked, and neither has any group above it, so its appointment types have no staff time.`);
+                }
+                const weightSum = node.children.reduce((sum, child) => sum + child.weight, 0);
+                if (weightSum > 100) warnings.push(`The weights in "${node.name}" add up to ${weightSum}%. They are scaled down to fit 100%.`);
+                walk(node.children, staffed);
+            });
+            walk(appointmentGroups, false);
+
+            appointmentPositionChoices().forEach(choice => {
+                const users = positionUse[choice.id] || [];
+                if (users.length > 1) warnings.push(`${choice.label} is ticked in more than one group (${users.join(', ')}), so the same staff time is counted ${users.length} times.`);
+            });
+            return [...new Set(warnings)];
+        }
+
+        // ---- The editor on the Settings page ----
+
+        function appointmentWeightSummary(group) {
+            if (group.children.length === 0) return { text: 'Empty: add an appointment type or a sub-group.', over: false };
+            const weightSum = group.children.reduce((sum, child) => sum + child.weight, 0);
+            if (weightSum > 100) return { text: `Weights total ${weightSum}%: over 100, so they are scaled down to fit.`, over: true };
+            if (weightSum < 100) return { text: `Weights total ${weightSum}%. The other ${100 - weightSum}% of this group's time is held back, unposted.`, over: false };
+            return { text: 'Weights total 100%.', over: false };
+        }
+
+        function renderAppointmentGroups() {
+            const choices = appointmentPositionChoices();
+            const moveButtons = (node, index, count) => `
+                <button style="background-color: #64748b;" title="Move up" ${index === 0 ? 'disabled' : ''} onclick="moveAppointmentNode('${node.id}', -1)">▲</button>
+                <button style="background-color: #64748b;" title="Move down" ${index === count - 1 ? 'disabled' : ''} onclick="moveAppointmentNode('${node.id}', 1)">▼</button>
+                <button class="btn-danger" title="Remove" onclick="removeAppointmentNode('${node.id}')">✕</button>`;
+            const weightBox = node => `
+                <span class="ag-caption">Weight</span>
+                <input type="number" min="0" max="100" value="${node.weight}" onchange="updateAppointmentNode('${node.id}', 'weight', this.value)">
+                <span class="ag-caption">%</span>`;
+
+            const nodeHTML = (node, depth, index, count) => {
+                if (!isAppointmentGroup(node)) {
+                    const each = transactionTimes[node.txn];
+                    return `
+                        <div class="ag-row ag-txn">
+                            <span class="ag-txn-name">${escapeHTML(appointmentNodeLabel(node))}</span>
+                            <span class="ag-caption">${each > 0 ? `${each} min each` : 'no time set'}</span>
+                            ${weightBox(node)}
+                            ${moveButtons(node, index, count)}
+                        </div>`;
+                }
+
+                const summary = appointmentWeightSummary(node);
+                return `
+                    <div class="ag-group">
+                        <div class="ag-row">
+                            <input type="text" maxlength="40" value="${escapeHTML(node.name)}" title="Group name" onchange="updateAppointmentNode('${node.id}', 'name', this.value)">
+                            ${depth > 1 ? weightBox(node) : ''}
+                            ${moveButtons(node, index, count)}
+                        </div>
+                        <div class="ag-row">
+                            <span class="ag-caption">Staffed by</span>
+                            ${choices.map(c => `<label class="ag-chip"><input type="checkbox" ${node.positions.includes(c.id) ? 'checked' : ''} onchange="toggleAppointmentPosition('${node.id}', '${c.id}', this.checked)"> ${escapeHTML(c.label)}</label>`).join('')}
+                            ${node.positions.length > 0 ? `
+                                <span class="ag-caption">during</span>
+                                <select onchange="updateAppointmentNode('${node.id}', 'hours', this.value)">
+                                    <option value="office" ${node.hours === 'office' ? 'selected' : ''}>Appointment hours</option>
+                                    <option value="roadtest" ${node.hours === 'roadtest' ? 'selected' : ''}>Road test hours</option>
+                                </select>` : ''}
+                        </div>
+                        <div class="ag-children">${node.children.map((child, i) => nodeHTML(child, depth + 1, i, node.children.length)).join('')}</div>
+                        <div class="ag-row" style="margin-bottom: 0;">
+                            <select id="ag-new-type-${node.id}">${TRANSACTION_TYPES.map(t => `<option value="${t.key}">${escapeHTML(t.label)}</option>`).join('')}</select>
+                            <button onclick="addAppointmentType('${node.id}')">Add Appointment Type</button>
+                            ${depth < MAX_GROUP_DEPTH ? `<button onclick="addAppointmentGroup('${node.id}')">Add Sub-group</button>` : `<span class="ag-caption">Deepest level (${MAX_GROUP_DEPTH})</span>`}
+                            <span id="ag-sum-${node.id}" class="ag-sum${summary.over ? ' over' : ''}">${summary.text}</span>
+                        </div>
+                    </div>`;
+            };
+
+            document.getElementById('settings-appt-groups').innerHTML = appointmentGroups.length > 0
+                ? appointmentGroups.map((group, i) => nodeHTML(group, 1, i, appointmentGroups.length)).join('')
+                : '<div class="ag-caption" style="margin-bottom: 8px;">No groups yet. Add one to start.</div>';
+        }
+
+        function updateAppointmentNode(id, field, value) {
+            const found = findAppointmentNode(id);
+            if (!found) return;
+            if (field === 'weight') found.node.weight = clampWeight(value);
+            else if (field === 'name') found.node.name = value.trim() || found.node.name;
+            else found.node[field] = value;
+
+            // Only the totals are redrawn, so the box being tabbed into keeps the cursor
+            forEachAppointmentGroup(group => {
+                const sum = document.getElementById('ag-sum-' + group.id);
+                if (!sum) return;
+                const summary = appointmentWeightSummary(group);
+                sum.textContent = summary.text;
+                sum.classList.toggle('over', summary.over);
+            });
+            if (field === 'weight' && String(found.node.weight) !== value) renderAppointmentGroups();
+        }
+
+        function toggleAppointmentPosition(id, positionId, on) {
+            const found = findAppointmentNode(id);
+            if (!found) return;
+            found.node.positions = found.node.positions.filter(p => p !== positionId);
+            if (on) found.node.positions.push(positionId);
+            renderAppointmentGroups();
+        }
+
+        // parentId '' adds a top-level group
+        function addAppointmentGroup(parentId) {
+            const parent = parentId ? findAppointmentNode(parentId) : null;
+            if (parentId && (!parent || parent.depth >= MAX_GROUP_DEPTH)) return;
+            const group = { id: newAppointmentId(), name: 'New group', weight: 0, positions: [], hours: 'office', children: [] };
+            (parent ? parent.node.children : appointmentGroups).push(group);
+            renderAppointmentGroups();
+        }
+
+        function addAppointmentType(groupId) {
+            const found = findAppointmentNode(groupId);
+            if (!found) return;
+            found.node.children.push({ id: newAppointmentId(), txn: document.getElementById('ag-new-type-' + groupId).value, weight: 0 });
+            renderAppointmentGroups();
+        }
+
+        function moveAppointmentNode(id, delta) {
+            const found = findAppointmentNode(id);
+            if (!found) return;
+            const from = found.siblings.indexOf(found.node);
+            const to = from + delta;
+            if (to < 0 || to >= found.siblings.length) return;
+            found.siblings.splice(to, 0, found.siblings.splice(from, 1)[0]);
+            renderAppointmentGroups();
+        }
+
+        function removeAppointmentNode(id) {
+            const found = findAppointmentNode(id);
+            if (!found) return;
+            if (isAppointmentGroup(found.node) && found.node.children.length > 0 &&
+                !confirm(`Remove the group "${found.node.name}" and everything inside it?`)) return;
+            found.siblings.splice(found.siblings.indexOf(found.node), 1);
+            renderAppointmentGroups();
+        }
+
+        function updateAppointmentHours(dayKey, edge, value) {
+            appointmentHours[dayKey][edge] = value;
+            const hours = appointmentHours[dayKey];
+            if (hours.start && hours.end && hours.start >= hours.end) {
+                alert('The appointment end time must be later than the start time.');
+                hours[edge] = '';
+                renderSettingsPage();
+            }
+        }
+
+        function updateBreakMinutes(slot, value) {
+            const minutes = parseInt(value);
+            breakMinutes[slot] = isNaN(minutes) || minutes < 0 ? 0 : minutes;
+        }
+
+        document.getElementById('cfg-appt-split').addEventListener('change', e => appointmentSplit = e.target.value);
+
+        document.getElementById('btn-appt-hours-copy').addEventListener('click', () => {
+            DAYS_MAP.forEach(d => appointmentHours[d.key] = { ...appointmentHours.mon });
+            renderSettingsPage();
+        });
+
+        // ---- The Appointments to Publish page ----
+
+        // One week's figures: { weekStart, days: [{ iso, closed, results }], rows: [{ node, depth, cells }], typeTotals: { txn: [5 counts] } }
+        // week 0 is the current week. A day past the end of the forecast has no results.
+        function buildAppointmentReport(week) {
+            const weekStart = addDaysISO(currentWeekStart, 7 * week);
+            const grid = buildFourWeekGrid();
+            const days = DAYS_MAP.map((d, i) => {
+                const iso = addDaysISO(weekStart, i);
+                const assignments = grid[week][i];
+                return { iso: iso, closed: isOfficeClosed(iso), results: assignments ? computeAppointmentDay(assignments, d.key, currentWeekNum + week, iso) : null };
+            });
+
+            const rows = [];
+            const typeTotals = {};
+            const walk = (list, depth) => list.forEach(node => {
+                const cells = days.map(day => day.results ? day.results[node.id] : null);
+                rows.push({ node: node, depth: depth, cells: cells });
+                if (isAppointmentGroup(node)) {
+                    walk(node.children, depth + 1);
+                } else {
+                    typeTotals[node.txn] = typeTotals[node.txn] || days.map(() => 0);
+                    cells.forEach((cell, i) => typeTotals[node.txn][i] += cell ? cell.count : 0);
+                }
+            });
+            walk(appointmentGroups, 0);
+            return { weekStart: weekStart, days: days, rows: rows, typeTotals: typeTotals };
+        }
+
+        function renderAppointmentsView() {
+            const week = parseInt(document.getElementById('ap-week').value) || 0;
+            const report = buildAppointmentReport(week);
+            const choices = appointmentPositionChoices();
+            const sum = list => list.reduce((total, n) => total + n, 0);
+            const hoursText = minutes => `${(minutes / 60).toFixed(1).replace(/\.0$/, '')} h`;
+
+            document.getElementById('ap-title').textContent = `${document.getElementById('office-select').value}: Appointments to Publish`;
+            document.getElementById('ap-calendar-notes').innerHTML = calendarNotesHTML(report.weekStart, 5);
+            document.getElementById('ap-warnings').innerHTML = '';
+            appointmentWarnings().forEach(msg => document.getElementById('ap-warnings').appendChild(createAlertBox('warning', msg)));
+
+            document.getElementById('ap-thead').innerHTML = `<tr><th>Group / appointment type</th>${
+                report.days.map((day, i) => `<th>${DAYS_MAP[i].label} ${parseISODate(day.iso).getMonth() + 1}/${parseISODate(day.iso).getDate()}</th>`).join('')}<th>Week</th></tr>`;
+
+            const dayCell = (day, count, detail) => {
+                if (day.closed) return '<td>Closed</td>';
+                if (!day.results) return '<td>–</td>';
+                return `<td>${count}${detail ? `<small>${detail}</small>` : ''}</td>`;
+            };
+
+            let bodyHTML = report.rows.map(row => {
+                const node = row.node;
+                const isGroup = isAppointmentGroup(node);
+                const notes = [];
+                if (isGroup) {
+                    const staffedBy = choices.filter(c => node.positions.includes(c.id)).map(c => c.label);
+                    if (staffedBy.length > 0) notes.push(`staffed by ${staffedBy.join(', ')}`);
+                    if (row.depth > 0) notes.push(`weight ${node.weight}%`);
+                } else {
+                    notes.push(`weight ${node.weight}%`, transactionTimes[node.txn] > 0 ? `${transactionTimes[node.txn]} min each` : 'no time set');
+                }
+
+                const cells = report.days.map((day, i) => {
+                    const cell = row.cells[i];
+                    if (!cell) return dayCell(day, 0, '');
+                    // A group that only holds other groups has no minutes of its own to show
+                    const detail = !isGroup || cell.minutes === 0 ? '' : (node.positions.length > 0 ? `${cell.staff} staff · ` : '') + hoursText(cell.minutes);
+                    return dayCell(day, cell.count, detail);
+                }).join('');
+
+                return `<tr class="${isGroup ? 'ap-group' : ''}">
+                    <td style="padding-left: ${10 + row.depth * 22}px;">${escapeHTML(appointmentNodeLabel(node))}<small>${escapeHTML(notes.join(' · '))}</small></td>
+                    ${cells}<td><strong>${sum(row.cells.map(cell => cell ? cell.count : 0))}</strong></td>
+                </tr>`;
+            }).join('');
+
+            // The same appointment type can sit in several groups, so each type is also added up once
+            const typeKeys = TRANSACTION_TYPES.filter(t => report.typeTotals[t.key]);
+            typeKeys.forEach((t, n) => {
+                const counts = report.typeTotals[t.key];
+                bodyHTML += `<tr class="${n === 0 ? 'ap-total' : ''}"><td>All ${escapeHTML(t.label)}</td>${
+                    report.days.map((day, i) => dayCell(day, counts[i], '')).join('')}<td><strong>${sum(counts)}</strong></td></tr>`;
+            });
+            if (typeKeys.length > 0) {
+                const dayTotals = report.days.map((day, i) => sum(typeKeys.map(t => report.typeTotals[t.key][i])));
+                bodyHTML += `<tr class="ap-total"><td>All appointments</td>${
+                    report.days.map((day, i) => dayCell(day, dayTotals[i], '')).join('')}<td><strong>${sum(dayTotals)}</strong></td></tr>`;
+            }
+
+            document.getElementById('ap-tbody').innerHTML = bodyHTML ||
+                '<tr><td colspan="7">No appointment groups are set up. Add them under Settings.</td></tr>';
+        }
+
+        function openAppointmentsView() {
+            generateSchedule();
+            const weekSelect = document.getElementById('ap-week');
+            const chosen = weekSelect.value || '0';
+            weekSelect.innerHTML = FOUR_WEEK_LABELS.map((label, w) => `<option value="${w}">${label} (${formatWeekRange(addDaysISO(currentWeekStart, 7 * w))})</option>`).join('');
+            weekSelect.value = chosen;
+            closeSettings();
+            document.body.classList.add('full-view-open');
+            document.getElementById('appointments-view').hidden = false;
+            renderAppointmentsView();
+        }
+
+        function closeAppointmentsView() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('appointments-view').hidden = true;
+        }
+
+        document.getElementById('btn-appointments').addEventListener('click', openAppointmentsView);
+        document.getElementById('btn-open-appointments-link').addEventListener('click', openAppointmentsView);
+        document.getElementById('ap-close').addEventListener('click', closeAppointmentsView);
+        document.getElementById('ap-settings').addEventListener('click', () => {
+            closeAppointmentsView();
+            openSettings();
+        });
+        document.getElementById('ap-print').addEventListener('click', () => window.print());
+        document.getElementById('ap-week').addEventListener('change', renderAppointmentsView);
+
+        document.getElementById('ap-export').addEventListener('click', () => {
+            const report = buildAppointmentReport(parseInt(document.getElementById('ap-week').value) || 0);
+            const counts = cells => report.days.map((day, i) => day.closed ? 'Closed' : (day.results ? cells[i] : ''));
+            const total = cells => cells.reduce((sum, n) => sum + n, 0);
+
+            const rows = [['Group / appointment type', 'Weight %', 'Minutes each'].concat(report.days.map(day => day.iso), ['Week'])];
+            report.rows.forEach(row => {
+                const cells = row.cells.map(cell => cell ? cell.count : 0);
+                const isGroup = isAppointmentGroup(row.node);
+                rows.push([
+                    '  '.repeat(row.depth) + appointmentNodeLabel(row.node),
+                    isGroup && row.depth === 0 ? '' : row.node.weight,
+                    isGroup ? '' : transactionTimes[row.node.txn]
+                ].concat(counts(cells), [total(cells)]));
+            });
+            TRANSACTION_TYPES.filter(t => report.typeTotals[t.key]).forEach(t => {
+                rows.push([`All ${t.label}`, '', transactionTimes[t.key]].concat(counts(report.typeTotals[t.key]), [total(report.typeTotals[t.key])]));
+            });
+
+            const office = document.getElementById('office-select').value.replace(/\s+/g, '_');
+            downloadCSV(rows.map(r => r.map(escapeCSV).join(',')).join('\r\n'), `${office}_appointments_${report.weekStart}.csv`);
+        });
 
         // ==========================================
         // DUTY OVERRIDE (supervisor sets a person's duty for one day or a whole week)
