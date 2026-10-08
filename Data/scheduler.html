@@ -1130,16 +1130,75 @@
             color: var(--text-muted);
             font-size: 0.8rem;
         }
-        .ap-wrap {
-            overflow-x: auto;
+        /* Tapering graph: a line across the day's hours, with a point to drag wherever it has been bent */
+        .ap-taper {
+            max-width: 1100px;
+            margin-bottom: 16px;
+            padding: 8px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
             background-color: var(--panel-bg);
         }
+        .ap-taper summary {
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .ap-taper-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0 4px 0;
+        }
+        .ap-taper-bar select {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        #ap-taper-chart {
+            display: block;
+            width: 100%;
+            cursor: ns-resize;
+            touch-action: none;
+            user-select: none;
+        }
+        #ap-taper-chart text {
+            fill: var(--text-muted);
+            font-size: 12px;
+        }
+        #ap-taper-chart .tp-band { fill: var(--summary-bg); opacity: 0.5; }
+        #ap-taper-chart .tp-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 4 4; }
+        #ap-taper-chart .tp-base { stroke: var(--text-muted); stroke-width: 1; }
+        #ap-taper-chart .tp-line { fill: none; stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; }
+        #ap-taper-chart .tp-line.tp-follows { stroke-dasharray: 8 6; opacity: 0.7; }
+        #ap-taper-chart .tp-point { fill: var(--primary); stroke: var(--panel-bg); stroke-width: 2; }
+        #ap-taper-chart .tp-spot { fill: var(--panel-bg); stroke: var(--primary); stroke-width: 1.5; opacity: 0.6; }
+        #ap-taper-chart .tp-value { fill: var(--text); font-size: 13px; font-weight: 700; }
+        .ap-wrap {
+            overflow-x: auto;
+        }
         .full-view table.ap-table {
             border: none;
+            background: none;
             font-size: 0.95rem;
             font-variant-numeric: tabular-nums;
+        }
+        /* The heading row, each top-level group and each section is a box of its own, with a gap between */
+        .ap-table thead,
+        .ap-table tbody.ap-block {
+            border: 1px solid var(--border);
+        }
+        .ap-table tbody.ap-block td {
+            background-color: var(--panel-bg);
+        }
+        .ap-table tbody.ap-gap td {
+            height: 14px;
+            padding: 0;
+            border: none;
+            background: none;
+        }
+        .ap-table tbody.ap-block tr:last-child td {
+            border-bottom: none;
         }
         .ap-table th,
         .ap-table td {
@@ -1189,9 +1248,20 @@
         .ap-table tr.ap-info:hover td {
             background-color: var(--summary-hover);
         }
+        /* The group that opens a box is its title; a group inside it starts under a heavier line */
+        .ap-table tr.ap-group.ap-l1 td {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            font-size: 1.05rem;
+        }
+        .ap-table tr.ap-group.ap-l1 td small {
+            font-size: 0.75rem;
+        }
+        .ap-table tr.ap-sub td {
+            border-top: 2px solid var(--border);
+        }
         .ap-table tr.ap-section td {
             position: static;
-            padding-top: 18px;
             border-bottom: 2px solid var(--border);
             color: var(--text-muted);
             font-size: 0.72rem;
@@ -1752,10 +1822,10 @@
             </div>
 
             <div class="help-card">
-                <h2>Lunch and break times</h2>
-                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">Each break group's times. The groups move to the next set of times every week.</small>
+                <h2>Shift, lunch and break times</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">Each break group's times. The groups move to the next set of times every week. Shift start and end are when the group arrives and leaves: outside them its people are not counted for appointments. Leave them blank if everyone works the whole day.</small>
                 <table class="settings-table">
-                    <thead><tr><th>Group</th><th>AM break</th><th>Lunch</th><th>PM break</th></tr></thead>
+                    <thead><tr><th>Group</th><th>Shift start</th><th>AM break</th><th>Lunch</th><th>PM break</th><th>Shift end</th></tr></thead>
                     <tbody id="settings-breaks"></tbody>
                 </table>
             </div>
@@ -2025,12 +2095,13 @@
                 <h2>11. Appointments to publish</h2>
                 <p>The appointment groups in Settings turn the staff schedule into a number of appointments to post for each day. Nothing here changes who works where.</p>
                 <ol>
-                    <li><strong>Place the staff, minute by minute.</strong> For each group, the people the schedule puts in its ticked positions that day. Typing means anyone at a typing counter. A person is left out while on their break or lunch, on a day out, and during any part-day time off set on their card. A paired Information Desk or Class C/M person counts in their partner's position once their own lunch is over.</li>
+                    <li><strong>Place the staff, minute by minute.</strong> For each group, the people the schedule puts in its ticked positions that day. Typing means anyone at a typing counter. A person is left out while on their break or lunch, on a day out, during any part-day time off set on their card, and before their break group's shift starts or after it ends. A paired Information Desk or Class C/M person counts in their partner's position once their own lunch is over.</li>
                     <li><strong>Add up each hour.</strong> Only the group's hours for the day count (appointment hours or road test hours). A blocked day gives nothing; a half day or special hours shorten the day.</li>
                     <li><strong>Share each hour by weight.</strong> Each appointment type or sub-group takes its weight's share. A sub-group adds the minutes of its own ticked positions, if it has any, and shares the total out again.</li>
                     <li><strong>Divide by the transaction time.</strong> An appointment is counted in the hour its minutes are complete, and whatever is left of an hour carries into the next. A day's total is its minutes divided by the time limit, rounded down.</li>
                 </ol>
-                <p>The page shows a whole week by day, or any one day hour by hour. The hourly table also lists how many people are on break or lunch and how many are off in each hour.</p>
+                <p>The page shows a whole week by day, or any one day hour by hour. The hourly table also lists how many people are on break or lunch, off, or not on shift in each hour.</p>
+                <p><strong>Tapering.</strong> The graph on the page weights the hours against each other. A day's appointments are spread over its hours by staff time multiplied by the hour's weight, so the number for the day does not change: an hour dragged down gets fewer and the others share what it gave up. With a flat line every hour simply gets what its staff can do. Click an hour to add a point and drag it; double-click a point to remove it. The curve can be the same every day, or a weekday can have its own. A group or a single appointment type can also be given a curve of its own: an appointment type uses its own curve if it has one, otherwise the nearest group above it that has one, otherwise the curve for all appointments.</p>
                 <p>Weights can be read two ways, chosen in Settings. As a share of <strong>appointments</strong>, 40% Long and 60% Short posts 4 Long for every 6 Short. As a share of <strong>staff time</strong>, Long gets 40% of the minutes, which is fewer appointments because each one takes longer.</p>
                 <p>Weights in a group that add up to less than 100 leave the rest of its time unposted, for walk-ins or catching up. Weights over 100 are scaled down to fit.</p>
             </div>
@@ -2164,11 +2235,21 @@
         <div id="ap-period" class="ap-period"></div>
         <div id="ap-cards" class="ap-cards"></div>
 
+        <details id="ap-taper" class="ap-taper ev-no-print" open>
+            <summary>Tapering: how the day's appointments are weighted across the hours</summary>
+            <div class="ap-taper-bar">
+                <span class="ag-caption">Curve for</span>
+                <select id="ap-taper-target" title="Shape all appointments together, or give one group or one appointment type a curve of its own"></select>
+                <span class="ag-caption">on</span>
+                <select id="ap-taper-scope" title="Shape every day the same way, or give one weekday a curve of its own"></select>
+                <button id="ap-taper-reset" style="background-color: #64748b; padding: 4px 10px; font-size: 0.8rem;"></button>
+                <span class="ag-caption">Click an hour to add a point, then drag it up or down. Double-click a point to take it off. The day's total stays the same: an hour pulled down passes its appointments to the other hours.</span>
+            </div>
+            <svg id="ap-taper-chart" viewBox="0 0 1000 230" role="img" aria-label="Tapering by hour"></svg>
+        </details>
+
         <div class="ap-wrap">
-            <table class="ap-table">
-                <thead id="ap-thead"></thead>
-                <tbody id="ap-tbody"></tbody>
-            </table>
+            <table class="ap-table" id="ap-table"></table>
         </div>
     </div>
 
@@ -3554,7 +3635,8 @@
             configState.roadTestHours = roadTestHours;
             configState.cdlTestHours = cdlTestHours;
             configState.transactionTimes = transactionTimes;
-            configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes };
+            configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes, taper: appointmentTaper };
+            configState.shiftHours = shiftHours;
             configState.restUnit = 'days';
             return configState;
         }
@@ -3629,6 +3711,21 @@
                 ['am', 'lunch', 'pm'].forEach(slot => {
                     const minutes = parseInt((savedAppointments.breakMinutes || {})[slot]);
                     if (minutes >= 0) breakMinutes[slot] = minutes;
+                });
+                if (savedAppointments.taper && typeof savedAppointments.taper === 'object') {
+                    appointmentTaper = { [TAPER_EVERYTHING]: blankTaperSet({}) };
+                    Object.keys(savedAppointments.taper).forEach(id => {
+                        const saved = savedAppointments.taper[id];
+                        if (!saved || typeof saved !== 'object') return;
+                        const set = blankTaperSet(cleanTaperCurve(saved.all));
+                        DAYS_MAP.forEach(d => set[d.key] = saved[d.key] ? cleanTaperCurve(saved[d.key]) : null);
+                        appointmentTaper[id] = set;
+                    });
+                    pruneTaper();
+                }
+                ['A', 'B', 'C'].forEach(grp => {
+                    const saved = (data.config.shiftHours || {})[grp];
+                    if (saved) shiftHours[grp] = { start: saved.start || '', end: saved.end || '' };
                 });
             }
 
@@ -4618,6 +4715,9 @@
         // Daily road test window, 'HH:MM' 24-hour ('' until set)
         let roadTestHours = {};
         DAYS_MAP.forEach(d => roadTestHours[d.key] = { start: '', end: '' });
+        // When each set of break times starts and ends its working day, 'HH:MM' ('' = works the whole day).
+        // Like the break times, they belong to the group a person is in that week.
+        let shiftHours = { A: { start: '', end: '' }, B: { start: '', end: '' }, C: { start: '', end: '' } };
         // Daily CDL road test window, kept apart because it is usually shorter
         let cdlTestHours = {};
         DAYS_MAP.forEach(d => cdlTestHours[d.key] = { start: '', end: '' });
@@ -4634,7 +4734,9 @@
             document.getElementById('settings-breaks').innerHTML = ['A', 'B', 'C'].map(grp => `
                 <tr>
                     <td><strong>Group ${grp}</strong></td>
+                    <td><input type="time" value="${shiftHours[grp].start}" onchange="updateShiftTime('${grp}', 'start', this.value)"></td>
                     ${['am', 'lunch', 'pm'].map(slot => `<td><input type="time" value="${clockTo24(BREAK_SCHEDULES[grp][slot])}" onchange="updateBreakTime('${grp}', '${slot}', this.value)"></td>`).join('')}
+                    <td><input type="time" value="${shiftHours[grp].end}" onchange="updateShiftTime('${grp}', 'end', this.value)"></td>
                 </tr>`).join('');
 
             document.getElementById('settings-roadtest').innerHTML = DAYS_MAP.map(d => `
@@ -4684,6 +4786,16 @@
             if (hours.start && hours.end && hours.start >= hours.end) {
                 alert('The road test end time must be later than the start time.');
                 hours[edge] = '';
+                renderSettingsPage();
+            }
+        }
+
+        function updateShiftTime(grp, edge, value) {
+            shiftHours[grp][edge] = value;
+            const shift = shiftHours[grp];
+            if (shift.start && shift.end && shift.start >= shift.end) {
+                alert('The shift end must be later than the shift start.');
+                shift[edge] = '';
                 renderSettingsPage();
             }
         }
@@ -4813,6 +4925,70 @@
         // How long each break takes a person away from their station
         let breakMinutes = { am: 15, lunch: 60, pm: 15 };
 
+        // Tapering: how heavily each clock hour is weighted when a day's appointments are spread over its
+        // hours, as a percentage (100 for an hour that is not listed). The weights only move appointments
+        // between hours; the day's total does not change. appointmentTaper.all is the curve for every day
+        // of the week. A weekday with a curve of its own, { hour: percent }, uses that instead; null
+        // follows the week's.
+        //
+        // Curves are kept by what they shape: appointmentTaper[TAPER_EVERYTHING] is the one for all
+        // appointments, and a group or an appointment type can have its own under its node id. An
+        // appointment type uses its own curve if it has one, otherwise the nearest group above it that
+        // has one, otherwise the one for everything.
+        const TAPER_MAX = 150;
+        const TAPER_EVERYTHING = '*';
+
+        function blankTaperSet(weekCurve) {
+            const set = { all: { ...weekCurve } };
+            DAYS_MAP.forEach(d => set[d.key] = null);
+            return set;
+        }
+
+        let appointmentTaper = { [TAPER_EVERYTHING]: blankTaperSet({}) };
+
+        // The curve a target (TAPER_EVERYTHING or a node id that has a set of its own) uses on a weekday
+        // ('all' for the week's)
+        function taperCurve(targetId, dayKey) {
+            const set = appointmentTaper[targetId] || appointmentTaper[TAPER_EVERYTHING];
+            return set[dayKey] || set.all;
+        }
+
+        // The 24 hourly weights a target uses on a weekday: 1 is the normal weight, 0.8 four fifths of it
+        function taperFactors(targetId, dayKey) {
+            const curve = taperCurve(targetId, dayKey);
+            return Array.from({ length: 24 }, (_, h) => (curve[h] === undefined ? 100 : curve[h]) / 100);
+        }
+
+        // Whose curve a group or appointment type follows: its own id, a group above it, or TAPER_EVERYTHING
+        function taperSourceOf(nodeId, list = appointmentGroups, inherited = TAPER_EVERYTHING) {
+            for (const node of list) {
+                const source = appointmentTaper[node.id] ? node.id : inherited;
+                if (node.id === nodeId) return source;
+                if (isAppointmentGroup(node)) {
+                    const found = taperSourceOf(nodeId, node.children, source);
+                    if (found !== null) return found;
+                }
+            }
+            return list === appointmentGroups ? TAPER_EVERYTHING : null;
+        }
+
+        // Curves left behind by groups and types that have since been removed are dropped
+        function pruneTaper() {
+            Object.keys(appointmentTaper).forEach(id => {
+                if (id !== TAPER_EVERYTHING && !findAppointmentNode(id)) delete appointmentTaper[id];
+            });
+        }
+
+        function cleanTaperCurve(saved) {
+            const curve = {};
+            Object.keys(saved || {}).forEach(key => {
+                const hour = parseInt(key);
+                const percent = parseFloat(saved[key]);
+                if (hour >= 0 && hour < 24 && percent >= 0) curve[hour] = Math.min(TAPER_MAX, percent);
+            });
+            return curve;
+        }
+
         function isAppointmentGroup(node) {
             return Array.isArray(node.children);
         }
@@ -4927,6 +5103,7 @@
 
         const AWAY_BREAK = '#break';
         const AWAY_OFF = '#off';
+        const AWAY_SHIFT = '#shift';
         const DAY_MINUTES = 24 * 60;
 
         // The stretches a person is off on a date, earliest first: [{ start, end }] as 'HH:MM'.
@@ -4953,7 +5130,8 @@
                     return;
                 }
 
-                const times = BREAK_SCHEDULES[getEmployeeActiveGroup(emp, weekNum)];
+                const group = getEmployeeActiveGroup(emp, weekNum);
+                const times = BREAK_SCHEDULES[group];
                 const startOf = slot => clockMinutes(clockTo24(times[slot]));
                 const swap = swaps[emp.id];
                 if (swap && swap.position && startOf('lunch') !== null) {
@@ -4968,13 +5146,21 @@
                     if (startOf(slot) !== null) line.fill(AWAY_BREAK, startOf(slot), Math.min(DAY_MINUTES, startOf(slot) + breakMinutes[slot]));
                 });
                 partialOutOf(emp, iso).forEach(off => line.fill(AWAY_OFF, clockMinutes(off.start), clockMinutes(off.end)));
+
+                // Nobody is at a station before their group's shift starts or after it ends
+                const shift = shiftHours[group];
+                if (shift.start) line.fill(AWAY_SHIFT, 0, clockMinutes(shift.start));
+                if (shift.end) line.fill(AWAY_SHIFT, clockMinutes(shift.end));
             });
             return timelines;
         }
 
         // One day's figures, hour by hour:
         //   nodes[node id] = { staff, minutes, count, hours: [24 x { minutes, count }] }
-        //   away = { break: [24 minutes], off: [24 minutes] }, the staff minutes lost in each clock hour
+        //   away = { break, off, shift }, each [24 minutes]: the staff minutes lost in each clock hour to
+        //          breaks and lunch, to time off, and to people not yet in or gone for the day
+        //   taper = [24 weights], how heavily each hour counts when the day's appointments are spread out,
+        //           for everything that has no curve of its own (each node's taperFrom says whose it uses)
         //   range = { start, end } minutes covering every group's hours that day, or null
         // staff counts the people who spend any time in the group's own positions; minutes includes the
         // share handed down. An appointment is counted in the hour its minutes are complete, so part of
@@ -5003,19 +5189,28 @@
                 return pool;
             };
 
-            // handed = minutes passed down from the group above, for each clock hour
-            const allocate = (node, handed) => {
+            // handed = minutes passed down from the group above, for each clock hour.
+            // inherited = whose tapering curve the group above uses.
+            const allocate = (node, handed, inherited) => {
+                const taperFrom = appointmentTaper[node.id] ? node.id : inherited;
                 if (!isAppointmentGroup(node)) {
                     const each = transactionTimes[node.txn];
+                    const taper = taperFactors(taperFrom, dayKey);
+                    // Tapering weights the hours against each other: the day's appointments stay the same in
+                    // number and are spread by staff time x weight, so an hour pulled down gives its
+                    // appointments to the other hours. The staff time shown stays as it is.
+                    const total = handed.reduce((sum, minutes) => sum + minutes, 0);
+                    const weighted = handed.reduce((sum, minutes, h) => sum + minutes * taper[h], 0);
+                    const scale = weighted > 0 ? total / weighted : 0;
                     let soFar = 0, posted = 0;
-                    const hours = handed.map(minutes => {
-                        soFar += minutes;
+                    const hours = handed.map((minutes, h) => {
+                        soFar += minutes * taper[h] * scale;
                         const done = each > 0 ? Math.floor(soFar / each + 1e-9) : 0;
                         const count = done - posted;
                         posted = done;
                         return { minutes: minutes, count: count };
                     });
-                    results[node.id] = { staff: 0, minutes: soFar, count: posted, hours: hours };
+                    results[node.id] = { staff: 0, minutes: total, count: posted, hours: hours, taperFrom: taperFrom };
                     return results[node.id];
                 }
 
@@ -5035,30 +5230,32 @@
                 const hours = minutes.map(m => ({ minutes: m, count: 0 }));
                 node.children.forEach((child, i) => {
                     const part = shareSum > 0 ? usable * shares[i] / shareSum : 0;
-                    allocate(child, minutes.map(m => m * part)).hours.forEach((hour, h) => hours[h].count += hour.count);
+                    allocate(child, minutes.map(m => m * part), taperFrom).hours.forEach((hour, h) => hours[h].count += hour.count);
                 });
                 results[node.id] = {
                     staff: own.staff,
                     minutes: minutes.reduce((sum, m) => sum + m, 0),
                     count: hours.reduce((sum, hour) => sum + hour.count, 0),
-                    hours: hours
+                    hours: hours,
+                    taperFrom: taperFrom
                 };
                 return results[node.id];
             };
 
-            appointmentGroups.forEach(group => allocate(group, blankHours()));
+            appointmentGroups.forEach(group => allocate(group, blankHours(), TAPER_EVERYTHING));
 
-            const away = { break: blankHours(), off: blankHours() };
+            const away = { break: blankHours(), off: blankHours(), shift: blankHours() };
             if (range) {
                 employees.forEach(emp => {
                     for (let m = range.start; m < range.end; m++) {
                         const where = timelines[emp.id][m];
                         if (where === AWAY_BREAK) away.break[Math.floor(m / 60)]++;
                         else if (where === AWAY_OFF) away.off[Math.floor(m / 60)]++;
+                        else if (where === AWAY_SHIFT) away.shift[Math.floor(m / 60)]++;
                     }
                 });
             }
-            return { nodes: results, away: away, range: range };
+            return { nodes: results, away: away, range: range, taper: taperFactors(TAPER_EVERYTHING, dayKey) };
         }
 
         // Set-up problems that would make the numbers wrong or empty
@@ -5302,7 +5499,7 @@
             const days = DAYS_MAP.map((d, i) => {
                 const iso = addDaysISO(weekStart, i);
                 const day = grid[week][i] ? computeAppointmentDay(grid[week][i], d.key, currentWeekNum + week, iso) : null;
-                return { iso: iso, closed: isOfficeClosed(iso), results: day ? day.nodes : null, away: day ? day.away : null, range: day ? day.range : null };
+                return { iso: iso, closed: isOfficeClosed(iso), results: day ? day.nodes : null, away: day ? day.away : null, range: day ? day.range : null, taper: day ? day.taper : null };
             });
 
             const rows = [];
@@ -5378,6 +5575,7 @@
                 } else {
                     notes.push(transactionTimes[node.txn] > 0 ? `${transactionTimes[node.txn]} min each` : 'no time set', `${node.weight}% of this group`);
                 }
+                if (appointmentTaper[node.id]) notes.push('own tapering curve');
 
                 const figures = columns.map(col => col.pick(row.cells));
                 const counts = figures.map(fig => fig ? fig.count : 0);
@@ -5414,12 +5612,18 @@
                 // Listed by type only when a type is split over more than one group; otherwise the rows above already say it
                 if (typeKeys.some(t => typeUses[t.key] > 1)) typeKeys.forEach(t => totalRow(`All ${t.label}`, typeCounts[t.key], 'total'));
                 totalRow('All appointments', allCounts, 'grand');
+                // By the hour, any tapering is shown under the total it has shaped
+                if (day && columns.some(col => day.taper[col.hour] !== 1)) rows.push({
+                    kind: 'info', label: 'Tapering weight', notes: 'for everything without a curve of its own; the day total stays the same', depth: 0, level: 0,
+                    cells: columns.map(col => ({ text: `${Math.round(day.taper[col.hour] * 100)}%`, detail: '', faint: day.taper[col.hour] === 1 })),
+                    total: ''
+                });
             }
 
-            // By the hour, the staff time that breaks and time off take out of each hour is listed too
+            // By the hour, the staff time that breaks, time off and shift ends take out of each hour is listed too
             if (day && columns.length > 0) {
                 sectionRow('People away, averaged over each hour');
-                [['On break or lunch', day.away.break], ['Off for all or part of the day', day.away.off]].forEach(([label, minutes]) => rows.push({
+                [['On break or lunch', day.away.break], ['Off for all or part of the day', day.away.off], ['Not on shift (yet to start, or gone for the day)', day.away.shift]].forEach(([label, minutes]) => rows.push({
                     kind: 'info', label: label, notes: '', depth: 0, level: 0,
                     cells: columns.map(col => ({ text: tenths(minutes[col.hour]), detail: '', faint: minutes[col.hour] === 0 })),
                     total: ''
@@ -5456,6 +5660,7 @@
                     .map(([value, label]) => `<button class="ev-day${value === appointmentDayChoice ? ' active' : ''}" onclick="pickAppointmentDay('${value}')">${label}</button>`).join('');
 
             document.getElementById('ap-period').textContent = table.period;
+            renderTaperPanel();
             document.getElementById('ap-cards').innerHTML = table.cards.map(card => `
                 <div class="ap-card${card.main ? ' ap-main' : ''}">
                     <div class="ap-card-value">${card.value}</div>
@@ -5463,30 +5668,246 @@
                 </div>`).join('');
 
             const width = table.columns.length + 2;
-            document.getElementById('ap-thead').innerHTML = `<tr><th>Group / appointment type</th>${
-                table.columns.map(col => `<th>${col.label}${col.sub ? `<small>${col.sub}</small>` : ''}</th>`).join('')}<th class="ap-sum">${table.totalLabel}</th></tr>`;
+            const headHTML = `<thead><tr><th>Group / appointment type</th>${
+                table.columns.map(col => `<th>${col.label}${col.sub ? `<small>${col.sub}</small>` : ''}</th>`).join('')}<th class="ap-sum">${table.totalLabel}</th></tr></thead>`;
+            const messageHTML = text => `<tbody class="ap-block"><tr><td colspan="${width}">${text}</td></tr></tbody>`;
+            const gapHTML = `<tbody class="ap-gap"><tr><td colspan="${width}"></td></tr></tbody>`;
 
             let bodyHTML;
             if (appointmentGroups.length === 0) {
-                bodyHTML = `<tr><td colspan="${width}">No appointment groups are set up. Add them under Settings.</td></tr>`;
+                bodyHTML = messageHTML('No appointment groups are set up. Add them under Settings.');
             } else if (table.empty) {
-                bodyHTML = `<tr><td colspan="${width}">${table.empty}</td></tr>`;
+                bodyHTML = messageHTML(table.empty);
             } else {
-                bodyHTML = table.rows.map(row => row.kind === 'section'
+                // Each top-level group, and each section after them, is drawn as its own box with a gap
+                // before it, so it is plain where one ends and the next begins
+                const blocks = [];
+                table.rows.forEach(row => {
+                    if (blocks.length === 0 || row.kind === 'section' || (row.kind === 'group' && row.depth === 0)) blocks.push([]);
+                    blocks[blocks.length - 1].push(row);
+                });
+                bodyHTML = blocks.map(rows => `<tbody class="ap-block">${rows.map(row => row.kind === 'section'
                     ? `<tr class="ap-section"><td colspan="${width}">${escapeHTML(row.label)}</td></tr>`
-                    : `<tr class="ap-${row.kind} ap-l${row.level}">
+                    : `<tr class="ap-${row.kind} ap-l${row.level}${row.kind === 'group' && row.depth > 0 ? ' ap-sub' : ''}">
                         <td style="padding-left: ${14 + row.depth * 22}px;">${escapeHTML(row.label)}${row.notes ? `<small>${escapeHTML(row.notes)}</small>` : ''}</td>
                         ${row.cells.map(cell => `<td class="${cell.faint ? 'ap-faint' : ''}">${cell.text}${cell.detail ? `<small>${cell.detail}</small>` : ''}</td>`).join('')}
                         <td class="ap-sum">${row.total}</td>
-                    </tr>`).join('');
+                    </tr>`).join('')}</tbody>`).join(gapHTML);
             }
-            document.getElementById('ap-tbody').innerHTML = bodyHTML;
+            document.getElementById('ap-table').innerHTML = headHTML + gapHTML + bodyHTML;
         }
 
         function pickAppointmentDay(value) {
             appointmentDayChoice = value;
+            // The graph follows the page: the week's curve for the whole week, the day's for a day
+            taperScope = value === '' ? 'all' : DAYS_MAP[parseInt(value)].key;
             renderAppointmentsView();
         }
+
+        // ---- The tapering graph ----
+        // A line across the hours of the day. Clicking an hour puts a point there; dragging the point up
+        // or down sets how heavily that hour is weighted when the day's appointments are spread out.
+
+        // What the graph is shaping: everything, or the group or appointment type with this node id
+        let taperTarget = TAPER_EVERYTHING;
+        // 'all' edits the curve every day shares; a weekday key edits that day's own curve
+        let taperScope = 'all';
+
+        // What a target is called in the lists and on the button
+        function taperTargetName(targetId) {
+            if (targetId === TAPER_EVERYTHING) return 'All appointments';
+            const found = findAppointmentNode(targetId);
+            return found ? appointmentNodeLabel(found.node) : 'All appointments';
+        }
+
+        // Whose curve the graph is showing: the target's own if it has one, otherwise the one it follows
+        function taperShownSource() {
+            return appointmentTaper[taperTarget] ? taperTarget : taperSourceOf(taperTarget);
+        }
+
+        // True while the graph shows a curve that belongs to something else: the target has none of its
+        // own, or the weekday picked is still following the week's
+        function taperIsFollowing() {
+            const set = appointmentTaper[taperTarget];
+            return !set || (taperScope !== 'all' && !set[taperScope]);
+        }
+        // The hour whose point is being dragged, or null
+        let taperDragHour = null;
+
+        const TAPER_CHART = { width: 1000, height: 230, left: 48, right: 14, top: 18, bottom: 30 };
+
+        // The clock hours the graph covers: every hour any group can serve in, for the days it applies to
+        function taperChartHours() {
+            const dayKeys = taperScope === 'all' ? DAYS_MAP.map(d => d.key) : [taperScope];
+            let first = null, last = null;
+            APPOINTMENT_HOUR_SETS.forEach(set => dayKeys.forEach(dayKey => {
+                const start = clockMinutes(set.table()[dayKey].start);
+                const end = clockMinutes(set.table()[dayKey].end);
+                if (start === null || end === null) return;
+                first = first === null ? Math.floor(start / 60) : Math.min(first, Math.floor(start / 60));
+                last = last === null ? Math.ceil(end / 60) : Math.max(last, Math.ceil(end / 60));
+            }));
+            // 8 to 5 until some hours have been set
+            if (first === null) { first = 8; last = 17; }
+            return Array.from({ length: last - first }, (_, i) => first + i);
+        }
+
+        function drawTaperChart() {
+            const c = TAPER_CHART;
+            const hours = taperChartHours();
+            const curve = taperCurve(taperShownSource(), taperScope);
+            const follows = taperIsFollowing();
+            const plotWidth = c.width - c.left - c.right;
+            const plotHeight = c.height - c.top - c.bottom;
+            const column = plotWidth / hours.length;
+            const x = i => c.left + column * (i + 0.5);
+            const y = percent => c.top + plotHeight * (1 - percent / TAPER_MAX);
+            const valueOf = hour => curve[hour] === undefined ? 100 : curve[hour];
+
+            let svg = '';
+            hours.forEach((hour, i) => {
+                if (i % 2 === 0) svg += `<rect class="tp-band" x="${c.left + column * i}" y="${c.top}" width="${column}" height="${plotHeight}"></rect>`;
+                svg += `<text x="${x(i)}" y="${c.height - 9}" text-anchor="middle">${(hour % 12) || 12} ${hour < 12 ? 'AM' : 'PM'}</text>`;
+            });
+            [0, 50, 100, 150].forEach(percent => {
+                svg += `<line class="${percent === 100 ? 'tp-base' : 'tp-grid'}" x1="${c.left}" x2="${c.width - c.right}" y1="${y(percent)}" y2="${y(percent)}"></line>`;
+                svg += `<text x="${c.left - 8}" y="${y(percent) + 4}" text-anchor="end">${percent}%</text>`;
+            });
+
+            // The line runs level to each edge from the first and last hours
+            const points = [`${c.left},${y(valueOf(hours[0]))}`]
+                .concat(hours.map((hour, i) => `${x(i)},${y(valueOf(hour))}`))
+                .concat([`${c.width - c.right},${y(valueOf(hours[hours.length - 1]))}`]);
+            svg += `<polyline class="tp-line${follows ? ' tp-follows' : ''}" points="${points.join(' ')}"></polyline>`;
+
+            hours.forEach((hour, i) => {
+                if (curve[hour] === undefined) {
+                    svg += `<circle class="tp-spot" cx="${x(i)}" cy="${y(100)}" r="3.5"></circle>`;
+                    return;
+                }
+                // The figure sits above its point, or below it near the top of the graph
+                const labelY = curve[hour] > 125 ? y(curve[hour]) + 22 : y(curve[hour]) - 12;
+                svg += `<circle class="tp-point" cx="${x(i)}" cy="${y(curve[hour])}" r="7"></circle>`;
+                svg += `<text class="tp-value" x="${x(i)}" y="${labelY}" text-anchor="middle">${curve[hour]}%</text>`;
+            });
+
+            document.getElementById('ap-taper-chart').innerHTML = svg;
+        }
+
+        // The scope list and the reset button, then the graph itself
+        function renderTaperPanel() {
+            pruneTaper();
+            if (taperTarget !== TAPER_EVERYTHING && !findAppointmentNode(taperTarget)) taperTarget = TAPER_EVERYTHING;
+            const ownSet = appointmentTaper[taperTarget];
+
+            // Everything first, then the groups and appointment types as they are nested
+            const targets = [];
+            const walk = (list, depth) => list.forEach(node => {
+                targets.push({ id: node.id, depth: depth });
+                if (isAppointmentGroup(node)) walk(node.children, depth + 1);
+            });
+            walk(appointmentGroups, 1);
+            const target = document.getElementById('ap-taper-target');
+            target.innerHTML = `<option value="${TAPER_EVERYTHING}">All appointments</option>` + targets.map(t =>
+                `<option value="${t.id}">${'   '.repeat(t.depth)}${escapeHTML(taperTargetName(t.id))}${appointmentTaper[t.id] ? ' (own curve)' : ''}</option>`).join('');
+            target.value = taperTarget;
+
+            const scope = document.getElementById('ap-taper-scope');
+            scope.innerHTML = '<option value="all">Every day of the week</option>' + DAYS_MAP.map(d =>
+                `<option value="${d.key}">${d.full} only${ownSet && ownSet[d.key] ? ' (own curve)' : ''}</option>`).join('');
+            scope.value = taperScope;
+
+            // The button undoes one step: a weekday goes back to the week's curve, a group or type goes
+            // back to the curve it would otherwise follow, and the curve for everything goes flat
+            const reset = document.getElementById('ap-taper-reset');
+            if (taperScope !== 'all') {
+                reset.textContent = ownSet && ownSet[taperScope] ? "Go back to the week's curve" : "Following the week's curve";
+                reset.disabled = !(ownSet && ownSet[taperScope]);
+            } else if (taperTarget !== TAPER_EVERYTHING) {
+                reset.textContent = ownSet ? 'Remove this curve' : `Following ${taperTargetName(taperSourceOf(taperTarget))}`;
+                reset.disabled = !ownSet;
+            } else {
+                reset.textContent = 'Reset to a flat line';
+                reset.disabled = Object.keys(ownSet.all).length === 0;
+            }
+            reset.style.opacity = reset.disabled ? 0.5 : 1;
+
+            drawTaperChart();
+        }
+
+        // Where a pointer event falls on the graph: the hour of its column and the percentage of its height
+        function taperChartHit(event) {
+            const c = TAPER_CHART;
+            const box = document.getElementById('ap-taper-chart').getBoundingClientRect();
+            const px = (event.clientX - box.left) * c.width / box.width;
+            const py = (event.clientY - box.top) * c.height / box.height;
+            const hours = taperChartHours();
+            const index = Math.floor((px - c.left) / ((c.width - c.left - c.right) / hours.length));
+            const percent = (1 - (py - c.top) / (c.height - c.top - c.bottom)) * TAPER_MAX;
+            return {
+                hour: index >= 0 && index < hours.length ? hours[index] : null,
+                // In steps of 5, kept on the graph
+                percent: Math.min(TAPER_MAX, Math.max(0, Math.round(percent / 5) * 5))
+            };
+        }
+
+        // The curve being edited. A group or type without one starts from a copy of the curve it was
+        // following, and a weekday that was following the week starts from a copy of the week's.
+        function editableTaperCurve() {
+            if (!appointmentTaper[taperTarget]) appointmentTaper[taperTarget] = blankTaperSet(taperCurve(taperSourceOf(taperTarget), 'all'));
+            const set = appointmentTaper[taperTarget];
+            if (taperScope !== 'all' && !set[taperScope]) set[taperScope] = { ...set.all };
+            return set[taperScope];
+        }
+
+        document.getElementById('ap-taper-chart').addEventListener('pointerdown', e => {
+            const hit = taperChartHit(e);
+            if (hit.hour === null) return;
+            const curve = editableTaperCurve();
+            // A new point starts on the line, at 100%, and moves once it is dragged
+            if (curve[hit.hour] === undefined) curve[hit.hour] = 100;
+            taperDragHour = hit.hour;
+            // Keeps the drag going if the pointer strays off the graph; not every pointer can be held
+            try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* the drag still works inside the graph */ }
+            drawTaperChart();
+        });
+
+        document.getElementById('ap-taper-chart').addEventListener('pointermove', e => {
+            if (taperDragHour === null) return;
+            editableTaperCurve()[taperDragHour] = taperChartHit(e).percent;
+            drawTaperChart();
+        });
+
+        // Letting go redraws the table and the totals with the new shape
+        ['pointerup', 'pointercancel'].forEach(type => document.getElementById('ap-taper-chart').addEventListener(type, () => {
+            if (taperDragHour === null) return;
+            taperDragHour = null;
+            renderAppointmentsView();
+        }));
+
+        document.getElementById('ap-taper-chart').addEventListener('dblclick', e => {
+            const hit = taperChartHit(e);
+            if (hit.hour === null) return;
+            delete editableTaperCurve()[hit.hour];
+            renderAppointmentsView();
+        });
+
+        document.getElementById('ap-taper-scope').addEventListener('change', e => {
+            taperScope = e.target.value;
+            renderTaperPanel();
+        });
+
+        document.getElementById('ap-taper-target').addEventListener('change', e => {
+            taperTarget = e.target.value;
+            renderTaperPanel();
+        });
+
+        document.getElementById('ap-taper-reset').addEventListener('click', () => {
+            if (taperScope !== 'all') appointmentTaper[taperTarget][taperScope] = null;
+            else if (taperTarget !== TAPER_EVERYTHING) delete appointmentTaper[taperTarget];
+            else appointmentTaper[TAPER_EVERYTHING].all = {};
+            renderAppointmentsView();
+        });
 
         function openAppointmentsView() {
             generateSchedule();
@@ -7078,8 +7499,11 @@
                 // Hours, transaction times and the appointment groups, put back when Test Mode is switched off
                 testModeSavedTimes = JSON.stringify({
                     roadTestHours: roadTestHours, cdlTestHours: cdlTestHours, appointmentHours: appointmentHours,
-                    transactionTimes: transactionTimes, appointmentGroups: appointmentGroups
+                    transactionTimes: transactionTimes, appointmentGroups: appointmentGroups, shiftHours: shiftHours,
+                    appointmentTaper: appointmentTaper
                 });
+                // Staggered nine-hour shifts, so the first group in is the first to leave
+                shiftHours = { A: { start: '07:00', end: '16:00' }, B: { start: '08:00', end: '17:00' }, C: { start: '09:00', end: '18:00' } };
                 DAYS_MAP.forEach(d => {
                     appointmentHours[d.key] = { start: '07:00', end: '18:00' };
                     roadTestHours[d.key] = { start: '09:00', end: '15:00' };
@@ -7160,7 +7584,7 @@
                 });
                 renderRoleConfig();
 
-                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training\n- Varied days off, part-day time off, assigned duties and calendar entries planned for the coming weeks\n- Appointments 7 AM to 6 PM, road tests 9 AM to 3 PM, CDL road tests 9 AM to 1 PM\n- Short 20 min, Long 20 min, Class C road test 30 min, CDL road test 60 min\n- Typing appointments posted 35% Short, 65% Long");
+                alert("Test Mode Activated:\n- 64 employees added\n- 6 information desks, 50 typing stations, 9 duty desks created\n- Daily staffing set to 6 Info, 4 Class C/M, 2 CDL, 1 Banker, 2 Training\n- Varied days off, part-day time off, assigned duties and calendar entries planned for the coming weeks\n- Appointments 7 AM to 6 PM, road tests 9 AM to 3 PM, CDL road tests 9 AM to 1 PM\n- Shifts: Group A 7 AM to 4 PM, Group B 8 AM to 5 PM, Group C 9 AM to 6 PM\n- Short 20 min, Long 20 min, Class C road test 30 min, CDL road test 60 min\n- Typing appointments posted 35% Short, 65% Long");
             } else {
                 employees = [];
                 counterStations = [];
@@ -7171,6 +7595,8 @@
                     appointmentHours = saved.appointmentHours;
                     transactionTimes = saved.transactionTimes;
                     appointmentGroups = saved.appointmentGroups;
+                    shiftHours = saved.shiftHours;
+                    appointmentTaper = saved.appointmentTaper;
                     testModeSavedTimes = null;
                 }
                 if (testModeSavedCalendar) {
