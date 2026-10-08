@@ -32,6 +32,8 @@ Double-click `Launch_Scheduler.bat`. It opens `Data/scheduler.html` in Microsoft
 - That time is shared among the group's items by weight. Weights under 100% hold the rest back.
 - An appointment type's time divided by its transaction time limit is the number to publish.
 
+The page shows a whole week by day, or any one day hour by hour. The hourly figures leave out each person's breaks and lunch, days out, and part-day time off (set under **Part-Day Off** on the employee card), and move paired Information Desk and Class C/M staff to their partner's position after lunch.
+
 This reads the staff schedule; it does not change who works where.
 
 Click **Test Mode** in the top bar to load a sample office.
