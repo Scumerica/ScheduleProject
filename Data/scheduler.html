@@ -1071,6 +1071,40 @@
             padding: 4px 6px;
             text-align: right;
         }
+        .ag-type-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ag-noshow {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            margin-bottom: 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .ag-noshow input[type="number"] {
+            width: 54px;
+            padding: 4px 6px;
+            text-align: right;
+        }
+        .dc-secondary-box {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-left: 4px solid #7c3aed;
+            border-radius: 6px;
+            background-color: var(--panel-bg);
+            font-size: 0.85rem;
+            line-height: 1.9;
+        }
+        .ag-presets button {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
         .ag-bar {
             overflow: hidden;
             height: 6px;
@@ -1943,7 +1977,15 @@
                 <h2>Appointment groups and weights</h2>
                 <small style="display: block; color: var(--text-muted); margin-bottom: 10px; font-size: 0.8rem;">
                     A group shares its staff time among what is inside it, by weight. Click <strong>Staffed by</strong> on a group to choose its positions; a group inside another can also just take its weight's share of the group above. Groups nest up to 5 levels, one colour per level. A total under 100% holds the rest back, unposted.
+                    Each appointment type has a <strong>no-show</strong> rate: that share of its appointments is expected not to come, so extra are published to fill the time (at 25%, 4 are published for every 3 the staff time can serve).
                 </small>
+                <div class="ag-row ag-presets">
+                    <span class="ag-caption">Presets</span>
+                    <select id="appt-preset-select" title="Saved sets of groups, weights and no-show rates"></select>
+                    <button id="btn-appt-preset-load" style="background-color: #2563eb;">Load</button>
+                    <button id="btn-appt-preset-save" style="background-color: #059669;">Save as Preset</button>
+                    <button id="btn-appt-preset-delete" class="btn-danger">Delete</button>
+                </div>
                 <div class="ag-row">
                     <span class="ag-caption">A weight is a share of</span>
                     <select id="cfg-appt-split">
@@ -2026,6 +2068,7 @@
             </span>
         </div>
         <div id="dc-range-text" class="dc-range-text"></div>
+        <div id="dc-secondary"></div>
 
         <table class="dc-table">
             <thead id="dc-thead"></thead>
@@ -2542,7 +2585,7 @@
             { id: 'training', prop: 'training', name: 'Training', label: 'Training', req: 0, rot: -1, brk: -1 },
             { id: 'testing', prop: 'testing', name: 'Testing', label: 'Testing', req: 0, rot: 5, brk: 5 },
             // A secondary ("ghost") role: carried on top of a person's main job, never takes a station
-            { id: 'crc', prop: 'crc', name: 'Customer Readiness Check', label: 'CRC', req: 0, rot: 5, brk: 5, secondary: true, drawFrom: ['typing'], tickedOnly: false }
+            { id: 'crc', prop: 'crc', name: 'Customer Readiness Check', label: 'CRC', req: 0, rot: 5, brk: 5, secondary: true, drawFrom: ['typing'], tickedOnly: false, rotate: true }
         ];
         let roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
         let typingConfig = { req: -1, rot: -1, brk: -1 };
@@ -3591,10 +3634,12 @@
                 const drawn = (role.drawFrom || []).map(id => id === TYPING_POSITION ? 'Typing' : (roles.find(r => r.id === id) || {}).label).filter(x => x);
                 const row = document.createElement('div');
                 row.className = 'role-row';
+                // Out of the rotation, everyone ticked carries it, so it has no quotas to set
+                const offTitle = `${role.label} is not rotated: everyone ticked for it carries it. Turn rotation on under Settings.`;
                 row.innerHTML = `
                     <span class="role-secondary-mark" title="Secondary role">+</span>
                     <label title="${escapeHTML(role.name)}: picked from ${escapeHTML(drawn.join(', ') || 'no positions yet')}">${escapeHTML(role.label)}</label>
-                    ${settingInputs(role.id, role)}
+                    ${secondaryRotates(role) ? settingInputs(role.id, role) : ['cap', 'rot', 'brk'].map(f => `<input type="number" id="${idPrefix}-${f}-${role.id}" placeholder="–" disabled title="${escapeHTML(offTitle)}">`).join('')}
                     <div class="role-actions">
                         <button class="role-btn" title="Rename" onclick="renameRole('${role.id}')">✎</button>
                         ${(manageDefaults || !isBuiltInRole(role.id)) ? `<button class="role-btn btn-danger" title="Remove this role" onclick="deleteRole('${role.id}')">✕</button>` : ''}
@@ -3806,7 +3851,7 @@
             configState.roadTestHours = roadTestHours;
             configState.cdlTestHours = cdlTestHours;
             configState.transactionTimes = transactionTimes;
-            configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes, taper: appointmentTaper };
+            configState.appointments = { groups: appointmentGroups, split: appointmentSplit, hours: appointmentHours, breakMinutes: breakMinutes, taper: appointmentTaper, presets: appointmentPresets };
             configState.shiftHours = shiftHours;
             configState.restUnit = 'days';
             return configState;
@@ -3829,7 +3874,7 @@
                     .filter(r => r && r.id && r.prop && r.name)
                     .map(r => ({
                         id: r.id, prop: r.prop, name: r.name, label: r.label || r.name, req: r.req, rot: r.rot, brk: r.brk, tieWithPrev: !!r.tieWithPrev,
-                        secondary: !!r.secondary, drawFrom: Array.isArray(r.drawFrom) ? r.drawFrom : ['typing'], tickedOnly: !!r.tickedOnly
+                        secondary: !!r.secondary, drawFrom: Array.isArray(r.drawFrom) ? r.drawFrom : ['typing'], tickedOnly: !!r.tickedOnly, rotate: r.rotate !== false
                     }));
                 normalizeRoleOrder();
             } else if (data.config) {
@@ -3879,6 +3924,7 @@
                 const savedAppointments = data.config.appointments || {};
                 if (Array.isArray(savedAppointments.groups)) appointmentGroups = cleanAppointmentNodes(savedAppointments.groups, 1);
                 if (savedAppointments.split) appointmentSplit = savedAppointments.split === 'time' ? 'time' : 'count';
+                if (Array.isArray(savedAppointments.presets)) mergeAppointmentPresets(savedAppointments.presets);
                 DAYS_MAP.forEach(d => {
                     const saved = (savedAppointments.hours || {})[d.key];
                     if (saved) appointmentHours[d.key] = { start: saved.start || '', end: saved.end || '' };
@@ -4887,6 +4933,12 @@
         // emp.secondaryRoles (names held this week), emp.history[name] (Max Rot / Break Rot),
         // emp.secondarySince[name] and emp.secondaryTotal[name] (fairness). None of the main positions'
         // rotation, the Fairness Duty Limiter or the weekly picks is affected.
+        // A secondary role taken out of the rotation (rotate: false) has no picks: everyone ticked for it on
+        // their card carries it every week their main job is one it is drawn from. Its days are still counted.
+
+        function secondaryRotates(role) {
+            return role.rotate !== false;
+        }
 
         // The main job a person has this week, as a position id ('typing' for a typing station)
         function primaryKeyOf(emp) {
@@ -4910,6 +4962,15 @@
                 const holds = emp => emp.secondaryRoles.includes(role.name);
                 const drop = emp => emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
                 const canCarry = emp => !emp.frozen && daysOutCount(emp) < 5 && drawFrom.includes(primaryKeyOf(emp)) && (!role.tickedOnly || emp[role.prop]);
+
+                if (!secondaryRotates(role)) {
+                    employees.forEach(emp => {
+                        const carries = daysOutCount(emp) < 5 && drawFrom.includes(primaryKeyOf(emp)) && !!emp[role.prop];
+                        if (carries && !holds(emp)) emp.secondaryRoles.push(role.name);
+                        if (!carries && holds(emp)) drop(emp);
+                    });
+                    return;
+                }
 
                 // Anyone whose main job is no longer one it is drawn from, or who is out all week, gives it up
                 employees.forEach(emp => {
@@ -4962,14 +5023,20 @@
                             <strong style="flex: 1;">${escapeHTML(role.name)}</strong>
                             <button class="role-btn" style="padding: 4px 8px;" onclick="makeRolePrimary('${role.id}')" title="Turn this back into a normal position that takes a station">Make Main Position</button>
                         </div>
-                        <div style="font-size: 0.8rem; margin-bottom: 4px;">Picked from people whose main job this week is:</div>
+                        <label style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; font-size: 0.8rem;">
+                            <input type="checkbox" ${secondaryRotates(role) ? 'checked' : ''} onchange="setSecondaryRotate('${role.id}', this.checked)">
+                            <span><strong>Use the rotation</strong> (Required, Max Rot and Break Rot pick who has it each week)</span>
+                        </label>
+                        <div style="font-size: 0.8rem; margin-bottom: 4px;">${secondaryRotates(role) ? 'Picked from' : 'Carried by'} people whose main job this week is:</div>
                         <div class="toggles-grid">
                             ${positions.map(pos => `<label><input type="checkbox" ${(role.drawFrom || []).includes(pos.id) ? 'checked' : ''} onchange="setSecondaryDrawFrom('${role.id}', '${pos.id}', this.checked)"> ${escapeHTML(pos.label)}</label>`).join('')}
                         </div>
-                        <label style="display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 0.8rem;">
-                            <input type="checkbox" ${role.tickedOnly ? 'checked' : ''} onchange="setSecondaryTickedOnly('${role.id}', this.checked)">
-                            Only people ticked for ${escapeHTML(role.label)} on their card
-                        </label>
+                        ${secondaryRotates(role) ? `
+                            <label style="display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 0.8rem;">
+                                <input type="checkbox" ${role.tickedOnly ? 'checked' : ''} onchange="setSecondaryTickedOnly('${role.id}', this.checked)">
+                                Only people ticked for ${escapeHTML(role.label)} on their card
+                            </label>` : `
+                            <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">Not rotated: everyone ticked for ${escapeHTML(role.label)} on their card carries it, as an "if needed" role, while their main job is one ticked above. Their days on it are still counted.</div>`}
                     </div>`).join('');
 
             const select = document.getElementById('secondary-make-select');
@@ -4983,6 +5050,15 @@
             const drawFrom = new Set(role.drawFrom || []);
             if (checked) drawFrom.add(posId); else drawFrom.delete(posId);
             role.drawFrom = [...drawFrom];
+            refreshAfterRoleChange();
+        }
+
+        function setSecondaryRotate(roleId, checked) {
+            const role = roles.find(r => r.id === roleId);
+            if (!role) return;
+            role.rotate = checked;
+            // Starting the rotation again starts from nobody, so the picks are made fresh by fairness
+            if (checked) employees.forEach(emp => emp.secondaryRoles = (emp.secondaryRoles || []).filter(name => name !== role.name));
             refreshAfterRoleChange();
         }
 
@@ -5226,20 +5302,24 @@
         // ==========================================
         // appointmentGroups is a tree, at most MAX_GROUP_DEPTH groups deep.
         // A group:               { id, name, weight, positions: [role id | 'typing'], hours: 'office' | 'roadtest', children: [] }
-        // An appointment type:   { id, txn: key in TRANSACTION_TYPES, weight }
+        // An appointment type:   { id, txn: key in TRANSACTION_TYPES, weight, noShow: percent expected not to come }
         // Each day a group's minutes are those of the staff scheduled in its positions, plus whatever its
         // weight takes from the group above. The minutes are shared among its children by weight, and an
-        // appointment type's minutes divided by its transaction time is the number to publish.
+        // appointment type's minutes divided by its transaction time is the number the staff can serve.
+        // The number to publish is that divided by the share expected to show up (1 - noShow).
 
         const MAX_GROUP_DEPTH = 5;
         const TYPING_POSITION = 'typing';
+        // No-show rate given to a new appointment type; the highest a rate can be set to
+        const DEFAULT_NO_SHOW = 25;
+        const MAX_NO_SHOW = 90;
 
         function newAppointmentId() {
             return 'ag_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         }
 
         function defaultAppointmentGroups() {
-            const type = (txn, weight) => ({ id: newAppointmentId(), txn: txn, weight: weight });
+            const type = (txn, weight) => ({ id: newAppointmentId(), txn: txn, weight: weight, noShow: DEFAULT_NO_SHOW });
             const group = (name, weight, positions, hours, children) => ({ id: newAppointmentId(), name: name, weight: weight, positions: positions, hours: hours, children: children });
             return [
                 group('Typing', 100, [TYPING_POSITION], 'office', [type('short', 35), type('long', 65)]),
@@ -5343,6 +5423,12 @@
             return isNaN(weight) ? 0 : Math.min(100, Math.max(0, weight));
         }
 
+        // Files saved before no-show rates existed have none, so their numbers stay as they were
+        function clampNoShow(value) {
+            const rate = parseFloat(value);
+            return isNaN(rate) ? 0 : Math.min(MAX_NO_SHOW, Math.max(0, rate));
+        }
+
         // Tidies a saved tree: drops anything unreadable and any group nested deeper than the limit
         function cleanAppointmentNodes(list, depth) {
             return list.filter(node => node && typeof node === 'object').map(node => {
@@ -5358,7 +5444,7 @@
                     };
                 }
                 if (!TRANSACTION_TYPES.some(t => t.key === node.txn)) return null;
-                return { id: node.id || newAppointmentId(), txn: node.txn, weight: clampWeight(node.weight) };
+                return { id: node.id || newAppointmentId(), txn: node.txn, weight: clampWeight(node.weight), noShow: clampNoShow(node.noShow) };
             }).filter(Boolean);
         }
 
@@ -5547,6 +5633,8 @@
                 const taperFrom = appointmentTaper[node.id] ? node.id : inherited;
                 if (!isAppointmentGroup(node)) {
                     const each = transactionTimes[node.txn];
+                    // Overbooked so the ones expected to turn up fill the staff time
+                    const showUp = 1 - clampNoShow(node.noShow) / 100;
                     const taper = taperFactors(taperFrom, dayKey);
                     // Tapering weights the hours against each other: the day's appointments stay the same in
                     // number and are spread by staff time x weight, so an hour pulled down gives its
@@ -5557,7 +5645,7 @@
                     let soFar = 0, posted = 0;
                     const hours = handed.map((minutes, h) => {
                         soFar += minutes * taper[h] * scale;
-                        const done = each > 0 ? Math.floor(soFar / each + 1e-9) : 0;
+                        const done = each > 0 ? Math.floor(soFar / each / showUp + 1e-9) : 0;
                         const count = done - posted;
                         posted = done;
                         return { minutes: minutes, count: count };
@@ -5661,6 +5749,7 @@
 
         function renderAppointmentGroups() {
             const choices = appointmentPositionChoices();
+            renderAppointmentPresets();
 
             const weightCell = (node, show) => !show ? '<span></span>' : `
                 <span class="ag-weight">
@@ -5682,7 +5771,10 @@
                         <div class="ag-line ag-type-line">
                             <span class="ag-dot"></span>
                             <span class="ag-type-name">${escapeHTML(appointmentNodeLabel(node))}</span>
-                            <span class="ag-caption">${each > 0 ? `${each} min each` : 'no time set'}</span>
+                            <span class="ag-type-meta">
+                                <span class="ag-caption">${each > 0 ? `${each} min each` : 'no time set'}</span>
+                                <label class="ag-noshow" title="Share of these appointments expected not to come. Extra are published to make up for them.">No-show <input type="number" min="0" max="${MAX_NO_SHOW}" value="${clampNoShow(node.noShow)}" onchange="updateAppointmentNode('${node.id}', 'noShow', this.value)"> %</label>
+                            </span>
                             ${weightCell(node, true)}
                             ${actions(node, index, count)}
                         </div>`;
@@ -5736,7 +5828,7 @@
             document.getElementById('settings-appt-groups').innerHTML = appointmentGroups.length === 0
                 ? '<div class="ag-caption" style="margin-bottom: 10px;">No groups yet. Add one to start.</div>'
                 : `<div class="ag-tree">
-                        <div class="ag-line ag-head"><span></span><span>Group or appointment type</span><span>Staffed by / time each</span><span>Weight in its group</span><span></span></div>
+                        <div class="ag-line ag-head"><span></span><span>Group or appointment type</span><span>Staffed by / time each, no-shows</span><span>Weight in its group</span><span></span></div>
                         ${appointmentGroups.map((group, i) => nodeHTML(group, 1, i, appointmentGroups.length)).join('')}
                     </div>`;
         }
@@ -5755,11 +5847,12 @@
             const found = findAppointmentNode(id);
             if (!found) return;
             if (field === 'weight') found.node.weight = clampWeight(value);
+            else if (field === 'noShow') found.node.noShow = clampNoShow(value);
             else if (field === 'name') found.node.name = value.trim() || found.node.name;
             else found.node[field] = value;
 
             // A typed weight or name only redraws the bar and the totals, so the box being tabbed into keeps the cursor
-            if (field === 'hours' || (field === 'weight' && String(found.node.weight) !== value)) {
+            if (field === 'hours' || (field === 'weight' && String(found.node.weight) !== value) || (field === 'noShow' && String(found.node.noShow) !== value)) {
                 renderAppointmentGroups();
                 return;
             }
@@ -5795,7 +5888,7 @@
         function addAppointmentType(groupId, txn) {
             const found = findAppointmentNode(groupId);
             if (!found || !txn) return;
-            found.node.children.push({ id: newAppointmentId(), txn: txn, weight: 0 });
+            found.node.children.push({ id: newAppointmentId(), txn: txn, weight: 0, noShow: DEFAULT_NO_SHOW });
             renderAppointmentGroups();
         }
 
@@ -5838,6 +5931,91 @@
         document.getElementById('btn-appt-hours-copy').addEventListener('click', () => {
             DAYS_MAP.forEach(d => appointmentHours[d.key] = { ...appointmentHours.mon });
             renderSettingsPage();
+        });
+
+        // ---- Presets: named copies of the groups, weights, no-show rates, the split and the groups' own curves ----
+        // Kept in this browser, so every schedule file can use them, and saved inside each schedule file too.
+        // The curve for everything is left out: it belongs to the office, not to a set of groups.
+        const PRESETS_STORAGE_KEY = 'swift_appointment_presets';
+
+        function cleanAppointmentPresets(list) {
+            return (Array.isArray(list) ? list : []).filter(p => p && typeof p.name === 'string' && p.name.trim() && Array.isArray(p.groups)).map(p => ({
+                name: p.name.trim(),
+                groups: p.groups,
+                split: p.split === 'time' ? 'time' : 'count',
+                taper: p.taper && typeof p.taper === 'object' ? p.taper : {}
+            }));
+        }
+
+        let appointmentPresets = (() => {
+            try { return cleanAppointmentPresets(JSON.parse(localStorage.getItem(PRESETS_STORAGE_KEY) || '[]')); } catch (e) { return []; }
+        })();
+
+        function storeAppointmentPresets() {
+            // Test Mode's presets go when it is switched off, so they are not kept in the browser
+            if (testModeActive) return;
+            try { localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(appointmentPresets)); } catch (e) { /* storage blocked */ }
+        }
+
+        // Presets in a loaded file are added to the ones already here; one with the same name is replaced
+        function mergeAppointmentPresets(list) {
+            cleanAppointmentPresets(list).forEach(preset => {
+                appointmentPresets = appointmentPresets.filter(p => p.name.toLowerCase() !== preset.name.toLowerCase()).concat(preset);
+            });
+            storeAppointmentPresets();
+        }
+
+        function renderAppointmentPresets() {
+            const select = document.getElementById('appt-preset-select');
+            const chosen = select.value;
+            const names = appointmentPresets.map(p => p.name).sort((a, b) => a.localeCompare(b));
+            select.innerHTML = names.length === 0
+                ? '<option value="">No presets saved yet</option>'
+                : names.map(name => `<option value="${escapeHTML(name)}" ${name === chosen ? 'selected' : ''}>${escapeHTML(name)}</option>`).join('');
+            document.getElementById('btn-appt-preset-load').disabled = names.length === 0;
+            document.getElementById('btn-appt-preset-delete').disabled = names.length === 0;
+        }
+
+        document.getElementById('btn-appt-preset-save').addEventListener('click', () => {
+            const suggested = document.getElementById('appt-preset-select').value;
+            const name = (prompt('Name for this preset (groups, weights and no-show rates):', suggested) || '').trim();
+            if (!name) return;
+            const existing = appointmentPresets.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (existing && !confirm(`Replace the preset "${existing.name}" with the groups as they are now?`)) return;
+            const taper = {};
+            Object.keys(appointmentTaper).forEach(id => { if (id !== TAPER_EVERYTHING) taper[id] = appointmentTaper[id]; });
+            const preset = JSON.parse(JSON.stringify({ name: name, groups: appointmentGroups, split: appointmentSplit, taper: taper }));
+            appointmentPresets = appointmentPresets.filter(p => p !== existing).concat(preset);
+            storeAppointmentPresets();
+            renderAppointmentPresets();
+            document.getElementById('appt-preset-select').value = name;
+        });
+
+        document.getElementById('btn-appt-preset-load').addEventListener('click', () => {
+            const preset = appointmentPresets.find(p => p.name === document.getElementById('appt-preset-select').value);
+            if (!preset || !confirm(`Replace the current appointment groups with the preset "${preset.name}"?`)) return;
+            const copy = JSON.parse(JSON.stringify(preset));
+            appointmentGroups = cleanAppointmentNodes(copy.groups, 1);
+            appointmentSplit = copy.split;
+            const everything = appointmentTaper[TAPER_EVERYTHING];
+            appointmentTaper = { [TAPER_EVERYTHING]: everything };
+            Object.keys(copy.taper).forEach(id => {
+                const saved = copy.taper[id];
+                if (!saved || typeof saved !== 'object') return;
+                const set = blankTaperSet(cleanTaperCurve(saved.all));
+                DAYS_MAP.forEach(d => set[d.key] = saved[d.key] ? cleanTaperCurve(saved[d.key]) : null);
+                appointmentTaper[id] = set;
+            });
+            pruneTaper();
+            renderSettingsPage();
+        });
+
+        document.getElementById('btn-appt-preset-delete').addEventListener('click', () => {
+            const name = document.getElementById('appt-preset-select').value;
+            if (!name || !confirm(`Delete the preset "${name}"? The groups in use now are not changed.`)) return;
+            appointmentPresets = appointmentPresets.filter(p => p.name !== name);
+            storeAppointmentPresets();
+            renderAppointmentPresets();
         });
 
         // ---- The Appointments to Publish page ----
@@ -5915,6 +6093,8 @@
             const cellOf = (col, count, detail) => ({ text: col.blank || String(count), detail: col.blank ? '' : detail, faint: !!col.blank || count === 0 });
             const typeCounts = {};
             const typeUses = {};
+            // How many of the published appointments are expected to turn up, by column
+            const expectedCounts = columns.map(() => 0);
 
             const rows = report.rows.map(row => {
                 const node = row.node;
@@ -5926,6 +6106,7 @@
                     if (row.depth > 0) notes.push(`${node.weight}% of the group above`);
                 } else {
                     notes.push(transactionTimes[node.txn] > 0 ? `${transactionTimes[node.txn]} min each` : 'no time set', `${node.weight}% of this group`);
+                    if (node.noShow > 0) notes.push(`${node.noShow}% no-shows`);
                 }
                 if (appointmentTaper[node.id]) notes.push('own tapering curve');
 
@@ -5936,6 +6117,7 @@
                     typeCounts[node.txn] = typeCounts[node.txn] || columns.map(() => 0);
                     counts.forEach((count, c) => typeCounts[node.txn][c] += count);
                     typeUses[node.txn] = (typeUses[node.txn] || 0) + 1;
+                    counts.forEach((count, c) => expectedCounts[c] += count * (1 - node.noShow / 100));
                 }
 
                 return {
@@ -5964,6 +6146,11 @@
                 // Listed by type only when a type is split over more than one group; otherwise the rows above already say it
                 if (typeKeys.some(t => typeUses[t.key] > 1)) typeKeys.forEach(t => totalRow(`All ${t.label}`, typeCounts[t.key], 'total'));
                 totalRow('All appointments', allCounts, 'grand');
+                if (expectedCounts.some((expected, c) => Math.round(expected) !== allCounts[c])) rows.push({
+                    kind: 'info', label: 'Expected to show up', notes: 'after the no-show rates', depth: 0, level: 0,
+                    cells: columns.map((col, c) => ({ text: col.blank || String(Math.round(expectedCounts[c])), detail: '', faint: !!col.blank })),
+                    total: Math.round(sum(expectedCounts))
+                });
                 // By the hour, any tapering is shown under the total it has shaped
                 if (day && columns.some(col => day.taper[col.hour] !== 1)) rows.push({
                     kind: 'info', label: 'Tapering weight', notes: 'for everything without a curve of its own; the day total stays the same', depth: 0, level: 0,
@@ -5983,6 +6170,7 @@
             }
 
             const cards = [{ label: day ? 'Appointments this day' : 'Appointments this week', value: sum(allCounts), main: true }]
+                .concat(Math.round(sum(expectedCounts)) !== sum(allCounts) ? [{ label: 'Expected to show up', value: Math.round(sum(expectedCounts)), main: false }] : [])
                 .concat(typeKeys.map(t => ({ label: t.label, value: sum(typeCounts[t.key]), main: false })));
 
             return {
@@ -6318,8 +6506,10 @@
         function buildHourlyDay(week, dayIdx) {
             const iso = addDaysISO(currentWeekStart, 7 * week + dayIdx);
             const dayKey = DAYS_MAP[dayIdx].key;
-            const assignments = buildFourWeekGrid()[week][dayIdx];
-            const result = { iso: iso, closed: isOfficeClosed(iso), missing: !assignments, hours: [], people: [], counts: [] };
+            const grid = buildFourWeekGrid();
+            const assignments = grid[week][dayIdx];
+            // secondary[emp id] = the secondary roles they carry that day
+            const result = { iso: iso, closed: isOfficeClosed(iso), missing: !assignments, hours: [], people: [], counts: [], secondary: (grid.secondary[week] || [])[dayIdx] || {} };
             if (result.closed || result.missing) return result;
 
             // From the earliest start to the latest end of any shift or set of hours that day; 8 to 5 if none are set
@@ -6422,7 +6612,8 @@
             // Only the people who work the chosen position at some point in the day
             const filter = document.getElementById('hp-filter');
             const chosen = filter.value;
-            filter.innerHTML = '<option value="">Every position</option>' + appointmentPositionChoices().map(c => `<option value="${c.id}">${escapeHTML(c.label)} only</option>`).join('');
+            filter.innerHTML = '<option value="">Every position</option>' + appointmentPositionChoices().map(c => `<option value="${c.id}">${escapeHTML(c.label)} only</option>`).join('')
+                + secondaryRoles().map(r => `<option value="sec:${escapeHTML(r.name)}">On ${escapeHTML(r.label)} (secondary) only</option>`).join('');
             filter.value = [...filter.options].some(o => o.value === chosen) ? chosen : '';
 
             const message = day.closed ? 'The office is closed on this day.' : (day.missing ? 'This day is past the end of the forecast.' : '');
@@ -6442,13 +6633,14 @@
                 </tr>`).join('') + '</tbody>';
 
             const query = document.getElementById('hp-search').value.trim().toLowerCase();
+            const carried = person => person.cells.some(cell => cell.kind !== 'out') ? (day.secondary[person.emp.id] || []) : [];
             const shown = day.people.filter(person =>
                 (!query || formatDisplayName(person.emp.name).toLowerCase().includes(query)) &&
-                (!filter.value || person.worked.has(filter.value)));
+                (!filter.value || (filter.value.startsWith('sec:') ? carried(person).includes(filter.value.slice(4)) : person.worked.has(filter.value))));
 
             document.getElementById('hp-table').innerHTML = headHTML('Employee') + '<tbody>' + shown.map(person => `
                 <tr>
-                    <td class="fw-name"><strong>${escapeHTML(formatDisplayName(person.emp.name))}</strong></td>
+                    <td class="fw-name"><strong>${escapeHTML(formatDisplayName(person.emp.name))}</strong>${secondaryLabelsFor(carried(person)).map(label => ` <span class="badge secondary-badge" title="Secondary role this day">+ ${escapeHTML(label)}</span>`).join('')}</td>
                     ${person.cells.map(cell => `<td class="${HOURLY_KIND_CLASS[cell.kind]}">${escapeHTML(cell.label)}${cell.notes.map(note => `<small>${escapeHTML(note)}</small>`).join('')}</td>`).join('')}
                 </tr>`).join('') + '</tbody>';
             document.getElementById('hp-empty').hidden = shown.length > 0;
@@ -6645,7 +6837,7 @@
 
         function dutyCounterColumns() {
             return primaryRoles().map(r => ({ key: r.id, label: r.label, prop: r.prop }))
-                .concat(secondaryRoles().map(r => ({ key: r.id, label: `${r.label} (secondary)`, prop: r.prop, secondary: true, tickedOnly: !!r.tickedOnly })))
+                .concat(secondaryRoles().map(r => ({ key: r.id, label: `${r.label} (secondary)`, prop: r.prop, secondary: true, tickedOnly: !!r.tickedOnly || !secondaryRotates(r), name: r.name })))
                 .concat([
                     { key: '__total', label: 'All special duties' },
                     { key: 'T', label: 'Typing' },
@@ -6719,6 +6911,25 @@
                 if (key === '__total') return primaryRoles().reduce((sum, r) => sum + (days[r.id] || 0), 0);
                 return days[key] || 0;
             };
+            const carriesNow = (emp, col) => col.secondary && (emp.secondaryRoles || []).includes(col.name);
+
+            // Each secondary role: who carries it now, and everyone who has in the period, most recent first
+            document.getElementById('dc-secondary').innerHTML = secondaryRoles().map(role => {
+                const lastOn = {};
+                dates.forEach(date => Object.entries(dutyLog[date].__secondary || {}).forEach(([id, ids]) => {
+                    if (ids.includes(role.id)) lastOn[id] = date;
+                }));
+                const nameOf = emp => escapeHTML(formatDisplayName(emp.name));
+                const now = employees.filter(emp => (emp.secondaryRoles || []).includes(role.name));
+                const past = employees.filter(emp => lastOn[emp.id]).sort((a, b) => lastOn[b.id].localeCompare(lastOn[a.id]));
+                return `
+                    <div class="dc-secondary-box">
+                        <div><strong>${escapeHTML(role.label)} now</strong> <span class="ag-caption">(week of ${formatWeekRange(currentWeekStart, true)}${secondaryRotates(role) ? '' : ', not rotated'})</span>:
+                            ${now.length === 0 ? '<span class="ag-caption">nobody</span>' : now.map(emp => `<span class="badge secondary-badge">${nameOf(emp)}</span>`).join(' ')}</div>
+                        <div style="margin-top: 4px;"><strong>Has been on ${escapeHTML(role.label)}</strong> <span class="ag-caption">(in the days shown, most recent first)</span>:
+                            ${past.length === 0 ? '<span class="ag-caption">nobody yet</span>' : past.map(emp => `<span class="stat-tag">${nameOf(emp)} · ${valueOf(emp, role.id)} day${valueOf(emp, role.id) === 1 ? '' : 's'} · last ${formatShortDate(lastOn[emp.id])}</span>`).join(' ')}</div>
+                    </div>`;
+            }).join('');
             const timesOf = (emp, key) => ((tally[emp.id] || { times: {} }).times[key] || 0);
 
             const query = document.getElementById('dc-search').value.trim().toLowerCase();
@@ -6745,10 +6956,10 @@
                 const days = valueOf(emp, col.key);
                 // A secondary role open to anyone has no "not ticked" state
                 const needsTick = col.prop && (!col.secondary || col.tickedOnly);
-                if (needsTick && !emp[col.prop] && days === 0) return '<td class="dc-na" title="Not ticked for this duty">–</td>';
+                if (needsTick && !emp[col.prop] && days === 0 && !carriesNow(emp, col)) return '<td class="dc-na" title="Not ticked for this duty">–</td>';
                 const times = col.prop ? timesOf(emp, col.key) : 0;
                 const shade = days === 0 ? 0 : 0.08 + 0.37 * (days / maxOf[col.key]);
-                return `<td style="background-color: rgba(37, 99, 235, ${shade.toFixed(2)});">${days}${times > 0 ? ` <span class="dc-times">${times}×</span>` : ''}</td>`;
+                return `<td style="background-color: rgba(37, 99, 235, ${shade.toFixed(2)});">${days}${times > 0 ? ` <span class="dc-times">${times}×</span>` : ''}${carriesNow(emp, col) ? ' <span class="badge secondary-badge" title="Carries it this week">now</span>' : ''}</td>`;
             };
 
             // Average days among the people ticked for each duty (everyone, for the other columns)
@@ -7639,7 +7850,7 @@
                         hist.consecutive++;
                         emp.secondaryTotal[role.name] = (emp.secondaryTotal[role.name] || 0) + 1;
                         emp.secondarySince[role.name] = 0;
-                        if (rules.maxRot !== -1 && hist.consecutive >= rules.maxRot) {
+                        if (secondaryRotates(role) && rules.maxRot !== -1 && hist.consecutive >= rules.maxRot) {
                             hist.breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
                             hist.consecutive = 0;
                             emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
@@ -7703,7 +7914,8 @@
             employees.forEach(emp => {
                 (emp.secondaryRoles || []).slice().forEach(name => {
                     const rules = getRoleRules(name);
-                    if (!rules) return;
+                    const role = roles.find(r => r.name === name);
+                    if (!rules || !role || !secondaryRotates(role)) return;
                     if (!emp.history[name]) emp.history[name] = { consecutive: 0, breakRemaining: 0 };
                     const hist = emp.history[name];
                     if (rules.maxRot !== -1 && rules.maxRot - hist.consecutive < 5) {
@@ -8149,7 +8361,7 @@
                 testModeSavedTimes = JSON.stringify({
                     roadTestHours: roadTestHours, cdlTestHours: cdlTestHours, appointmentHours: appointmentHours,
                     transactionTimes: transactionTimes, appointmentGroups: appointmentGroups, shiftHours: shiftHours,
-                    appointmentTaper: appointmentTaper
+                    appointmentTaper: appointmentTaper, appointmentSplit: appointmentSplit, appointmentPresets: appointmentPresets
                 });
                 // Staggered nine-hour shifts, so the first group in is the first to leave
                 shiftHours = { A: { start: '07:00', end: '16:00' }, B: { start: '08:00', end: '17:00' }, C: { start: '09:00', end: '18:00' } };
@@ -8247,6 +8459,8 @@
                     appointmentGroups = saved.appointmentGroups;
                     shiftHours = saved.shiftHours;
                     appointmentTaper = saved.appointmentTaper;
+                    if (saved.appointmentSplit) appointmentSplit = saved.appointmentSplit;
+                    if (saved.appointmentPresets) appointmentPresets = saved.appointmentPresets;
                     testModeSavedTimes = null;
                 }
                 if (testModeSavedCalendar) {
