@@ -1091,6 +1091,46 @@
             padding: 4px 6px;
             text-align: right;
         }
+        .swap-rule {
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-left: 4px solid #0d9488;
+            border-radius: 6px;
+            background-color: var(--panel-bg);
+        }
+        .swap-rule-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        .swap-sides {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: start;
+        }
+        .swap-side {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            font-size: 0.8rem;
+        }
+        .swap-side .ag-caption {
+            flex-basis: 100%;
+        }
+        .swap-arrow {
+            align-self: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        .swap-chip-off {
+            opacity: 0.4;
+            cursor: default;
+        }
         .dc-secondary-box {
             margin-bottom: 10px;
             padding: 8px 12px;
@@ -1916,9 +1956,11 @@
                     <input type="checkbox" id="cfg-lunch-swap" checked style="margin-top: 4px;">
                     <span>
                         <strong>After-lunch swap</strong>
-                        <small style="display: block; color: var(--text-muted); font-size: 0.8rem; font-weight: normal;">Information Desk and Class C/M trade places after lunch, one for one. Anyone left without a partner is told to check with a supervisor.</small>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.8rem; font-weight: normal;">People in the positions on one side of a swap trade places after lunch, one for one, with people on the other side. Each side can hold one position or several. Both people must be ticked for the other's position. Anyone left without a partner is told to check with a supervisor. Swaps are matched in the order listed, and nobody swaps twice.</small>
                     </span>
                 </label>
+                <div id="settings-lunch-swaps" style="margin-top: 8px;"></div>
+                <button onclick="addLunchSwapRule()" style="margin-top: 6px;">Add Swap</button>
             </div>
 
             <div class="help-card">
@@ -2167,8 +2209,8 @@
             </div>
 
             <div class="help-card">
-                <h2>7. After-lunch swap</h2>
-                <p>Information Desk and Class C/M staff trade places after lunch, one for one. A pair must each be ticked for the other's duty, and partners in the same break group are matched first. Anyone left without a partner is told to check with a supervisor. There is no swap on a blocked day or a half day.</p>
+                <h2>7. After-lunch swaps</h2>
+                <p>Swaps are set up under Settings. Each swap has two sides, and each side holds one or more positions (for example Information Desk on one side, Class C/M + CDL on the other). People on one side trade places after lunch, one for one, with people on the other. A pair must each be ticked for the other's position, partners in the same break group are matched first, and as many pairs as possible are made. Swaps are matched in the order listed and nobody swaps twice. Anyone left without a partner is told to check with a supervisor. There is no swap on a blocked day or a half day.</p>
             </div>
 
             <div class="help-card">
@@ -2554,7 +2596,7 @@
                     <tr>
                         <th><button class="sort-btn" data-sort="name" title="Sort by employee name">Employee / Station <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="position" title="Sort by assigned position">Assigned Position <span class="sort-arrow"></span></button></th>
-                        <th title="Information Desk and Class C/M trade places after lunch">After Lunch</th>
+                        <th title="Where the person works after lunch, if they are in an after-lunch swap">After Lunch</th>
                         <th><button class="sort-btn" data-sort="next" title="Sort by days until the next special duty">Next Duty <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="am" title="Sort by AM break time">AM Break <span class="sort-arrow"></span></button></th>
                         <th><button class="sort-btn" data-sort="lunch" title="Sort by lunch time">Lunch <span class="sort-arrow"></span></button></th>
@@ -3847,6 +3889,7 @@
             configState.typing = { ...typingConfig };
             configState.maxAuxPerWeek = getMaxAuxPerWeek();
             configState.lunchSwap = document.getElementById('cfg-lunch-swap').checked;
+            configState.lunchSwapRules = lunchSwapRules;
             configState.breakSchedules = BREAK_SCHEDULES;
             configState.roadTestHours = roadTestHours;
             configState.cdlTestHours = cdlTestHours;
@@ -3901,6 +3944,8 @@
                 if (data.config.lunchSwap !== undefined) {
                     document.getElementById('cfg-lunch-swap').checked = !!data.config.lunchSwap;
                 }
+                // Files saved before swaps could be set up have none
+                lunchSwapRules = cleanLunchSwapRules(data.config.lunchSwapRules);
 
                 // Settings page values
                 const savedBreaks = data.config.breakSchedules || {};
@@ -4517,61 +4562,155 @@
         }
 
         // ==========================================
-        // AFTER-LUNCH SWAP (Information Desk <-> Class C/M)
+        // AFTER-LUNCH SWAPS (sets of positions set up on the Settings page)
         // ==========================================
+        // lunchSwapRules = [{ id, sides: [[position ids], [position ids]] }], position ids being role ids or
+        // 'typing'. Anyone working a position on one side of a set trades places after lunch, one for one,
+        // with someone on the other side. There are none until some are added.
+        let lunchSwapRules = [];
+
+        // The positions a swap side can hold: Typing and every main position
+        function lunchSwapChoices() {
+            return [{ id: 'typing', label: 'Typing' }].concat(primaryRoles().map(r => ({ id: r.id, label: r.label })));
+        }
+
+        // A set's sides with anything no longer a main position left out
+        function lunchSwapSides(rule) {
+            const valid = new Set(lunchSwapChoices().map(c => c.id));
+            return rule.sides.map(side => side.filter(id => valid.has(id)));
+        }
+
+        function lunchSwapSideText(side) {
+            const labels = lunchSwapChoices().filter(c => side.includes(c.id)).map(c => c.label);
+            return labels.length === 0 ? 'nothing yet' : labels.join(' + ');
+        }
+
+        function cleanLunchSwapRules(list) {
+            return (Array.isArray(list) ? list : []).filter(rule => rule && Array.isArray(rule.sides) && rule.sides.length === 2).map(rule => ({
+                id: rule.id || newAppointmentId(),
+                sides: rule.sides.map(side => (Array.isArray(side) ? side : []).map(String))
+            }));
+        }
 
         function isLunchSwapOn(iso) {
             if (!document.getElementById('cfg-lunch-swap').checked) return false;
+            if (!lunchSwapRules.some(rule => lunchSwapSides(rule).every(side => side.length > 0))) return false;
             // No swap on a closed day or a half day: there is only one half to work
             return !getCalendarEntries(iso).some(entry => entry.type === 'closed' || entry.type === 'half');
         }
 
-        // Information Desk and Class C/M staff trade places after lunch, one for one. A pair must each be
-        // qualified for the other's role; anyone left over is told to check with a supervisor.
+        // Each set pairs the people on its two sides, one for one. A pair must each be qualified for the
+        // other's position. The sets are worked through in order and nobody swaps twice; anyone in a set
+        // who is left without a partner is told to check with a supervisor.
         // Returns { empId: { unpaired: true } | { position, staffText, partnerName } } for a day's assignments.
         function computeLunchSwaps(assignments, weekNum, iso) {
-            const infoRole = roles.find(r => r.id === 'info');
-            const roadRole = roles.find(r => r.id === 'classcm');
-            if (!infoRole || !roadRole || !isLunchSwapOn(iso)) return {};
+            if (!isLunchSwapOn(iso)) return {};
 
             const stationOf = emp => parseInt((assignments[emp.id].match(/Counter\s+(\d+)/i) || [])[1]) || 0;
-            const staffOn = role => employees
-                .filter(emp => getPositionRole(assignments[emp.id]) === role.name)
-                .sort((a, b) => stationOf(a) - stationOf(b));
-
-            const infoStaff = staffOn(infoRole);
-            const roadStaff = staffOn(roadRole);
-            if (infoStaff.length === 0 || roadStaff.length === 0) return {};
+            const positionOf = emp => assignments[emp.id] && !assignments[emp.id].startsWith('Out') ? appointmentPositionOf(assignments[emp.id]) : null;
+            const qualifiedFor = (emp, positionId) => {
+                if (positionId === 'typing') return emp.typing !== false;
+                const role = roles.find(r => r.id === positionId);
+                return !!role && !!emp[role.prop];
+            };
+            const sameGroup = (a, b) => getEmployeeActiveGroup(a, weekNum) === getEmployeeActiveGroup(b, weekNum);
 
             const swaps = {};
-            const takePosition = (emp, partner) => ({
+            const inASet = new Set();
+            const takePosition = partner => ({
                 position: assignments[partner.id],
                 staffText: describePositionForStaff(assignments[partner.id]),
                 partnerName: formatDisplayName(partner.name)
             });
-            const pairUp = sameGroupOnly => {
-                infoStaff.forEach(infoEmp => {
-                    if (swaps[infoEmp.id] || !infoEmp[roadRole.prop]) return;
-                    const partner = roadStaff.find(roadEmp =>
-                        !swaps[roadEmp.id] &&
-                        roadEmp[infoRole.prop] &&
-                        (!sameGroupOnly || getEmployeeActiveGroup(roadEmp, weekNum) === getEmployeeActiveGroup(infoEmp, weekNum))
-                    );
-                    if (partner) {
-                        swaps[infoEmp.id] = takePosition(infoEmp, partner);
-                        swaps[partner.id] = takePosition(partner, infoEmp);
+
+            lunchSwapRules.forEach(rule => {
+                const sides = lunchSwapSides(rule);
+                if (sides.some(side => side.length === 0)) return;
+                const staffOn = side => employees
+                    .filter(emp => !swaps[emp.id] && side.includes(positionOf(emp)))
+                    .sort((a, b) => stationOf(a) - stationOf(b));
+                const left = staffOn(sides[0]);
+                const right = staffOn(sides[1]).filter(emp => !left.includes(emp));
+                left.concat(right).forEach(emp => inASet.add(emp.id));
+                const canPair = (a, b) => qualifiedFor(a, positionOf(b)) && qualifiedFor(b, positionOf(a));
+
+                // As many pairs as possible (matching by augmenting paths), with pairs from the same break
+                // group found first so both are back from lunch at the same time
+                const partnerOf = new Map();
+                const tryPair = (a, seen, allowed) => {
+                    for (const b of right) {
+                        if (seen.has(b) || !allowed(a, b)) continue;
+                        seen.add(b);
+                        const current = partnerOf.get(b);
+                        if (!current || tryPair(current, seen, allowed)) {
+                            partnerOf.set(b, a);
+                            return true;
+                        }
                     }
+                    return false;
+                };
+                const matched = () => new Set(partnerOf.values());
+                left.forEach(a => tryPair(a, new Set(), (x, y) => canPair(x, y) && sameGroup(x, y)));
+                left.filter(a => !matched().has(a)).forEach(a => tryPair(a, new Set(), canPair));
+
+                partnerOf.forEach((a, b) => {
+                    swaps[a.id] = takePosition(b);
+                    swaps[b.id] = takePosition(a);
                 });
-            };
+            });
 
-            // Same break group first, so both are back from lunch at the same time
-            pairUp(true);
-            pairUp(false);
-
-            infoStaff.concat(roadStaff).forEach(emp => {
-                if (!swaps[emp.id]) swaps[emp.id] = { unpaired: true };
+            inASet.forEach(id => {
+                if (!swaps[id]) swaps[id] = { unpaired: true };
             });
             return swaps;
+        }
+
+        // ---- The swap sets on the Settings page ----
+
+        function renderLunchSwapRules() {
+            const choices = lunchSwapChoices();
+            const box = document.getElementById('settings-lunch-swaps');
+            box.innerHTML = lunchSwapRules.length === 0
+                ? '<div class="oc-none">No swaps set up. Add one to have people trade places after lunch.</div>'
+                : lunchSwapRules.map((rule, i) => {
+                    const sides = lunchSwapSides(rule);
+                    const sideHTML = s => `
+                        <div class="swap-side">
+                            <div class="ag-caption">${s === 0 ? 'These positions' : 'swap with these'}</div>
+                            ${choices.map(c => {
+                                const onOther = sides[1 - s].includes(c.id);
+                                return `<label class="ag-chip${onOther ? ' swap-chip-off' : ''}" ${onOther ? 'title="Already on the other side"' : ''}><input type="checkbox" ${sides[s].includes(c.id) ? 'checked' : ''} ${onOther ? 'disabled' : ''} onchange="toggleLunchSwapPosition('${rule.id}', ${s}, '${c.id}', this.checked)"> ${escapeHTML(c.label)}</label>`;
+                            }).join('')}
+                        </div>`;
+                    return `
+                        <div class="swap-rule">
+                            <div class="swap-rule-head">
+                                <strong>${i + 1}. ${escapeHTML(lunchSwapSideText(sides[0]))} ⇄ ${escapeHTML(lunchSwapSideText(sides[1]))}</strong>
+                                <button class="ag-icon ag-remove" title="Remove this swap" onclick="removeLunchSwapRule('${rule.id}')">✕</button>
+                            </div>
+                            <div class="swap-sides">${sideHTML(0)}<span class="swap-arrow">⇄</span>${sideHTML(1)}</div>
+                        </div>`;
+                }).join('');
+        }
+
+        function addLunchSwapRule() {
+            lunchSwapRules.push({ id: newAppointmentId(), sides: [[], []] });
+            renderLunchSwapRules();
+        }
+
+        function removeLunchSwapRule(ruleId) {
+            lunchSwapRules = lunchSwapRules.filter(rule => rule.id !== ruleId);
+            renderLunchSwapRules();
+            generateSchedule();
+        }
+
+        function toggleLunchSwapPosition(ruleId, sideIdx, positionId, on) {
+            const rule = lunchSwapRules.find(r => r.id === ruleId);
+            if (!rule) return;
+            rule.sides[sideIdx] = rule.sides[sideIdx].filter(id => id !== positionId);
+            if (on) rule.sides[sideIdx].push(positionId);
+            renderLunchSwapRules();
+            generateSchedule();
         }
 
         let scheduleLunchSwaps = {};
@@ -5150,6 +5289,7 @@
         }
 
         function renderSettingsPage() {
+            renderLunchSwapRules();
             document.getElementById('settings-breaks').innerHTML = ['A', 'B', 'C'].map(grp => `
                 <tr>
                     <td><strong>Group ${grp}</strong></td>
@@ -7052,7 +7192,7 @@
                     </tbody>
                 </table>
                 <p><strong>Fairness Duty Limiter:</strong> ${dutyLimit === -1 ? 'off' : `${dutyLimit} special-duty days in any ${DUTY_WINDOW_DAYS} work days`}.
-                   <strong>After-lunch swap:</strong> ${document.getElementById('cfg-lunch-swap').checked ? 'on' : 'off'}.</p>
+                   <strong>After-lunch swaps:</strong> ${!document.getElementById('cfg-lunch-swap').checked ? 'off' : (lunchSwapRules.length === 0 ? 'none set up' : lunchSwapRules.map(rule => { const sides = lunchSwapSides(rule); return `${escapeHTML(lunchSwapSideText(sides[0]))} ⇄ ${escapeHTML(lunchSwapSideText(sides[1]))}`; }).join('; '))}.</p>
             `;
         }
 
@@ -8361,8 +8501,11 @@
                 testModeSavedTimes = JSON.stringify({
                     roadTestHours: roadTestHours, cdlTestHours: cdlTestHours, appointmentHours: appointmentHours,
                     transactionTimes: transactionTimes, appointmentGroups: appointmentGroups, shiftHours: shiftHours,
-                    appointmentTaper: appointmentTaper, appointmentSplit: appointmentSplit, appointmentPresets: appointmentPresets
+                    appointmentTaper: appointmentTaper, appointmentSplit: appointmentSplit, appointmentPresets: appointmentPresets,
+                    lunchSwapRules: lunchSwapRules
                 });
+                // A sample swap: Information Desk and Class C/M trade places after lunch
+                lunchSwapRules = [{ id: 'test_swap_1', sides: [['info'], ['classcm']] }];
                 // Staggered nine-hour shifts, so the first group in is the first to leave
                 shiftHours = { A: { start: '07:00', end: '16:00' }, B: { start: '08:00', end: '17:00' }, C: { start: '09:00', end: '18:00' } };
                 DAYS_MAP.forEach(d => {
@@ -8461,6 +8604,7 @@
                     appointmentTaper = saved.appointmentTaper;
                     if (saved.appointmentSplit) appointmentSplit = saved.appointmentSplit;
                     if (saved.appointmentPresets) appointmentPresets = saved.appointmentPresets;
+                    if (saved.lunchSwapRules) lunchSwapRules = saved.lunchSwapRules;
                     testModeSavedTimes = null;
                 }
                 if (testModeSavedCalendar) {
