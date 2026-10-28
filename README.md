@@ -36,4 +36,6 @@ The page shows a whole week by day, or any one day hour by hour. The hourly figu
 
 This reads the staff schedule; it does not change who works where.
 
+**Views ▾ Hourly Positions** shows the same day from the staff side: one row per person and one column per hour, naming their position, break, lunch, time off or shift end in each hour, with a count of people on each position above it.
+
 Click **Test Mode** in the top bar to load a sample office.

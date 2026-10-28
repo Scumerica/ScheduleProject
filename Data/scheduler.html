@@ -671,6 +671,35 @@
         .next-duty-role {
             color: var(--text-muted);
         }
+        /* Secondary ("ghost") roles */
+        .badge.secondary-badge {
+            margin-left: 4px;
+            background-color: rgba(124, 58, 237, 0.18);
+            color: #7c3aed;
+        }
+        [data-theme="dark"] .badge.secondary-badge {
+            color: #c4b5fd;
+        }
+        .role-sub-heading {
+            margin: 10px 0 6px 0;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .role-secondary-mark {
+            text-align: center;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+        .secondary-setting {
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
         .next-up-icon {
             cursor: help;
         }
@@ -787,6 +816,30 @@
         }
         .fw-un {
             background-color: rgba(245, 158, 11, 0.22);
+        }
+
+        /* Hourly Positions page: the same colours, plus breaks and time outside the shift */
+        .hp-break {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+        .hp-shift {
+            background-color: rgba(100, 116, 139, 0.18);
+            color: var(--text-muted);
+        }
+        #hp-table td small,
+        #hp-counts td small {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: normal;
+        }
+        #hp-table th,
+        #hp-counts th {
+            min-width: 86px;
+        }
+        #hp-counts td.hp-zero {
+            color: var(--text-muted);
+            opacity: 0.5;
         }
         .fw-legend {
             display: flex;
@@ -1717,6 +1770,7 @@
                     <button id="btn-employee-view" title="Read-only schedule for staff">Employee View</button>
                     <button id="btn-duty-counters" title="How many days and times each person has worked each duty">Duty Counters</button>
                     <button id="btn-appointments" title="How many appointments of each type to publish, from the group weights and the staff schedule">Appointments to Publish</button>
+                    <button id="btn-hourly" title="Where each person is in every hour of a day: position, break, lunch, time off">Hourly Positions</button>
                 </div>
             </div>
 
@@ -1799,6 +1853,18 @@
                     <input type="text" id="settings-new-role-name" placeholder="New position name" maxlength="40" style="flex: 1; min-width: 160px;">
                     <button id="btn-settings-add-role">Add Position</button>
                     <button id="btn-restore-roles" style="background-color: #64748b;" title="Put back any of the standard positions that have been removed">Restore Default Positions</button>
+                </div>
+            </div>
+
+            <div class="help-card">
+                <h2>Secondary (ghost) roles</h2>
+                <small style="display: block; color: var(--text-muted); margin-bottom: 8px; font-size: 0.8rem;">
+                    A secondary role is carried on top of someone's main job, for example CRC for typists who may be pulled to the front. It takes no station, is not part of the hierarchy and does not count toward staffing or appointments. Each week its Required number of people are picked from those whose main job is one of the positions ticked below, on a rotation of its own (Max Rot and Break Rot) that leaves the main positions' rotation alone. Set its quotas in the position list.
+                </small>
+                <div id="settings-secondary"></div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;">
+                    <select id="secondary-make-select" style="flex: 1; min-width: 160px;"></select>
+                    <button id="btn-make-secondary" style="background-color: #64748b;">Make Secondary</button>
                 </div>
             </div>
 
@@ -2212,6 +2278,48 @@
         <div id="fw-empty" class="ev-empty" hidden>No one matches that name.</div>
     </div>
 
+    <!-- Hourly Positions: where each person is in every hour of one day -->
+    <div id="hourly-view" class="full-view" hidden>
+        <div class="ev-header">
+            <div>
+                <div id="hp-title" class="ev-title"></div>
+                <div class="ev-subtitle">Where each person is in every hour of the day. A cell names where they spend most of the hour; anything else in that hour is listed under it with its times. Today onward is a forecast.</div>
+            </div>
+            <div class="ev-controls ev-no-print">
+                <select id="hp-week" style="width: auto;" title="Which week to show"></select>
+                <select id="hp-filter" style="width: auto;" title="Show only the people who work this position during the day"></select>
+                <input type="text" id="hp-search" placeholder="Find a name...">
+                <button id="hp-export" style="background-color: #059669;">Export CSV</button>
+                <button id="hp-print" style="background-color: #059669;">Print</button>
+                <button id="hp-close" style="background-color: #475569;">Supervisor View</button>
+            </div>
+        </div>
+
+        <div id="hp-days" class="ev-days ev-no-print"></div>
+        <div id="hp-period" class="ap-period"></div>
+        <div id="hp-notes" class="fw-legend"></div>
+
+        <div class="fw-legend">
+            <span class="fw-chip fw-duty">Special duty · station</span>
+            <span class="fw-chip fw-typing">Typing counter</span>
+            <span class="fw-chip hp-break">Break or lunch</span>
+            <span class="fw-chip fw-out">Out or off</span>
+            <span class="fw-chip hp-shift">Not on shift</span>
+            <span class="fw-chip fw-un">Unassigned</span>
+        </div>
+
+        <div class="ap-period" style="font-size: 0.95rem;">People on each position, averaged over each hour</div>
+        <div class="ap-wrap" style="margin-bottom: 18px;">
+            <table class="fw-table" id="hp-counts"></table>
+        </div>
+
+        <div class="ap-period" style="font-size: 0.95rem;">Each person, hour by hour</div>
+        <div class="ap-wrap">
+            <table class="fw-table" id="hp-table"></table>
+        </div>
+        <div id="hp-empty" class="ev-empty" hidden>No one matches.</div>
+    </div>
+
     <!-- Appointments to Publish: counts per appointment type, from the group weights and the staff schedule -->
     <div id="appointments-view" class="full-view" hidden>
         <div class="ev-header">
@@ -2432,13 +2540,32 @@
             { id: 'classcm', prop: 'classCM', name: 'Class C/M Examiner', label: 'Class C/M', req: 2, rot: 5, brk: 5 },
             { id: 'banker', prop: 'banker', name: 'Banker', label: 'Banker', req: 1, rot: 5, brk: 15 },
             { id: 'training', prop: 'training', name: 'Training', label: 'Training', req: 0, rot: -1, brk: -1 },
-            { id: 'testing', prop: 'testing', name: 'Testing', label: 'Testing', req: 0, rot: 5, brk: 5 }
+            { id: 'testing', prop: 'testing', name: 'Testing', label: 'Testing', req: 0, rot: 5, brk: 5 },
+            // A secondary ("ghost") role: carried on top of a person's main job, never takes a station
+            { id: 'crc', prop: 'crc', name: 'Customer Readiness Check', label: 'CRC', req: 0, rot: 5, brk: 5, secondary: true, drawFrom: ['typing'], tickedOnly: false }
         ];
         let roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
         let typingConfig = { req: -1, rot: -1, brk: -1 };
 
+        // Main positions: the ones that are staffed, take a station and make up the hierarchy
+        function primaryRoles() {
+            return roles.filter(r => !r.secondary);
+        }
+
+        // Secondary ("ghost") roles: a note carried by people already working a main position, on a
+        // rotation of their own. They take no station and do not count toward staffing or appointments.
+        function secondaryRoles() {
+            return roles.filter(r => r.secondary);
+        }
+
+        // Keeps the secondary roles after the main positions, outside the hierarchy
+        function normalizeRoleOrder() {
+            roles = primaryRoles().concat(secondaryRoles().map(r => ({ ...r, tieWithPrev: false })));
+        }
+
+        // Names of the main positions, in hierarchy order
         function getRoleNames() {
-            return roles.map(r => r.name);
+            return primaryRoles().map(r => r.name);
         }
 
         function isBuiltInRole(id) {
@@ -2453,7 +2580,7 @@
         function getPositionRole(pos) {
             if (!pos) return null;
             const base = pos.replace(/\s*\(Counter\s+\d+\)$/i, '');
-            return roles.some(r => r.name === base) ? base : null;
+            return primaryRoles().some(r => r.name === base) ? base : null;
         }
 
         const DPS_OFFICES = [
@@ -3012,7 +3139,7 @@
                 const planDuty = getPlanDuty(emp, planWeekStart);
                 // A duty set through the Override dialog can be one the person is not ticked for
                 const dutyOptions = [['', 'Auto (scheduler decides)'], ['none', 'No special duty']]
-                    .concat(roles.filter(r => emp[r.prop] || r.name === planDuty).map(r => [r.name, emp[r.prop] ? r.label : `${r.label} (not ticked)`]))
+                    .concat(primaryRoles().filter(r => emp[r.prop] || r.name === planDuty).map(r => [r.name, emp[r.prop] ? r.label : `${r.label} (not ticked)`]))
                     .map(([value, label]) => `<option value="${escapeHTML(value)}" ${value === planDuty ? 'selected' : ''}>${escapeHTML(label)}</option>`)
                     .join('');
 
@@ -3084,7 +3211,7 @@
                             <span class="toggle-group-label">Duties:</span>
                             <div class="toggle-group-items">
                                 <label><input type="checkbox" ${emp.typing !== false ? 'checked' : ''} onchange="updateToggle('${emp.id}', 'typing', this.checked)"> Typing</label>
-                                ${roles.map(r => `<label><input type="checkbox" ${emp[r.prop] ? 'checked' : ''} onchange="updateToggle('${emp.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}</label>`).join('\n                                ')}
+                                ${roles.map(r => `<label${r.secondary ? ' title="Secondary role: ticking it marks this person as able to carry it"' : ''}><input type="checkbox" ${emp[r.prop] ? 'checked' : ''} onchange="updateToggle('${emp.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}${r.secondary ? ' (secondary)' : ''}</label>`).join('\n                                ')}
                                 <button class="btn-warning" onclick="clearAllDuties('${emp.id}')">Clear All</button>
                             </div>
                         </div>
@@ -3108,7 +3235,7 @@
                             <input type="text" placeholder="Private internal note..." value="${emp.privateNotes || ''}" onchange="updatePrivateNotes('${emp.id}', this.value)">
                         </div>
 
-                        ${trackerHTML ? `<div class="rotation-tracker">${trackerHTML}</div>` : ''}
+                        ${(trackerHTML || (emp.secondaryRoles || []).length > 0) ? `<div class="rotation-tracker">${secondaryLabelsFor(emp.secondaryRoles).map(label => `<span class="stat-tag active-role" title="Secondary role this week">+ ${escapeHTML(label)} this week</span>`).join('')}${trackerHTML}</div>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
@@ -3292,7 +3419,7 @@
                 if (counterStations.some(cntr => cntr.number === num)) return;
 
                 const allowed = { counter: true };
-                roles.forEach(r => allowed[r.prop] = true);
+                primaryRoles().forEach(r => allowed[r.prop] = true);
 
                 counterStations.push({
                     id: Date.now().toString() + '_' + num,
@@ -3338,7 +3465,7 @@
                     <div class="card-body">
                         <div class="toggles-grid">
                             <label><input type="checkbox" ${cntr.allowed.counter ? 'checked' : ''} onchange="updateCounterType('${cntr.id}', 'counter', this.checked)"> Typing</label>
-                            ${roles.map(r => `<label><input type="checkbox" ${cntr.allowed[r.prop] ? 'checked' : ''} onchange="updateCounterType('${cntr.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}</label>`).join('\n                            ')}
+                            ${primaryRoles().map(r => `<label><input type="checkbox" ${cntr.allowed[r.prop] ? 'checked' : ''} onchange="updateCounterType('${cntr.id}', '${r.prop}', this.checked)"> ${escapeHTML(r.label)}</label>`).join('\n                            ')}
                         </div>
                     </div>
                 `;
@@ -3396,11 +3523,13 @@
         function renderRoleConfig() {
             renderRoleList('role-config-list', 'role-hierarchy-summary', 'cfg', false);
             renderRoleList('settings-role-list', 'settings-hierarchy-summary', 'set', true);
+            renderSecondarySettings();
         }
 
         function renderRoleList(listId, summaryId, idPrefix, manageDefaults) {
             const listEl = document.getElementById(listId);
             listEl.innerHTML = '';
+            const roles = primaryRoles();   // the hierarchy is made of main positions only
 
             const settingInputs = (id, cfg) => `
                     <input type="number" id="${idPrefix}-cap-${id}" value="${isNaN(parseInt(cfg.req)) ? '' : cfg.req}" min="-1" oninput="updateRoleSetting('${id}', 'req', this.value)">
@@ -3449,6 +3578,30 @@
                     <span></span>
             `;
             listEl.appendChild(typingRow);
+
+            // Secondary roles: own quotas and rotation, outside the hierarchy
+            const secondaries = secondaryRoles();
+            if (secondaries.length > 0) {
+                const heading = document.createElement('div');
+                heading.className = 'role-sub-heading';
+                heading.textContent = 'Secondary roles (carried on top of a main position)';
+                listEl.appendChild(heading);
+            }
+            secondaries.forEach(role => {
+                const drawn = (role.drawFrom || []).map(id => id === TYPING_POSITION ? 'Typing' : (roles.find(r => r.id === id) || {}).label).filter(x => x);
+                const row = document.createElement('div');
+                row.className = 'role-row';
+                row.innerHTML = `
+                    <span class="role-secondary-mark" title="Secondary role">+</span>
+                    <label title="${escapeHTML(role.name)}: picked from ${escapeHTML(drawn.join(', ') || 'no positions yet')}">${escapeHTML(role.label)}</label>
+                    ${settingInputs(role.id, role)}
+                    <div class="role-actions">
+                        <button class="role-btn" title="Rename" onclick="renameRole('${role.id}')">✎</button>
+                        ${(manageDefaults || !isBuiltInRole(role.id)) ? `<button class="role-btn btn-danger" title="Remove this role" onclick="deleteRole('${role.id}')">✕</button>` : ''}
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
         }
 
         function refreshAfterRoleChange() {
@@ -3468,14 +3621,17 @@
         }
 
         function moveRole(id, delta) {
-            const idx = roles.findIndex(r => r.id === id);
+            // Only main positions are ordered; secondary roles stay after them
+            const ordered = primaryRoles();
+            const idx = ordered.findIndex(r => r.id === id);
             const target = idx + delta;
-            if (idx < 0 || target < 0 || target >= roles.length) return;
+            if (idx < 0 || target < 0 || target >= ordered.length) return;
 
             // The > and = markers stay where they are; only the two roles trade places
-            const ties = roles.map(r => !!r.tieWithPrev);
-            [roles[idx], roles[target]] = [roles[target], roles[idx]];
-            roles.forEach((r, i) => r.tieWithPrev = ties[i]);
+            const ties = ordered.map(r => !!r.tieWithPrev);
+            [ordered[idx], ordered[target]] = [ordered[target], ordered[idx]];
+            ordered.forEach((r, i) => r.tieWithPrev = ties[i]);
+            roles = ordered.concat(secondaryRoles());
             refreshAfterRoleChange();
         }
 
@@ -3490,7 +3646,7 @@
         function getRoleTierMap() {
             const tiers = {};
             let tier = 0;
-            roles.forEach((r, idx) => {
+            primaryRoles().forEach((r, idx) => {
                 if (idx > 0 && !r.tieWithPrev) tier++;
                 tiers[r.name] = tier;
             });
@@ -3553,6 +3709,13 @@
                 }
                 Object.keys(emp.dayOverrides || {}).forEach(date => {
                     if (emp.dayOverrides[date] === oldName) emp.dayOverrides[date] = newName;
+                });
+                if (emp.secondaryRoles) emp.secondaryRoles = emp.secondaryRoles.map(name => name === oldName ? newName : name);
+                [emp.secondarySince, emp.secondaryTotal].forEach(counts => {
+                    if (counts && counts[oldName] !== undefined) {
+                        counts[newName] = counts[oldName];
+                        delete counts[oldName];
+                    }
                 });
                 if (emp.weekRole === oldName) emp.weekRole = newName;
                 if (emp.owedRole === oldName) emp.owedRole = newName;
@@ -3618,6 +3781,14 @@
             });
             counterStations.forEach(cntr => delete cntr.allowed[role.prop]);
             dropAppointmentPosition(id);
+            employees.forEach(emp => {
+                if (emp.secondaryRoles) emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
+                if (emp.secondarySince) delete emp.secondarySince[role.name];
+                if (emp.secondaryTotal) delete emp.secondaryTotal[role.name];
+            });
+            roles.forEach(r => {
+                if (r.drawFrom) r.drawFrom = r.drawFrom.filter(posId => posId !== id);
+            });
 
             roles = roles.filter(r => r.id !== id);
             refreshAfterRoleChange();
@@ -3656,7 +3827,11 @@
             if (hasRoleList) {
                 roles = data.roles
                     .filter(r => r && r.id && r.prop && r.name)
-                    .map(r => ({ id: r.id, prop: r.prop, name: r.name, label: r.label || r.name, req: r.req, rot: r.rot, brk: r.brk, tieWithPrev: !!r.tieWithPrev }));
+                    .map(r => ({
+                        id: r.id, prop: r.prop, name: r.name, label: r.label || r.name, req: r.req, rot: r.rot, brk: r.brk, tieWithPrev: !!r.tieWithPrev,
+                        secondary: !!r.secondary, drawFrom: Array.isArray(r.drawFrom) ? r.drawFrom : ['typing'], tickedOnly: !!r.tickedOnly
+                    }));
+                normalizeRoleOrder();
             } else if (data.config) {
                 roles = JSON.parse(JSON.stringify(DEFAULT_ROLES));
             }
@@ -4359,6 +4534,11 @@
         function generateSchedule() {
             employees.forEach(plannedWeeksOf);
             ensureWeekPlan();
+            // Cards are usually drawn just before this runs, so redraw them if the secondary picks changed
+            const secondarySignature = () => JSON.stringify(employees.map(e => e.secondaryRoles || []));
+            const secondaryBefore = secondarySignature();
+            ensureSecondaryPicks();
+            if (secondarySignature() !== secondaryBefore) sortAndRenderEmployees();
             const planMessages = [...planNotices];
 
             const selectedDay = document.getElementById('schedule-day').value;
@@ -4699,6 +4879,169 @@
         document.getElementById('oc-add').addEventListener('click', addCalendarEntry);
 
         // ==========================================
+        // SECONDARY ("GHOST") ROLES
+        // ==========================================
+        // A secondary role is carried on top of a person's main job: it takes no station, is not part of the
+        // hierarchy and does not count toward staffing or appointments. Each week, Required people are picked
+        // for it from those whose main job is one of its "drawn from" positions, on a rotation of its own:
+        // emp.secondaryRoles (names held this week), emp.history[name] (Max Rot / Break Rot),
+        // emp.secondarySince[name] and emp.secondaryTotal[name] (fairness). None of the main positions'
+        // rotation, the Fairness Duty Limiter or the weekly picks is affected.
+
+        // The main job a person has this week, as a position id ('typing' for a typing station)
+        function primaryKeyOf(emp) {
+            if (emp.weekRole) {
+                const role = roles.find(r => r.name === emp.weekRole);
+                return role ? role.id : null;
+            }
+            return emp.typing !== false ? TYPING_POSITION : null;
+        }
+
+        function ensureSecondaryPicks() {
+            const daysOutCount = emp => DAYS_MAP.filter(d => emp.outDays && emp.outDays[d.key]).length;
+            const valid = new Set(secondaryRoles().map(r => r.name));
+            employees.forEach(emp => {
+                emp.secondaryRoles = (emp.secondaryRoles || []).filter(name => valid.has(name));
+            });
+
+            secondaryRoles().forEach(role => {
+                const rules = getRoleRules(role.name);
+                const drawFrom = role.drawFrom || [];
+                const holds = emp => emp.secondaryRoles.includes(role.name);
+                const drop = emp => emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
+                const canCarry = emp => !emp.frozen && daysOutCount(emp) < 5 && drawFrom.includes(primaryKeyOf(emp)) && (!role.tickedOnly || emp[role.prop]);
+
+                // Anyone whose main job is no longer one it is drawn from, or who is out all week, gives it up
+                employees.forEach(emp => {
+                    if (holds(emp) && !canCarry(emp)) drop(emp);
+                });
+                const needed = Math.max(0, rules.req);
+                const holders = employees.filter(holds);
+                holders.slice(needed).forEach(drop);
+                const open = needed - Math.min(holders.length, needed);
+                if (open <= 0) return;
+
+                const restLeft = emp => rules.breakRot === -1 ? 0 : ((emp.history[role.name] || {}).breakRemaining || 0);
+                const since = emp => (emp.secondarySince || {})[role.name] || 0;
+                const total = emp => (emp.secondaryTotal || {})[role.name] || 0;
+                const candidates = employees.filter(emp => canCarry(emp) && !holds(emp) && daysOutCount(emp) <= 2);
+
+                // Whoever has gone longest without it, then fewest days on it; if too few are rested,
+                // those closest to finishing their rest
+                const rested = candidates.filter(emp => restLeft(emp) <= 0).sort((a, b) => (since(b) - since(a)) || (total(a) - total(b)));
+                const resting = candidates.filter(emp => restLeft(emp) > 0).sort((a, b) => (restLeft(a) - restLeft(b)) || (since(b) - since(a)));
+                rested.concat(resting).slice(0, open).forEach(emp => emp.secondaryRoles.push(role.name));
+            });
+        }
+
+        // The secondary roles a person carries on a day, as labels (none on a day they are out)
+        function secondaryLabelsFor(names) {
+            return (names || []).map(name => (roles.find(r => r.name === name) || { label: name }).label);
+        }
+
+        // "+ CRC" tag after a person's position on the supervisor schedule
+        function secondaryTagHTML(emp) {
+            const pos = activeAssignments[emp.id] || '';
+            if (pos.startsWith('Out')) return '';
+            return secondaryLabelsFor(emp.secondaryRoles).map(label =>
+                `<span class="badge secondary-badge" title="Secondary role this week: it does not change their position or station">+ ${escapeHTML(label)}</span>`
+            ).join('');
+        }
+
+        // Settings card: which roles are secondary and who each is drawn from
+        function renderSecondarySettings() {
+            const box = document.getElementById('settings-secondary');
+            if (!box) return;
+            const positions = [{ id: TYPING_POSITION, label: 'Typing' }].concat(primaryRoles().map(r => ({ id: r.id, label: r.label })));
+
+            box.innerHTML = secondaryRoles().length === 0
+                ? '<div class="oc-none">No secondary roles yet.</div>'
+                : secondaryRoles().map(role => `
+                    <div class="secondary-setting">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <strong style="flex: 1;">${escapeHTML(role.name)}</strong>
+                            <button class="role-btn" style="padding: 4px 8px;" onclick="makeRolePrimary('${role.id}')" title="Turn this back into a normal position that takes a station">Make Main Position</button>
+                        </div>
+                        <div style="font-size: 0.8rem; margin-bottom: 4px;">Picked from people whose main job this week is:</div>
+                        <div class="toggles-grid">
+                            ${positions.map(pos => `<label><input type="checkbox" ${(role.drawFrom || []).includes(pos.id) ? 'checked' : ''} onchange="setSecondaryDrawFrom('${role.id}', '${pos.id}', this.checked)"> ${escapeHTML(pos.label)}</label>`).join('')}
+                        </div>
+                        <label style="display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 0.8rem;">
+                            <input type="checkbox" ${role.tickedOnly ? 'checked' : ''} onchange="setSecondaryTickedOnly('${role.id}', this.checked)">
+                            Only people ticked for ${escapeHTML(role.label)} on their card
+                        </label>
+                    </div>`).join('');
+
+            const select = document.getElementById('secondary-make-select');
+            select.innerHTML = primaryRoles().map(r => `<option value="${r.id}">${escapeHTML(r.name)}</option>`).join('');
+            document.getElementById('btn-make-secondary').disabled = primaryRoles().length === 0;
+        }
+
+        function setSecondaryDrawFrom(roleId, posId, checked) {
+            const role = roles.find(r => r.id === roleId);
+            if (!role) return;
+            const drawFrom = new Set(role.drawFrom || []);
+            if (checked) drawFrom.add(posId); else drawFrom.delete(posId);
+            role.drawFrom = [...drawFrom];
+            refreshAfterRoleChange();
+        }
+
+        function setSecondaryTickedOnly(roleId, checked) {
+            const role = roles.find(r => r.id === roleId);
+            if (!role) return;
+            role.tickedOnly = checked;
+            refreshAfterRoleChange();
+        }
+
+        // Turns a main position into a secondary role: nobody holds it as a position any more
+        function makeRoleSecondary(roleId) {
+            const role = roles.find(r => r.id === roleId);
+            if (!role || role.secondary) return;
+            if (!confirm(`Make "${role.name}" a secondary role? It will stop taking a station, anyone holding it as their position this week goes back to typing, and any overrides or assigned duties for it are removed.`)) return;
+
+            employees.forEach(emp => {
+                if (emp.weekRole === role.name) releaseWeekRole(emp);
+                if (emp.owedRole === role.name) emp.owedRole = '';
+                if (emp.weekDuty === role.name) emp.weekDuty = '';
+                Object.values(emp.plannedWeeks || {}).forEach(week => {
+                    if (week.duty === role.name) week.duty = '';
+                });
+                Object.keys(emp.dayOverrides || {}).forEach(date => {
+                    if (emp.dayOverrides[date] === role.name) delete emp.dayOverrides[date];
+                });
+                if (emp.frozen && getPositionRole(emp.frozenPosition) === role.name) {
+                    emp.frozen = false;
+                    emp.frozenPosition = '';
+                }
+            });
+            dropAppointmentPosition(roleId);
+            roles.forEach(r => {
+                if (r.drawFrom) r.drawFrom = r.drawFrom.filter(posId => posId !== roleId);
+            });
+
+            role.secondary = true;
+            role.tieWithPrev = false;
+            if (!Array.isArray(role.drawFrom) || role.drawFrom.length === 0) role.drawFrom = [TYPING_POSITION];
+            normalizeRoleOrder();
+            refreshAfterRoleChange();
+        }
+
+        function makeRolePrimary(roleId) {
+            const role = roles.find(r => r.id === roleId);
+            if (!role || !role.secondary) return;
+            employees.forEach(emp => {
+                if (emp.secondaryRoles) emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
+            });
+            role.secondary = false;
+            normalizeRoleOrder();
+            refreshAfterRoleChange();
+        }
+
+        document.getElementById('btn-make-secondary').addEventListener('click', () => {
+            makeRoleSecondary(document.getElementById('secondary-make-select').value);
+        });
+
+        // ==========================================
         // SETTINGS PAGE (the office's backend variables)
         // ==========================================
         // Break times live in BREAK_SCHEDULES. Road test hours and transaction times are stored here and
@@ -4831,6 +5174,7 @@
             if (showing('fourweek-view')) renderFourWeekView();
             if (showing('counters-view')) renderDutyCounters();
             if (showing('appointments-view')) renderAppointmentsView();
+            if (showing('hourly-view')) renderHourlyView();
             if (showing('calendar-view')) renderOfficeCalendar();
         }
 
@@ -4871,8 +5215,9 @@
             }
             missing.forEach(def => {
                 const nameTaken = roles.some(r => r.name.toLowerCase() === def.name.toLowerCase() || r.label.toLowerCase() === def.label.toLowerCase());
-                if (!nameTaken) roles.push({ ...def });
+                if (!nameTaken) roles.push(JSON.parse(JSON.stringify(def)));
             });
+            normalizeRoleOrder();
             refreshAfterRoleChange();
         });
 
@@ -5041,7 +5386,7 @@
         }
 
         function appointmentPositionChoices() {
-            return [{ id: TYPING_POSITION, label: 'Typing' }].concat(roles.map(r => ({ id: r.id, label: r.label })));
+            return [{ id: TYPING_POSITION, label: 'Typing' }].concat(primaryRoles().map(r => ({ id: r.id, label: r.label })));
         }
 
         function appointmentNodeLabel(node) {
@@ -5117,7 +5462,10 @@
         // Where everyone is for each minute of a day: timelines[emp id][minute] = a position id,
         // AWAY_BREAK (break or lunch), AWAY_OFF (out for the day or part of it) or null (no station).
         // A person in an after-lunch swap pair holds their partner's position once their own lunch ends.
-        function buildDayTimelines(assignments, weekNum, iso) {
+        // places, when given, is filled with what the Hourly Positions page needs to name each minute:
+        // places[emp id] = { before, after, swapAt, lunch: [from, to] }, the assignment held before and
+        // from swapAt (the same one all day unless they swap) and when their lunch is.
+        function buildDayTimelines(assignments, weekNum, iso, places = {}) {
             const swaps = computeLunchSwaps(assignments, weekNum, iso);
             const timelines = {};
 
@@ -5125,6 +5473,7 @@
                 const line = new Array(DAY_MINUTES).fill(null);
                 timelines[emp.id] = line;
                 const pos = assignments[emp.id] || '';
+                places[emp.id] = { before: pos, after: pos, swapAt: DAY_MINUTES, lunch: [0, 0] };
                 if (pos.startsWith('Out')) {
                     line.fill(AWAY_OFF);
                     return;
@@ -5133,11 +5482,14 @@
                 const group = getEmployeeActiveGroup(emp, weekNum);
                 const times = BREAK_SCHEDULES[group];
                 const startOf = slot => clockMinutes(clockTo24(times[slot]));
+                if (startOf('lunch') !== null) places[emp.id].lunch = [startOf('lunch'), startOf('lunch') + breakMinutes.lunch];
                 const swap = swaps[emp.id];
                 if (swap && swap.position && startOf('lunch') !== null) {
                     const swapAt = Math.min(DAY_MINUTES, startOf('lunch') + breakMinutes.lunch);
                     line.fill(appointmentPositionOf(pos), 0, swapAt);
                     line.fill(appointmentPositionOf(swap.position), swapAt);
+                    places[emp.id].after = swap.position;
+                    places[emp.id].swapAt = swapAt;
                 } else {
                     line.fill(appointmentPositionOf(pos));
                 }
@@ -5947,6 +6299,205 @@
         });
 
         // ==========================================
+        // HOURLY POSITIONS (where each person is in every hour of one day)
+        // ==========================================
+        // Built from the same minute-by-minute timelines as the appointment counts, so the two pages agree.
+
+        // The day of the week being shown, 0 to 4; null until the page is first opened
+        let hourlyDay = null;
+
+        const HOURLY_KIND_CLASS = { duty: 'fw-duty', typing: 'fw-typing', break: 'hp-break', out: 'fw-out', shift: 'hp-shift', un: 'fw-un' };
+
+        // One day of a week (0 = the current week):
+        // {
+        //   iso, closed, missing, hours: [clock hours],
+        //   people: [{ emp, worked: Set of position ids, cells: [{ label, kind, notes: [text] }] }],
+        //   counts: [{ label, kind, minutes: { hour: staff minutes } }]
+        // }
+        // A cell is named for where the person spends most of the hour; notes list the rest with times.
+        function buildHourlyDay(week, dayIdx) {
+            const iso = addDaysISO(currentWeekStart, 7 * week + dayIdx);
+            const dayKey = DAYS_MAP[dayIdx].key;
+            const assignments = buildFourWeekGrid()[week][dayIdx];
+            const result = { iso: iso, closed: isOfficeClosed(iso), missing: !assignments, hours: [], people: [], counts: [] };
+            if (result.closed || result.missing) return result;
+
+            // From the earliest start to the latest end of any shift or set of hours that day; 8 to 5 if none are set
+            let first = null, last = null;
+            const stretch = (start, end) => {
+                first = first === null ? start : Math.min(first, start);
+                last = last === null ? end : Math.max(last, end);
+            };
+            APPOINTMENT_HOUR_SETS.forEach(set => {
+                const win = appointmentWindow(set.key, dayKey, iso);
+                if (win) stretch(win.start, win.end);
+            });
+            Object.values(shiftHours).forEach(shift => {
+                if (shift.start && shift.end) stretch(clockMinutes(shift.start), clockMinutes(shift.end));
+            });
+            if (first === null) stretch(8 * 60, 17 * 60);
+            for (let h = Math.floor(first / 60); h * 60 < last; h++) result.hours.push(h);
+
+            const places = {};
+            const timelines = buildDayTimelines(assignments, currentWeekNum + week, iso, places);
+            const shortClock = m => `${(Math.floor(m / 60) % 12) || 12}:${String(m % 60).padStart(2, '0')}`;
+
+            // What an assignment is called and counted as, worked out once for each one
+            const named = {};
+            const nameOf = pos => {
+                if (named[pos]) return named[pos];
+                const station = (pos.match(/Counter\s+(\d+)/i) || [])[1];
+                const role = roles.find(r => r.name === getPositionRole(pos));
+                if (role) named[pos] = { label: role.label + (station ? ` · ${station}` : ''), kind: 'duty', key: role.id };
+                else if (pos.startsWith('Counter')) named[pos] = { label: `Counter ${station}`, kind: 'typing', key: TYPING_POSITION };
+                else named[pos] = { label: 'Unassigned', kind: 'un', key: 'unassigned' };
+                return named[pos];
+            };
+            const AWAY = {
+                out: { label: 'Out', kind: 'out', key: AWAY_OFF },
+                off: { label: 'Off', kind: 'out', key: AWAY_OFF },
+                shift: { label: 'Not on shift', kind: 'shift', key: AWAY_SHIFT },
+                lunch: { label: 'Lunch', kind: 'break', key: AWAY_BREAK },
+                break: { label: 'Break', kind: 'break', key: AWAY_BREAK }
+            };
+            const stateAt = (emp, m) => {
+                const where = timelines[emp.id][m];
+                const place = places[emp.id];
+                if (where === AWAY_OFF) return place.before.startsWith('Out') ? AWAY.out : AWAY.off;
+                if (where === AWAY_SHIFT) return AWAY.shift;
+                if (where === AWAY_BREAK) return m >= place.lunch[0] && m < place.lunch[1] ? AWAY.lunch : AWAY.break;
+                return nameOf(m < place.swapAt ? place.before : place.after);
+            };
+
+            // The count rows: every position, then the reasons a person is not at one
+            const countRows = {};
+            appointmentPositionChoices().forEach(choice => countRows[choice.id] = { label: choice.label, kind: choice.id === TYPING_POSITION ? 'typing' : 'duty', minutes: {} });
+            countRows[AWAY_BREAK] = { label: 'On break or lunch', kind: 'break', minutes: {} };
+            countRows[AWAY_OFF] = { label: 'Out or off', kind: 'out', minutes: {} };
+            countRows[AWAY_SHIFT] = { label: 'Not on shift', kind: 'shift', minutes: {} };
+            countRows.unassigned = { label: 'Unassigned', kind: 'un', minutes: {} };
+
+            result.people = employees.map(emp => {
+                const worked = new Set();
+                const cells = result.hours.map(h => {
+                    // Runs of the same thing within the hour, and the minutes spent on each
+                    const runs = [];
+                    const spent = {};
+                    for (let m = Math.max(h * 60, first); m < Math.min(h * 60 + 60, last); m++) {
+                        const state = stateAt(emp, m);
+                        const run = runs[runs.length - 1];
+                        if (run && run.state === state) run.end = m + 1;
+                        else runs.push({ state: state, start: m, end: m + 1 });
+                        spent[state.label] = (spent[state.label] || 0) + 1;
+                        countRows[state.key].minutes[h] = (countRows[state.key].minutes[h] || 0) + 1;
+                        if (state.kind === 'duty' || state.kind === 'typing') worked.add(state.key);
+                    }
+                    const main = runs.reduce((best, run) => spent[run.state.label] > spent[best.state.label] ? run : best, runs[0]).state;
+                    return {
+                        label: main.label,
+                        kind: main.kind,
+                        notes: runs.filter(run => run.state !== main).map(run => `${run.state.label} ${shortClock(run.start)}–${shortClock(run.end)}`)
+                    };
+                });
+                return { emp: emp, worked: worked, cells: cells };
+            });
+
+            // Rows nobody is ever in are left out
+            result.counts = Object.values(countRows).filter(row => Object.keys(row.minutes).length > 0);
+            return result;
+        }
+
+        function renderHourlyView() {
+            const week = parseInt(document.getElementById('hp-week').value) || 0;
+            const day = buildHourlyDay(week, hourlyDay);
+            const hourLabel = h => `${(h % 12) || 12} ${h < 12 ? 'AM' : 'PM'}`;
+            const tenths = minutes => (minutes / 60).toFixed(1).replace(/\.0$/, '');
+
+            document.getElementById('hp-title').textContent = `${document.getElementById('office-select').value}: Hourly Positions`;
+            document.getElementById('hp-period').textContent = formatLongDate(day.iso);
+            document.getElementById('hp-notes').innerHTML = calendarNotesHTML(day.iso, 1);
+            document.getElementById('hp-days').innerHTML = DAYS_MAP.map((d, i) =>
+                `<button class="ev-day${i === hourlyDay ? ' active' : ''}" onclick="pickHourlyDay(${i})">${formatShortDate(addDaysISO(currentWeekStart, 7 * week + i))}</button>`).join('');
+
+            // Only the people who work the chosen position at some point in the day
+            const filter = document.getElementById('hp-filter');
+            const chosen = filter.value;
+            filter.innerHTML = '<option value="">Every position</option>' + appointmentPositionChoices().map(c => `<option value="${c.id}">${escapeHTML(c.label)} only</option>`).join('');
+            filter.value = [...filter.options].some(o => o.value === chosen) ? chosen : '';
+
+            const message = day.closed ? 'The office is closed on this day.' : (day.missing ? 'This day is past the end of the forecast.' : '');
+            if (message) {
+                document.getElementById('hp-counts').innerHTML = `<tbody><tr><td>${message}</td></tr></tbody>`;
+                document.getElementById('hp-table').innerHTML = '';
+                document.getElementById('hp-empty').hidden = true;
+                return;
+            }
+
+            const headHTML = first => `<thead><tr><th class="fw-name">${first}</th>${day.hours.map(h => `<th>${hourLabel(h)}</th>`).join('')}</tr></thead>`;
+
+            document.getElementById('hp-counts').innerHTML = headHTML('Position') + '<tbody>' + day.counts.map(row => `
+                <tr>
+                    <td class="fw-name ${HOURLY_KIND_CLASS[row.kind]}"><strong>${escapeHTML(row.label)}</strong></td>
+                    ${day.hours.map(h => `<td class="${row.minutes[h] ? '' : 'hp-zero'}">${tenths(row.minutes[h] || 0)}</td>`).join('')}
+                </tr>`).join('') + '</tbody>';
+
+            const query = document.getElementById('hp-search').value.trim().toLowerCase();
+            const shown = day.people.filter(person =>
+                (!query || formatDisplayName(person.emp.name).toLowerCase().includes(query)) &&
+                (!filter.value || person.worked.has(filter.value)));
+
+            document.getElementById('hp-table').innerHTML = headHTML('Employee') + '<tbody>' + shown.map(person => `
+                <tr>
+                    <td class="fw-name"><strong>${escapeHTML(formatDisplayName(person.emp.name))}</strong></td>
+                    ${person.cells.map(cell => `<td class="${HOURLY_KIND_CLASS[cell.kind]}">${escapeHTML(cell.label)}${cell.notes.map(note => `<small>${escapeHTML(note)}</small>`).join('')}</td>`).join('')}
+                </tr>`).join('') + '</tbody>';
+            document.getElementById('hp-empty').hidden = shown.length > 0;
+        }
+
+        function pickHourlyDay(dayIdx) {
+            hourlyDay = dayIdx;
+            renderHourlyView();
+        }
+
+        function openHourlyView() {
+            generateSchedule();
+            // The first time, the page opens on the day the schedule is showing
+            if (hourlyDay === null) hourlyDay = Math.max(0, DAYS_MAP.findIndex(d => d.key === document.getElementById('schedule-day').value));
+            const weekSelect = document.getElementById('hp-week');
+            const chosen = weekSelect.value || '0';
+            weekSelect.innerHTML = FOUR_WEEK_LABELS.map((label, w) => `<option value="${w}">${label} (${formatWeekRange(addDaysISO(currentWeekStart, 7 * w))})</option>`).join('');
+            weekSelect.value = chosen;
+            document.getElementById('hp-search').value = '';
+            closeFullViews();
+            document.body.classList.add('full-view-open');
+            document.getElementById('hourly-view').hidden = false;
+            renderHourlyView();
+        }
+
+        function closeHourlyView() {
+            document.body.classList.remove('full-view-open');
+            document.getElementById('hourly-view').hidden = true;
+        }
+
+        document.getElementById('btn-hourly').addEventListener('click', openHourlyView);
+        document.getElementById('hp-close').addEventListener('click', closeHourlyView);
+        document.getElementById('hp-print').addEventListener('click', () => window.print());
+        document.getElementById('hp-week').addEventListener('change', renderHourlyView);
+        document.getElementById('hp-filter').addEventListener('change', renderHourlyView);
+        document.getElementById('hp-search').addEventListener('input', renderHourlyView);
+
+        document.getElementById('hp-export').addEventListener('click', () => {
+            const day = buildHourlyDay(parseInt(document.getElementById('hp-week').value) || 0, hourlyDay);
+            const hourLabel = h => `${(h % 12) || 12} ${h < 12 ? 'AM' : 'PM'}`;
+            const lines = [['Employee'].concat(day.hours.map(hourLabel))];
+            day.people.forEach(person => {
+                lines.push([formatDisplayName(person.emp.name)].concat(person.cells.map(cell => cell.label + (cell.notes.length > 0 ? ` (${cell.notes.join('; ')})` : ''))));
+            });
+            const office = document.getElementById('office-select').value.replace(/\s+/g, '_');
+            downloadCSV(lines.map(r => r.map(escapeCSV).join(',')).join('\r\n'), `${office}_hourly_positions_${day.iso}.csv`);
+        });
+
+        // ==========================================
         // DUTY OVERRIDE (supervisor sets a person's duty for one day or a whole week)
         // ==========================================
         // One day: emp.dayOverrides['YYYY-MM-DD'] = role name or 'none'.
@@ -5976,7 +6527,7 @@
             const picked = document.getElementById('ov-duty').value;
             document.getElementById('ov-duty').innerHTML =
                 '<option value="">Auto (remove the override)</option><option value="none">No special duty</option>' +
-                roles.map(r => `<option value="${escapeHTML(r.name)}">${escapeHTML(r.name)}${emp[r.prop] ? '' : ' (not ticked for this person)'}</option>`).join('');
+                primaryRoles().map(r => `<option value="${escapeHTML(r.name)}">${escapeHTML(r.name)}${emp[r.prop] ? '' : ' (not ticked for this person)'}</option>`).join('');
             document.getElementById('ov-duty').value = picked;
 
             // Everything already set for this person, soonest first
@@ -6078,11 +6629,23 @@
                 const role = roleName ? roles.find(r => r.name === roleName) : null;
                 day[emp.id] = role ? role.id : (assigned.startsWith('Out') ? 'O' : (assigned.startsWith('Counter') ? 'T' : 'U'));
             });
+
+            // Secondary roles carried that day, kept apart from the main position: { empId: [role ids] }
+            const carried = {};
+            employees.forEach(emp => {
+                const assigned = assignments[emp.id];
+                if (!assigned || assigned.startsWith('Out')) return;
+                const ids = (emp.secondaryRoles || []).map(name => (roles.find(r => r.name === name) || {}).id).filter(id => id);
+                if (ids.length > 0) carried[emp.id] = ids;
+            });
+            day.__secondary = carried;
+
             dutyLog[iso] = day;
         }
 
         function dutyCounterColumns() {
-            return roles.map(r => ({ key: r.id, label: r.label, prop: r.prop }))
+            return primaryRoles().map(r => ({ key: r.id, label: r.label, prop: r.prop }))
+                .concat(secondaryRoles().map(r => ({ key: r.id, label: `${r.label} (secondary)`, prop: r.prop, secondary: true, tickedOnly: !!r.tickedOnly })))
                 .concat([
                     { key: '__total', label: 'All special duties' },
                     { key: 'T', label: 'Typing' },
@@ -6113,16 +6676,26 @@
         function tallyDutyLog(dates) {
             const tally = {};
             const lastKey = {};
+            const lastCarried = {};
             dates.forEach(date => {
                 const day = dutyLog[date];
+                const carriedToday = day.__secondary || {};
                 Object.keys(day).forEach(id => {
+                    if (id === '__secondary') return;
                     const key = day[id];
                     if (!tally[id]) tally[id] = { days: {}, times: {} };
                     tally[id].days[key] = (tally[id].days[key] || 0) + 1;
-                    if (key !== 'O') {
-                        if (lastKey[id] !== key) tally[id].times[key] = (tally[id].times[key] || 0) + 1;
-                        lastKey[id] = key;
-                    }
+                    if (key === 'O') return;
+                    if (lastKey[id] !== key) tally[id].times[key] = (tally[id].times[key] || 0) + 1;
+                    lastKey[id] = key;
+
+                    // Secondary roles are counted on top of the main position, with runs of their own
+                    const carried = carriedToday[id] || [];
+                    carried.forEach(roleId => {
+                        tally[id].days[roleId] = (tally[id].days[roleId] || 0) + 1;
+                        if (!(lastCarried[id] || []).includes(roleId)) tally[id].times[roleId] = (tally[id].times[roleId] || 0) + 1;
+                    });
+                    lastCarried[id] = carried;
                 });
             });
             return tally;
@@ -6143,7 +6716,7 @@
             const columns = dutyCounterColumns();
             const valueOf = (emp, key) => {
                 const days = (tally[emp.id] || { days: {} }).days;
-                if (key === '__total') return roles.reduce((sum, r) => sum + (days[r.id] || 0), 0);
+                if (key === '__total') return primaryRoles().reduce((sum, r) => sum + (days[r.id] || 0), 0);
                 return days[key] || 0;
             };
             const timesOf = (emp, key) => ((tally[emp.id] || { times: {} }).times[key] || 0);
@@ -6170,7 +6743,9 @@
 
             const cellHTML = (emp, col) => {
                 const days = valueOf(emp, col.key);
-                if (col.prop && !emp[col.prop] && days === 0) return '<td class="dc-na" title="Not ticked for this duty">–</td>';
+                // A secondary role open to anyone has no "not ticked" state
+                const needsTick = col.prop && (!col.secondary || col.tickedOnly);
+                if (needsTick && !emp[col.prop] && days === 0) return '<td class="dc-na" title="Not ticked for this duty">–</td>';
                 const times = col.prop ? timesOf(emp, col.key) : 0;
                 const shade = days === 0 ? 0 : 0.08 + 0.37 * (days / maxOf[col.key]);
                 return `<td style="background-color: rgba(37, 99, 235, ${shade.toFixed(2)});">${days}${times > 0 ? ` <span class="dc-times">${times}×</span>` : ''}</td>`;
@@ -6178,7 +6753,7 @@
 
             // Average days among the people ticked for each duty (everyone, for the other columns)
             const averageHTML = columns.map(col => {
-                const pool = col.prop ? employees.filter(emp => emp[col.prop]) : employees;
+                const pool = (col.prop && (!col.secondary || col.tickedOnly)) ? employees.filter(emp => emp[col.prop]) : employees;
                 const average = pool.length === 0 ? 0 : pool.reduce((sum, emp) => sum + valueOf(emp, col.key), 0) / pool.length;
                 return `<td>${average.toFixed(1)}</td>`;
             }).join('');
@@ -6226,7 +6801,7 @@
             const columns = dutyCounterColumns();
             const daysOf = (emp, key) => {
                 const days = (tally[emp.id] || { days: {} }).days;
-                return key === '__total' ? roles.reduce((sum, r) => sum + (days[r.id] || 0), 0) : (days[key] || 0);
+                return key === '__total' ? primaryRoles().reduce((sum, r) => sum + (days[r.id] || 0), 0) : (days[key] || 0);
             };
 
             const rows = [
@@ -6298,11 +6873,18 @@
             const todayIdx = dayKeys.indexOf(document.getElementById('schedule-day').value);
 
             const grid = FOUR_WEEK_LABELS.map(() => []);
+            // grid.secondary[week][day] = { empId: [secondary role names] } for the same days
+            grid.secondary = FOUR_WEEK_LABELS.map(() => []);
+            const carriedNow = Object.fromEntries(employees.filter(e => (e.secondaryRoles || []).length > 0).map(e => [e.id, e.secondaryRoles.slice()]));
             for (let i = 0; i < todayIdx; i++) {
                 grid[0][i] = computeAssignmentsForDay(dayKeys[i], currentWeekNum).assignments;
+                grid.secondary[0][i] = carriedNow;
             }
             scheduleForecast.days.forEach(d => {
-                if (d.weekOffset < grid.length) grid[d.weekOffset][dayKeys.indexOf(d.dayKey)] = d.assignments;
+                if (d.weekOffset < grid.length) {
+                    grid[d.weekOffset][dayKeys.indexOf(d.dayKey)] = d.assignments;
+                    grid.secondary[d.weekOffset][dayKeys.indexOf(d.dayKey)] = d.secondary || {};
+                }
             });
             return grid;
         }
@@ -6320,7 +6902,7 @@
         }
 
         // One person's week: their main assignment, plus a note for every day that differs from it
-        function summarizeWeekForStaff(emp, weekDays, weekStart, weekSwaps) {
+        function summarizeWeekForStaff(emp, weekDays, weekStart, weekSwaps, weekSecondary) {
             // Days the office is closed are left out: they are noted once for everyone in the week's heading
             const days = DAYS_MAP.map((d, i) => ({
                 label: d.label,
@@ -6358,6 +6940,20 @@
                 } else {
                     notes.push(`Covering ${text} on ${when}`);
                 }
+            });
+
+            // Secondary roles: one note for each, naming the days unless it is every working day
+            const carriedDays = {};
+            days.forEach((d, i) => {
+                if (!d.text || d.text === 'Out' || !weekSecondary || !weekSecondary[i]) return;
+                secondaryLabelsFor(weekSecondary[i][emp.id]).forEach(label => {
+                    if (!carriedDays[label]) carriedDays[label] = [];
+                    carriedDays[label].push(d.label);
+                });
+            });
+            Object.keys(carriedDays).forEach(label => {
+                const everyDay = carriedDays[label].length === worked.length;
+                notes.push(`Also ${label}${everyDay ? ' this week' : ' on ' + carriedDays[label].join(', ')}`);
             });
 
             // After-lunch swap: one note when it is the same on every working day, otherwise the days are named
@@ -6413,7 +7009,7 @@
                 let rowHTML = `<td><strong>${escapeHTML(formatDisplayName(emp.name))}</strong></td>`;
 
                 FOUR_WEEK_LABELS.forEach((label, w) => {
-                    const week = summarizeWeekForStaff(emp, grid[w], addDaysISO(currentWeekStart, 7 * w), swapsByWeek[w]);
+                    const week = summarizeWeekForStaff(emp, grid[w], addDaysISO(currentWeekStart, 7 * w), swapsByWeek[w], grid.secondary[w]);
                     const group = getEmployeeActiveGroup(emp, (currentWeekNum - 1 + w) % 3 + 1);
                     const mainClass = week.isOut ? 'ev-main ev-out' : (week.isDuty ? 'ev-main ev-duty' : 'ev-main');
 
@@ -6503,9 +7099,16 @@
             document.getElementById('fw-calendar-notes').innerHTML = calendarNotesHTML(currentWeekStart, 28);
 
             // A day the office is closed shows as Closed for everyone
-            const cellAt = (emp, w, i) => isOfficeClosed(addDaysISO(currentWeekStart, 7 * w + i))
-                ? { text: 'Closed', cls: 'fw-closed' }
-                : cellFor(grid[w][i] ? grid[w][i][emp.id] : '');
+            const cellAt = (emp, w, i) => {
+                if (isOfficeClosed(addDaysISO(currentWeekStart, 7 * w + i))) return { text: 'Closed', cls: 'fw-closed' };
+                const cell = cellFor(grid[w][i] ? grid[w][i][emp.id] : '');
+                // A secondary role carried that day is added after the position, e.g. "Counter 12 + CRC"
+                const carried = ((grid.secondary[w] || [])[i] || {})[emp.id];
+                if (cell.text && cell.text !== 'Out' && carried && carried.length > 0) {
+                    cell.text += ' + ' + secondaryLabelsFor(carried).join(' + ');
+                }
+                return cell;
+            };
 
             const query = document.getElementById('fw-search').value.trim().toLowerCase();
             const shown = employees.filter(emp => !query || formatDisplayName(emp.name).toLowerCase().includes(query));
@@ -6605,7 +7208,7 @@
                     row.nextHTML = `<span class="next-duty">${dayWords(next.days)}</span> <span class="next-duty-role">${labelOf(next.role)}</span>`;
                     row.nextUp = scheduleForecast.daysToNextWeek !== null && next.days <= scheduleForecast.daysToNextWeek;
                     row.nextTitle = `Next up: ${labelOf(next.role)}, ${dayWords(next.days).toLowerCase()}`;
-                } else if (roles.some(r => emp[r.prop])) {
+                } else if (primaryRoles().some(r => emp[r.prop])) {
                     row.nextSort = FORECAST_DAYS + 1;
                     row.nextHTML = `<span class="next-duty-role">${FORECAST_DAYS}+ days</span>`;
                 } else {
@@ -6620,7 +7223,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${row.name}</strong>${row.nextUp ? ` <span class="next-up-icon" title="${row.nextTitle}">🔜</span>` : ''}</td>
-                    <td style="white-space: nowrap;"><span class="${row.badgeClass}">${escapeHTML(row.pos)}</span><button class="ov-btn ${row.overrideText ? 'active' : ''}" title="${escapeHTML(row.overrideText || 'Override this person\'s duty')}" onclick="openOverrideDialog('${row.id}')">✎</button></td>
+                    <td style="white-space: nowrap;"><span class="${row.badgeClass}">${escapeHTML(row.pos)}</span><button class="ov-btn ${row.overrideText ? 'active' : ''}" title="${escapeHTML(row.overrideText || 'Override this person\'s duty')}" onclick="openOverrideDialog('${row.id}')">✎</button>${secondaryTagHTML(employees.find(e => e.id === row.id))}</td>
                     <td style="font-size: 0.8rem;">${row.swapHTML}</td>
                     <td style="font-size: 0.8rem; white-space: nowrap;">${row.nextHTML}</td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;">${row.amText}</td>
@@ -7019,6 +7622,36 @@
                 }
             });
 
+            // Secondary roles keep a rotation of their own, apart from the main positions above. A day out
+            // or a closed day counts for nothing, as with the main positions.
+            if (!officeClosed) employees.forEach(emp => {
+                const assigned = assignments[emp.id];
+                if (!assigned || assigned.startsWith('Out')) return;
+                if (!emp.secondarySince) emp.secondarySince = {};
+                if (!emp.secondaryTotal) emp.secondaryTotal = {};
+
+                secondaryRoles().forEach(role => {
+                    const rules = getRoleRules(role.name);
+                    if (!emp.history[role.name]) emp.history[role.name] = { consecutive: 0, breakRemaining: 0 };
+                    const hist = emp.history[role.name];
+
+                    if ((emp.secondaryRoles || []).includes(role.name)) {
+                        hist.consecutive++;
+                        emp.secondaryTotal[role.name] = (emp.secondaryTotal[role.name] || 0) + 1;
+                        emp.secondarySince[role.name] = 0;
+                        if (rules.maxRot !== -1 && hist.consecutive >= rules.maxRot) {
+                            hist.breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
+                            hist.consecutive = 0;
+                            emp.secondaryRoles = emp.secondaryRoles.filter(name => name !== role.name);
+                        }
+                    } else {
+                        hist.consecutive = 0;
+                        if (hist.breakRemaining > 0) hist.breakRemaining--;
+                        emp.secondarySince[role.name] = (emp.secondarySince[role.name] || 0) + 1;
+                    }
+                });
+            });
+
             const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
             const dayIdx = daysOrder.indexOf(dayKey);
             if (dayIdx < 4) return { dayKey: daysOrder[dayIdx + 1], weekNum: weekNum, weekStart: weekStart };
@@ -7064,6 +7697,21 @@
                 } else {
                     emp.weekDaysOut = 0;
                 }
+            });
+
+            // New week: secondary roles rotate too, by the same Max Rot rule as the main positions
+            employees.forEach(emp => {
+                (emp.secondaryRoles || []).slice().forEach(name => {
+                    const rules = getRoleRules(name);
+                    if (!rules) return;
+                    if (!emp.history[name]) emp.history[name] = { consecutive: 0, breakRemaining: 0 };
+                    const hist = emp.history[name];
+                    if (rules.maxRot !== -1 && rules.maxRot - hist.consecutive < 5) {
+                        hist.breakRemaining = (rules.breakRot === -1 ? 0 : rules.breakRot);
+                        hist.consecutive = 0;
+                        emp.secondaryRoles = emp.secondaryRoles.filter(n => n !== name);
+                    }
+                });
             });
 
             return { dayKey: 'mon', weekNum: (weekNum % 3) + 1, weekStart: nextWeekStart };
@@ -7118,9 +7766,10 @@
                 let weekStart = currentWeekStart;
                 for (let n = 0; n <= FORECAST_DAYS; n++) {
                     ensureWeekPlan();
+                    ensureSecondaryPicks();
                     const { assignments } = computeAssignmentsForDay(day, week, weekStart);
                     activeAssignments = assignments;
-                    days.push({ dayKey: day, weekNum: week, weekOffset: weekOffset, assignments: assignments });
+                    days.push({ dayKey: day, weekNum: week, weekOffset: weekOffset, assignments: assignments, secondary: Object.fromEntries(employees.filter(e => (e.secondaryRoles || []).length > 0).map(e => [e.id, e.secondaryRoles.slice()])) });
 
                     if (n > 0 && !isOfficeClosed(scheduleDateOf(day, weekStart))) {
                         employees.forEach(emp => {
@@ -7573,7 +8222,8 @@
                     classcm: { req: 4, rot: 5, brk: 5 },
                     cdl: { req: 2, rot: 5, brk: 5 },
                     banker: { req: 1, rot: 5, brk: 15 },
-                    training: { req: 2, rot: 5, brk: 5 }
+                    training: { req: 2, rot: 5, brk: 5 },
+                    crc: { req: 4, rot: 5, brk: 5 }
                 };
                 testModeSavedConfig = {};
                 Object.keys(testConfig).forEach(k => {
