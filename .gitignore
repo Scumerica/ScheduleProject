@@ -1,3 +1,6 @@
 # Saved schedules hold real staff names and private notes - keep them out of the repo
 Storage/*
 !Storage/.gitkeep
+
+# Build output: rebuild with Build/build.ps1
+Build/icon-preview.png
